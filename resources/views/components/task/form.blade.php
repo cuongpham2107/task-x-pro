@@ -361,10 +361,11 @@ new class extends Component {
         if ($this->phase_id === null && $this->phase?->id !== null) {
             $this->phase_id = $this->phase->id;
         }
-
-        $this->validate();
+        
+        
 
         try {
+            $this->validate();
             $taskService = app(TaskService::class);
             $attributes = [
                 'phase_id' => $this->phase_id,
@@ -429,9 +430,11 @@ new class extends Component {
             $this->dispatch('toast', message: $toastMessage, type: 'success');
             $this->dispatch('task-saved', taskTitle: $savedName);
         } catch (ValidationException $e) {
+            $this->dispatch('toast', message: 'Lỗi: ' . $e->getMessage(), type: 'error');
             throw $e;
         } catch (\Exception $e) {
             $this->dispatch('toast', message: 'Lỗi: ' . $e->getMessage(), type: 'error');
+            throw $e;
         }
     }
 

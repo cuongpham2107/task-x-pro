@@ -1,11 +1,12 @@
 @props([
-    'align' => 'left', // left | center | right
+    'align' => 'start', // start | center | end
 ])
 
 @php
     $alignClass = match ($align) {
-        'center' => 'text-center',
-        'right' => 'text-right',
+        'center' => 'text-center [&>*]:mx-auto [&>*]:justify-center',
+        'end', 'right' => 'text-right [&>*]:ml-auto [&>*]:justify-end',
+        'start', 'left' => 'text-left [&>*]:mr-auto [&>*]:justify-start',
         default => '',
     };
 @endphp

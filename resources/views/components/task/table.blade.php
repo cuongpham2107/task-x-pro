@@ -13,7 +13,9 @@
             </button>
         </x-ui.table.column>
         <x-ui.table.column width="min-w-60 w-60">Dự án &amp; Giai đoạn</x-ui.table.column>
-        <x-ui.table.column width="min-w-40">PIC &amp; Phối hợp</x-ui.table.column>
+        <x-ui.table.column width="min-w-35" align="center">Leader quản lý</x-ui.table.column>
+        <x-ui.table.column width="min-w-35" align="center">Chủ PIC</x-ui.table.column>
+        <x-ui.table.column width="min-w-35" align="center">PIC hỗ trợ</x-ui.table.column>
         <x-ui.table.column width="min-w-30">
             <button wire:click="setSort('priority')"
                 class="hover:text-primary flex items-center gap-1 uppercase tracking-wider transition-colors">
@@ -34,7 +36,7 @@
                 </span>
             </button>
         </x-ui.table.column>
-        <x-ui.table.column width="min-w-30">
+        <x-ui.table.column width="min-w-35">
             <button wire:click="setSort('status')"
                 class="hover:text-primary flex items-center gap-1 uppercase tracking-wider transition-colors">
                 Trạng thái
@@ -94,8 +96,19 @@
                     </div>
                 </x-ui.table.cell>
 
-                <x-ui.table.cell>
-                    <x-ui.avatar-stack :users="collect([$task->pic])->concat($task->coPics)->filter()" :max="4" />
+                <x-ui.table.cell align="center">
+                    @php
+                        $leaders = $task->phase?->project?->leaders ?? collect();
+                    @endphp
+                    <x-ui.avatar-stack :users="collect($leaders)" :max="3" />
+                </x-ui.table.cell>
+
+                <x-ui.table.cell align="center">
+                    <x-ui.avatar-stack :users="collect([$task->pic])" :max="1" />
+                </x-ui.table.cell>
+
+                <x-ui.table.cell align="center">
+                    <x-ui.avatar-stack :users="$task->coPics" :max="4" />
                 </x-ui.table.cell>
 
                 <x-ui.table.cell>
@@ -137,7 +150,7 @@
                 </x-ui.table.cell>
             </x-ui.table.row>
         @empty
-            <x-ui.table.empty :colspan="7" icon="task_alt" message="Chưa có công việc nào." />
+            <x-ui.table.empty :colspan="9" icon="task_alt" message="Chưa có công việc nào." />
         @endforelse
     </x-ui.table.body>
 </x-ui.table>

@@ -197,7 +197,7 @@
             @can('viewAny', App\Models\Task::class)
                 <a class="{{ $navLink('tasks.*') }} inline-flex items-center gap-1.5"
                     href="{{ route('tasks.index') }}" wire:navigate>
-                    <span class="material-symbols-outlined text-[18px] leading-none">folder_open</span>
+                    <span class="material-symbols-outlined text-[18px] leading-none">document_scanner</span>
                     Công việc
                 </a>
             @endcan

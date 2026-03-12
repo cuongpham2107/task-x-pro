@@ -36,8 +36,9 @@ class TaskQueryService
             ->with([
                 'phase:id,project_id,name',
                 'phase.project:id,name,type,status',
-                'pic:id,name,email',
-                'coPics:id,name,email',
+                'phase.project.leaders:id,name,email,avatar,status',
+                'pic:id,name,email,avatar,status',
+                'coPics:id,name,email,avatar,status',
             ]);
 
         $this->applyIndexFilters($query, $filters);
@@ -144,6 +145,7 @@ class TaskQueryService
         return $task->load([
             'phase:id,project_id,name',
             'phase.project:id,name,type,status',
+            'phase.project.leaders:id,name,email',
             'pic:id,name,email,department_id',
             'coPics:id,name,email,department_id',
             'dependencyTask:id,name,status',

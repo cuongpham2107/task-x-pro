@@ -3,13 +3,13 @@
 namespace App\Notifications;
 
 use App\Models\Task;
-use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
+use Illuminate\Support\Carbon;
 use NotificationChannels\Telegram\TelegramChannel;
 use NotificationChannels\Telegram\TelegramMessage;
 
-class ApprovalResults extends Notification
+class PicOverloadWarningNotification extends Notification
 {
     use Queueable;
 
@@ -18,7 +18,8 @@ class ApprovalResults extends Notification
      */
     public function __construct(
         public Task $task,
-        public User $leader,
+        public int $nearbyTaskCount,
+        public Carbon $deadline,
     ) {}
 
     /**
@@ -38,23 +39,21 @@ class ApprovalResults extends Notification
     {
         $this->task->loadMissing(['phase.project']);
 
-        $leaderName = trim((string) $this->leader->name) !== '' ? $this->leader->name : 'Leader';
         $taskName = trim((string) $this->task->name) !== '' ? $this->task->name : "Task #{$this->task->id}";
         $projectName = $this->task->phase?->project?->name;
         $phaseName = $this->task->phase?->name;
+        $deadlineText = $this->deadline->format('d/m/Y H:i');
 
-        $contextDetails = [];
+        $contextDetails = ["Task: \"{$taskName}\""];
         if ($projectName !== null && trim((string) $projectName) !== '') {
-            $contextDetails[] = "Dự án: {$projectName}";
+            $contextDetails[] = "Du an: {$projectName}";
         }
         if ($phaseName !== null && trim((string) $phaseName) !== '') {
-            $contextDetails[] = "Giai đoạn: {$phaseName}";
+            $contextDetails[] = "Giai doan: {$phaseName}";
         }
 
-        $content = "Task \"{$taskName}\" đã được {$leaderName} phê duyệt và đang chờ CEO phê duyệt.";
-        if ($contextDetails !== []) {
-            $content .= "\n".implode(' | ', $contextDetails);
-        }
+        $content = "Canh bao qua tai: Ban co {$this->nearbyTaskCount} task co deadline trong vung +/-1 ngay quanh {$deadlineText}.";
+        $content .= "\n".implode(' | ', $contextDetails);
 
         $message = TelegramMessage::create()
             ->to((string) $notifiable->telegram_id)
@@ -62,7 +61,7 @@ class ApprovalResults extends Notification
 
         $taskUrl = $this->resolveTaskUrl();
         if ($taskUrl !== null) {
-            $message->button('Xem công việc', $taskUrl);
+            $message->button('Xem cong viec', $taskUrl);
         }
 
         return $message;

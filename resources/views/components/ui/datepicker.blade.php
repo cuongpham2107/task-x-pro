@@ -15,29 +15,46 @@
 @endphp
 
 <div class="w-full" x-data="{
+    displayValue: '',
     value: @entangle($attributes->wire('model')),
     instance: null,
+
+    // Convert dd/mm/yyyy → yyyy-mm-dd
+    toISO(str) {
+        if (!str) return '';
+        const [d, m, y] = str.split('/');
+        return y && m && d ? `${y}-${m}-${d}` : '';
+    },
+
+    // Convert yyyy-mm-dd → dd/mm/yyyy để hiển thị
+    toDisplay(str) {
+        if (!str) return '';
+        const [y, m, d] = str.split('-');
+        return y && m && d ? `${d}/${m}/${y}` : '';
+    },
+
     init() {
+        this.displayValue = this.toDisplay(this.value);
+
         this.instance = new window.Datepicker(this.$refs.input, {
             language: 'vi',
             format: '{{ $format }}',
             orientation: '{{ $orientation }}',
             autohide: true,
             clearBtn: true,
-
             todayBtn: true,
             todayBtnMode: 1,
         });
 
         this.$refs.input.addEventListener('changeDate', (e) => {
-            // Update Livewire value
-            this.value = this.$refs.input.value;
+            this.displayValue = this.$refs.input.value;
+            this.value = this.toISO(this.$refs.input.value); // → Livewire nhận Y-m-d
         });
 
-        // Watch for external changes
         this.$watch('value', (newVal) => {
-            if (newVal !== this.$refs.input.value) {
-                this.instance.setDate(newVal);
+            const display = this.toDisplay(newVal);
+            if (display !== this.$refs.input.value) {
+                this.instance.setDate(display);
             }
         });
     }

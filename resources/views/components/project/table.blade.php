@@ -12,12 +12,12 @@
                 </span>
             </button>
         </x-ui.table.column>
-        <x-ui.table.column width="min-w-37.5">Người tạo</x-ui.table.column>
-        <x-ui.table.column width="min-w-40">Quản lý</x-ui.table.column>
+        <x-ui.table.column width="min-w-35" align="center">Người tạo</x-ui.table.column>
+        <x-ui.table.column width="min-w-35" align="center">Quản lý</x-ui.table.column>
         <x-ui.table.column width="min-w-40">
             Ngân sách dự kiến
         </x-ui.table.column>
-        <x-ui.table.column width="min-w-30">
+        <x-ui.table.column width="min-w-30" align="center">
             <button wire:click="setSort('start_date')"
                 class="hover:text-primary flex items-center gap-1 uppercase tracking-wider transition-colors">
                 Ngày bắt đầu
@@ -28,7 +28,7 @@
             </button>
         </x-ui.table.column>
 
-        <x-ui.table.column width="min-w-30">
+        <x-ui.table.column width="min-w-30" align="center">
             <button wire:click="setSort('end_date')"
                 class="hover:text-primary flex items-center gap-1 uppercase tracking-wider transition-colors">
                 Hạn chót
@@ -66,19 +66,20 @@
                         </div>
                 </x-ui.table.cell>
 
-                <x-ui.table.cell>
-                    <div class="flex items-center gap-2">
+                <x-ui.table.cell align="center">
+                    {{-- <div class="flex items-center gap-2">
                         <div
                             class="bg-primary/20 text-primary flex size-6 items-center justify-center rounded-full text-xs font-bold">
                             {{ strtoupper(substr($project->creator?->name ?? '?', 0, 1)) }}
                         </div>
                         <span
                             class="text-xs text-slate-600 dark:text-slate-400">{{ $project->creator?->name ?? '—' }}</span>
-                    </div>
+                    </div> --}}
+                    <x-ui.avatar-stack :users="collect([$project->creator])" :max="1" />
                 </x-ui.table.cell>
 
                 {{-- Danh sách tham gia --}}
-                <x-ui.table.cell>
+                <x-ui.table.cell align="center">
                     <x-ui.avatar-stack :users="$project->leaders" :max="4" />
                 </x-ui.table.cell>
                 <x-ui.table.cell>
@@ -87,11 +88,11 @@
                         VNĐ</span>
                 </x-ui.table.cell>
 
-                <x-ui.table.cell class="text-xs text-slate-600 dark:text-slate-400">
+                <x-ui.table.cell align="center" class="text-xs text-slate-600 dark:text-slate-400">
                     {{ $project->start_date ? \Carbon\Carbon::parse($project->start_date)->format('d/m/Y') : '—' }}
                 </x-ui.table.cell>
 
-                <x-ui.table.cell class="text-xs text-slate-600 dark:text-slate-400">
+                <x-ui.table.cell align="center" class="text-xs text-slate-600 dark:text-slate-400">
                     {{ $project->end_date ? \Carbon\Carbon::parse($project->end_date)->format('d/m/Y') : '—' }}
                 </x-ui.table.cell>
 

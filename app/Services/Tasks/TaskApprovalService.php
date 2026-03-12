@@ -13,6 +13,9 @@ use App\Models\ApprovalLog;
 use App\Models\SystemNotification;
 use App\Models\Task;
 use App\Models\User;
+use App\Notifications\ApprovalResults;
+use App\Notifications\TaskRejectedNotification;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\ValidationException;
 
 class TaskApprovalService
@@ -220,7 +223,7 @@ class TaskApprovalService
             return;
         }
 
-        $task->loadMissing('pic:id,name');
+        $task->loadMissing('pic:id,name,telegram_id');
         $actorName = trim((string) $actor->name) !== '' ? $actor->name : 'Người duyệt';
         $taskName = trim((string) $task->name) !== '' ? $task->name : "Task #{$task->id}";
         $body = "Task \"{$taskName}\" vừa bị từ chối duyệt bởi {$actorName}. Lý do: {$reason}";
@@ -236,6 +239,11 @@ class TaskApprovalService
             'status' => NotificationStatus::Pending->value,
             'created_at' => now(),
         ]);
+
+        $pic = $task->pic;
+        if ($pic !== null && trim((string) $pic->telegram_id) !== '') {
+            Notification::send($pic, new TaskRejectedNotification($task, $actor, $reason));
+        }
     }
 
     /**
@@ -298,6 +306,14 @@ class TaskApprovalService
                 'status' => NotificationStatus::Pending->value,
                 'created_at' => now(),
             ]);
+        }
+
+        $telegramRecipients = $ceos->filter(function (User $ceo): bool {
+            return trim((string) $ceo->telegram_id) !== '';
+        });
+
+        if ($telegramRecipients->isNotEmpty()) {
+            Notification::send($telegramRecipients, new ApprovalResults($task, $leader));
         }
     }
 }

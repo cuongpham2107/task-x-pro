@@ -11,11 +11,13 @@ use App\Models\SystemNotification;
 use App\Models\Task;
 use App\Models\TaskAttachment;
 use App\Models\User;
+use App\Notifications\TaskApprovalRequestLeaderNotification;
 use App\Services\Documents\Contracts\DocumentServiceInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\ValidationException;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
@@ -310,12 +312,13 @@ class TaskService
 
             // Lấy leaders được chỉ định cho project của task (qua phase)
             $projectLeaders = $task->phase->project->projectLeaders()->with('user')->get();
-            foreach ($projectLeaders as $pl) {
-                $leader = $pl->user;
-                if (! $leader) {
-                    continue;
-                }
+            $leaders = $projectLeaders
+                ->pluck('user')
+                ->filter()
+                ->unique('id')
+                ->values();
 
+            foreach ($leaders as $leader) {
                 SystemNotification::query()->create([
                     'user_id' => $leader->id,
                     'type' => SystemNotificationType::ApprovalRequestLeader->value,
@@ -327,6 +330,14 @@ class TaskService
                     'status' => NotificationStatus::Pending->value,
                     'created_at' => now(),
                 ]);
+            }
+
+            $telegramRecipients = $leaders->filter(function (User $leader): bool {
+                return trim((string) $leader->telegram_id) !== '';
+            });
+
+            if ($telegramRecipients->isNotEmpty()) {
+                Notification::send($telegramRecipients, new TaskApprovalRequestLeaderNotification($task, $actor));
             }
         } catch (\Exception $e) {
             // Không phá vỡ luồng chính nếu gửi notification thất bại; ghi log nếu cần

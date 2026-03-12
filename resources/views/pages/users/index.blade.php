@@ -515,8 +515,8 @@ new #[Title('Người dùng')] class extends Component {
                     required />
 
                 <div class="md:col-span-2">
-                    <x-ui.input label="Telegram ID" name="telegramId" wire:model="telegramId"
-                        placeholder="Ví dụ: chat_123456789" icon="chat" />
+                    <x-ui.input label="Telegram ID" name="telegramId" wire:model="telegramId" icon="chat" />
+                    
                 </div>
             </div>
         </form>

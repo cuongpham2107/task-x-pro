@@ -21,13 +21,14 @@ Schedule::command('tasks:mark-late')->everyFiveMinutes();
 Schedule::call(function () {
     // Logic thực hiện vào ngày cuối cùng của mỗi tháng sẽ được viết ở đây
     // Cập nhập Kpi của người dùng
+    // => gửi tin nhắn telegram cho leader và ceo
 })->lastDayOfMonth('23:59');
 
 // Mỗi 17:00 thứ 6 hàng tuần
 Schedule::call(function () {
     // Logic thực hiện vào 17:00 thứ 6 hàng tuần
     // 1. Báo cáo task hàng tuần // cho leader cho ceo
-
+    // => gửi tin nhắn telegram cho leader và ceo
 })->weekly()->fridays()->at('17:00');
 
 // Mỗi 07:00 hàng ngày
@@ -37,4 +38,5 @@ Schedule::call(function () {
     // 2. Nhắc nhở Pic đang làm > 3 task trễ deadline
     // 3. Nhắc nhở Task đang trạng thái chờ duyệt quá 24h thì thông báo cho leader
     // 4. Kiểm tra các Task quá hạn mà status != completed thì cập nhật status thành tre han
+    // => gửi tin nhắn telegram cho pic và leader
 })->daily()->at('07:00');

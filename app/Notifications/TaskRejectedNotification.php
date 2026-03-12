@@ -9,7 +9,7 @@ use Illuminate\Notifications\Notification;
 use NotificationChannels\Telegram\TelegramChannel;
 use NotificationChannels\Telegram\TelegramMessage;
 
-class ApprovalResults extends Notification
+class TaskRejectedNotification extends Notification
 {
     use Queueable;
 
@@ -18,7 +18,8 @@ class ApprovalResults extends Notification
      */
     public function __construct(
         public Task $task,
-        public User $leader,
+        public User $actor,
+        public string $reason,
     ) {}
 
     /**
@@ -38,7 +39,7 @@ class ApprovalResults extends Notification
     {
         $this->task->loadMissing(['phase.project']);
 
-        $leaderName = trim((string) $this->leader->name) !== '' ? $this->leader->name : 'Leader';
+        $actorName = trim((string) $this->actor->name) !== '' ? $this->actor->name : 'Người duyệt';
         $taskName = trim((string) $this->task->name) !== '' ? $this->task->name : "Task #{$this->task->id}";
         $projectName = $this->task->phase?->project?->name;
         $phaseName = $this->task->phase?->name;
@@ -51,7 +52,11 @@ class ApprovalResults extends Notification
             $contextDetails[] = "Giai đoạn: {$phaseName}";
         }
 
-        $content = "Task \"{$taskName}\" đã được {$leaderName} phê duyệt và đang chờ CEO phê duyệt.";
+        $content = "Task \"{$taskName}\" đã bị từ chối duyệt bởi {$actorName}.";
+        $reason = trim($this->reason);
+        if ($reason !== '') {
+            $content .= "\nLý do: {$reason}";
+        }
         if ($contextDetails !== []) {
             $content .= "\n".implode(' | ', $contextDetails);
         }

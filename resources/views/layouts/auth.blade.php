@@ -7,11 +7,6 @@
     <title>{{ $title ?? 'ProManager' }}</title>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
-        rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
-        rel="stylesheet" />
 </head>
 
 <body class="font-display bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 antialiased">
@@ -20,7 +15,7 @@
         <div class="hidden lg:flex lg:w-2/3 flex-col justify-end items-center relative overflow-hidden">
             <!-- Background Image (only show if file is present in public/images) -->
             @if (file_exists(public_path('images/background-login.jpg')))
-                <img src="{{ asset('images/background-login.jpg') }}" alt="Professional workspace"
+                <img src="{{ asset('images/background-login.jpg' ?? '') }}" alt="Professional workspace"
                     class="absolute inset-0 w-full h-full object-cover" />
             @endif
 
@@ -69,7 +64,7 @@
                             <span
                                 class="text-xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 leading-none">{{ config('app.name') }}</span>
                             <span
-                                class="text-[11px] font-medium text-slate-400 dark:text-slate-500 tracking-widest uppercase mt-0.5">Project
+                                class="text-[11px] font-medium text-slate-400 dark:text-slate-500 tracking-widest uppercase mt-4">Project
                                 Manager</span>
                         </div>
                     </div>

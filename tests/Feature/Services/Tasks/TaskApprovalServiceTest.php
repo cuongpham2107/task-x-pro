@@ -11,8 +11,10 @@ use App\Models\Phase;
 use App\Models\Project;
 use App\Models\Task;
 use App\Models\User;
+use App\Notifications\ApprovalResults;
 use App\Services\Tasks\TaskApprovalService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Notification;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
@@ -36,6 +38,8 @@ class TaskApprovalServiceTest extends TestCase
     {
         parent::setUp();
 
+        Notification::fake();
+
         $this->service = new TaskApprovalService;
 
         // Setup roles
@@ -53,12 +57,19 @@ class TaskApprovalServiceTest extends TestCase
         $this->leader = User::factory()->create();
         $this->leader->assignRole('leader');
 
-        $this->ceo = User::factory()->create();
+        $this->ceo = User::factory()->create([
+            'telegram_id' => '123456789',
+        ]);
         $this->ceo->assignRole('ceo');
     }
 
     public function test_send_ceo_approval_notification_sends_notification_when_task_is_double_workflow_and_leader_approved(): void
     {
+        $ceoWithoutTelegram = User::factory()->create([
+            'telegram_id' => null,
+        ]);
+        $ceoWithoutTelegram->assignRole('ceo');
+
         $task = Task::factory()->create([
             'phase_id' => $this->phase->id,
             'pic_id' => $this->requester->id,
@@ -85,6 +96,17 @@ class TaskApprovalServiceTest extends TestCase
             'notifiable_id' => $task->id,
             'status' => 'pending',
         ]);
+
+        $this->assertDatabaseHas('notifications', [
+            'user_id' => $ceoWithoutTelegram->id,
+            'type' => 'approval_request_ceo',
+            'notifiable_type' => Task::class,
+            'notifiable_id' => $task->id,
+            'status' => 'pending',
+        ]);
+
+        Notification::assertSentTo($this->ceo, ApprovalResults::class);
+        Notification::assertNotSentTo($ceoWithoutTelegram, ApprovalResults::class);
     }
 
     public function test_send_ceo_approval_notification_does_not_send_notification_for_single_workflow(): void
@@ -112,6 +134,8 @@ class TaskApprovalServiceTest extends TestCase
             'type' => 'approval_request_ceo',
             'notifiable_id' => $task->id,
         ]);
+
+        Notification::assertNotSentTo($this->ceo, ApprovalResults::class);
     }
 
     public function test_send_ceo_approval_notification_does_not_send_notification_if_leader_has_not_approved(): void
@@ -132,6 +156,8 @@ class TaskApprovalServiceTest extends TestCase
             'type' => 'approval_request_ceo',
             'notifiable_id' => $task->id,
         ]);
+
+        Notification::assertNotSentTo($this->ceo, ApprovalResults::class);
     }
 
     public function test_approve_method_triggers_ceo_notification_for_double_workflow(): void
@@ -152,5 +178,7 @@ class TaskApprovalServiceTest extends TestCase
             'notifiable_type' => Task::class,
             'notifiable_id' => $task->id,
         ]);
+
+        Notification::assertSentTo($this->ceo, ApprovalResults::class);
     }
 }
