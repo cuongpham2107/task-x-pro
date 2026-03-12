@@ -1,6 +1,7 @@
 import './bootstrap';
 import Datepicker from "flowbite-datepicker/Datepicker";
-
+import mask from '@alpinejs/mask'
+import './dashboard-ceo.js' // CEO dashboard charts
 // Register Vietnamese locale inline to avoid package export issues
 Datepicker.locales.vi = {
     days: ["Chủ nhật", "Thứ hai", "Thứ ba", "Thứ tư", "Thứ năm", "Thứ sáu", "Thứ bảy"],
@@ -15,6 +16,9 @@ Datepicker.locales.vi = {
 
 // Expose to window for Alpine.js components
 window.Datepicker = Datepicker;
+
+// register mask plugin globally
+Alpine.plugin(mask);
 
 document.addEventListener('alpine:init', () => {
     Alpine.data('notificationDrawer', () => ({

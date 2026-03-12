@@ -161,9 +161,43 @@ new class extends Component {
 
     public function save(): void
     {
-        $this->validate();
-
         try {
+            // Normalize inputs so validation handles empty strings as null where appropriate
+            $this->startDate = $this->startDate === '' ? null : $this->startDate;
+            $this->endDate = $this->endDate === '' ? null : $this->endDate;
+            $this->budget = $this->budget === '' ? null : $this->budget;
+
+            // Parse common date formats from UI (e.g. 31.12.2026 or 31/12/2026) into Y-m-d
+            $tryParse = function (?string $value): ?string {
+                if ($value === null) {
+                    return null;
+                }
+
+                // Try a list of common formats
+                $formats = ['Y-m-d', 'd.m.Y', 'd/m/Y', 'd-m-Y', 'd M Y', 'd F Y'];
+                foreach ($formats as $fmt) {
+                    try {
+                        $dt = Carbon::createFromFormat($fmt, $value);
+                        return $dt->toDateString();
+                    } catch (\Exception $e) {
+                        // ignore and try next
+                    }
+                }
+
+                // Fallback to parse - may throw if invalid
+                try {
+                    $dt = Carbon::parse($value);
+                    return $dt->toDateString();
+                } catch (\Exception $e) {
+                    return $value; // keep original so validator will report proper error
+                }
+            };
+
+            $this->startDate = $tryParse($this->startDate);
+            $this->endDate = $tryParse($this->endDate);
+
+            $this->validate();
+            
             $projectService = app(ProjectService::class);
             $attributes = [
                 'name' => $this->name,
@@ -184,6 +218,7 @@ new class extends Component {
                     $phasePayloads = $payloads;
                 }
             }
+            
             if ($this->mode === 'edit' && $this->editingProjectId !== null) {
                 $project = $projectService->findForEdit(auth()->user(), $this->editingProjectId);
 
@@ -192,7 +227,10 @@ new class extends Component {
                 session()->flash('success', 'Dự án đã được cập nhật thành công!');
                 $this->dispatch('toast', message: 'Dự án đã được cập nhật thành công!', type: 'success');
             } else {
-                $projectService->create(actor: auth()->user(), attributes: $attributes, leaderIds: $this->leaderIds ?: [], phasePayloads: $phasePayloads);
+                // Ensure leaderIds is an array
+                $leaderIds = is_array($this->leaderIds) ? $this->leaderIds : [];
+
+                $projectService->create(actor: auth()->user(), attributes: $attributes, leaderIds: $leaderIds ?: [], phasePayloads: $phasePayloads);
 
                 session()->flash('success', 'Dự án đã được tạo thành công!');
                 $this->dispatch('toast', message: 'Dự án đã được tạo thành công!', type: 'success');
@@ -203,8 +241,11 @@ new class extends Component {
 
             $this->dispatch('project-saved');
         } catch (ValidationException $e) {
+            \Log::error('Validation failed', ['errors' => $e->validator->errors()->toArray()]);
             $this->setErrorBag($e->validator->errors());
+            $this->dispatch('toast', message: 'Vui lòng kiểm tra lại thông tin!', type: 'error');
         } catch (\Exception $e) {
+            \Log::error('Project save failed', ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
             session()->flash('error', 'Có lỗi xảy ra: ' . $e->getMessage());
             $this->dispatch('toast', message: 'Có lỗi xảy ra: ' . $e->getMessage(), type: 'error');
         }
@@ -227,13 +268,13 @@ new class extends Component {
             @endif
         </x-slot>
 
-        <form id="project-form" wire:submit="save">
+        <form id="project-form" wire:submit="save" novalidate>
             <x-ui.section-card title="Thông tin chung" icon="description" iconBg="bg-transparent"
                 iconColor="text-primary" :separator="true">
                 <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
                     {{-- Tên dự án --}}
                     <div class="col-span-full">
-                        <x-ui.input label="Tên dự án" wire:model="name"
+                        <x-ui.input label="Tên dự án" name="name" wire:model="name"
                             placeholder="Ví dụ: Chiến dịch Marketing Q4 - 2024" required />
                     </div>
 
@@ -245,17 +286,17 @@ new class extends Component {
 
                     {{-- Ngân sách --}}
                     <div>
-                        <x-ui.input label="Ngân sách (VND)" type="number" wire:model="budget"
+                        <x-ui.input label="Ngân sách (VND)" name="budget" type="number" wire:model="budget"
                             placeholder="Ví dụ: 500000000" min="0" />
                     </div>
 
                     {{-- Ngày bắt đầu --}}
                     <div>
-                        <x-ui.datepicker label="Ngày bắt đầu" wire:model="startDate" />
+                        <x-ui.datepicker label="Ngày bắt đầu" name="startDate" wire:model="startDate" />
                     </div>
                     {{-- Ngày kết thúc --}}
                     <div>
-                        <x-ui.datepicker label="Ngày kết thúc (Dự kiến)" wire:model="endDate" />
+                        <x-ui.datepicker label="Ngày kết thúc (Dự kiến)" name="endDate" wire:model="endDate" />
                     </div>
                     {{-- Sử dụng mẫu phase hay không --}}
                     {{-- Sử dụng mẫu phase hay không --}}
@@ -295,7 +336,7 @@ new class extends Component {
                     @endif
                     {{-- Mô tả / Mục tiêu --}}
                     <div class="col-span-full">
-                        <x-ui.textarea label="Mục tiêu dự án" wire:model="objective"
+                        <x-ui.textarea label="Mục tiêu dự án" name="objective" wire:model="objective"
                             placeholder="Nhập mục tiêu và phạm vi dự án của bạn..." rows="3" />
                     </div>
 

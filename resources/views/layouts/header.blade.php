@@ -2,18 +2,18 @@
     class="sticky top-0 z-50 flex items-center justify-between whitespace-nowrap border-b border-solid border-slate-200 bg-white px-4 py-3 lg:px-8 dark:border-slate-800 dark:bg-slate-900">
     <div class="flex items-center gap-4 lg:gap-8">
         <button @click="sidebarOpen = true"
-            class="rounded-lg p-1 text-slate-600 transition-colors hover:bg-slate-100 lg:hidden dark:text-slate-400 dark:hover:bg-slate-800">
+            class="rounded-lg p-1 text-slate-600 transition-colors hover:bg-slate-100 xl:hidden dark:text-slate-400 dark:hover:bg-slate-800">
             <span class="material-symbols-outlined text-2xl">menu</span>
         </button>
         <div class="text-primary hidden items-center gap-3 lg:flex">
             <div class="bg-primary/10 ring-primary/20 flex size-9 items-center justify-center rounded-lg p-1.5 ring-1">
-                <img src="{{ asset('images/logo.png') }}" alt="ASG logo" class="size-full object-contain">
+                <img src="{{ asset('images/LOGO.png') }}" alt="ASG logo" class="size-full object-contain">
             </div>
             <h2 class="text-lg font-bold leading-tight tracking-tight text-slate-900 dark:text-slate-100">
                 {{ config('app.name') }}
             </h2>
         </div>
-        <div class="relative hidden w-80 md:flex" x-data="{
+        <div class="relative hidden w-80 2xl:flex" x-data="{
             query: '',
             open: false,
             loading: false,
@@ -154,8 +154,8 @@
 
         </div>
     </div>
-    <div class="flex flex-1 items-center justify-end gap-6">
-        <nav class="hidden items-center gap-6 lg:flex">
+    <div class="flex flex-1 items-center justify-end gap-4">
+        <nav class="hidden items-center gap-4 xl:flex">
             @php
                 $navLink = fn(string $routePattern) => request()->routeIs($routePattern)
                     ? 'text-primary text-sm font-semibold leading-normal hover:text-primary/80'
@@ -194,6 +194,13 @@
                     Dự án
                 </a>
             @endcan
+            @can('viewAny', App\Models\Task::class)
+                <a class="{{ $navLink('tasks.*') }} inline-flex items-center gap-1.5"
+                    href="{{ route('tasks.index') }}" wire:navigate>
+                    <span class="material-symbols-outlined text-[18px] leading-none">folder_open</span>
+                    Công việc
+                </a>
+            @endcan
             @can('viewAny', App\Models\KpiScore::class)
                 <a class="{{ $navLink('kpi-scores.*') }} inline-flex items-center gap-1.5"
                     href="{{ route('kpi-scores.index') }}" wire:navigate>
@@ -208,20 +215,53 @@
                     Tài liệu
                 </a>
             @endcan
-            @can('create', App\Models\Department::class)
-                <a class="{{ $navLink('departments.*') }} inline-flex items-center gap-1.5"
-                    href="{{ route('departments.index') }}" wire:navigate>
-                    <span class="material-symbols-outlined text-[18px] leading-none">apartment</span>
-                    Phòng ban
-                </a>
-            @endcan
-            @can('create', App\Models\User::class)
-                <a class="{{ $navLink('users.*') }} inline-flex items-center gap-1.5" href="{{ route('users.index') }}"
-                    wire:navigate>
-                    <span class="material-symbols-outlined text-[18px] leading-none">group</span>
-                    Người dùng
-                </a>
-            @endcan
+
+            {{-- dropdown-style Danh mục group --}}
+            @php
+                $canViewDepartments = auth()->user()?->can('create', App\Models\Department::class) ?? false;
+                $canViewUsers = auth()->user()?->can('create', App\Models\User::class) ?? false;
+            @endphp
+            @if ($canViewDepartments || $canViewUsers)
+                <div class="relative flex items-center" x-data="{ open: false }" @click.outside="open = false">
+                    <button type="button" @click="open = !open"
+                        class="{{ (request()->routeIs('departments.*') || request()->routeIs('users.*'))
+                            ? 'text-primary text-sm font-semibold leading-normal hover:text-primary/80'
+                            : 'text-slate-600 dark:text-slate-400 text-sm font-medium leading-normal hover:text-primary transition-colors' }} inline-flex items-center gap-1">
+                        <span class="material-symbols-outlined text-[18px] leading-none">category</span>
+                        Danh mục
+                        <span class="material-symbols-outlined text-[18px] leading-none transition-transform"
+                            :class="open ? 'rotate-180' : ''">expand_more</span>
+                    </button>
+
+                    <div x-cloak x-show="open" x-transition:enter="transition ease-out duration-150"
+                        x-transition:enter-start="opacity-0 scale-95 -translate-y-1"
+                        x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                        x-transition:leave="transition ease-in duration-100"
+                        x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+                        x-transition:leave-end="opacity-0 scale-95 -translate-y-1"
+                        class="absolute right-0 top-full z-40 mt-2 w-40 space-y-2 rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl dark:border-slate-700 dark:bg-slate-900">
+                        @if ($canViewDepartments)
+                            <a href="{{ route('departments.index') }}" wire:navigate @click="open = false"
+                                class="{{ request()->routeIs('departments.*')
+                                    ? 'bg-primary/10 text-primary'
+                                    : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800' }} flex items-center rounded-lg px-3 py-2 text-sm transition-colors">
+                                <span class="material-symbols-outlined mr-2 text-[18px] leading-none">apartment</span>
+                                Phòng ban
+                            </a>
+                        @endif
+                        @if ($canViewUsers)
+                            <a href="{{ route('users.index') }}" wire:navigate @click="open = false"
+                                class="{{ request()->routeIs('users.*')
+                                    ? 'bg-primary/10 text-primary'
+                                    : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800' }} flex items-center rounded-lg px-3 py-2 text-sm transition-colors">
+                                <span class="material-symbols-outlined mr-2 text-[18px] leading-none">group</span>
+                                Người dùng
+                            </a>
+                        @endif
+                    </div>
+                </div>
+            @endif
+
             @if ($showSystemConfigGroup)
                 <div class="relative flex items-center" x-data="{ open: false }" @click.outside="open = false">
                     <button type="button" @click="open = !open"

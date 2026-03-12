@@ -6,6 +6,7 @@ use App\Models\Document;
 use App\Models\PhaseTemplate;
 use App\Models\Project;
 use App\Models\SlaConfig;
+use App\Models\Task;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -57,7 +58,12 @@ Route::middleware('auth')->group(function () {
             ->middleware('can:view,phase')
             ->name('phases.tasks.index');
     });
-
+    Route::prefix('tasks')
+        ->name('tasks.')
+        ->middleware('can:viewAny,'.Task::class)
+        ->group(function () {
+            Route::livewire('/', 'pages::tasks.table')->name('index');
+        });
     Route::prefix('documents')
         ->name('documents.')
         ->middleware('can:viewAny,'.Document::class)

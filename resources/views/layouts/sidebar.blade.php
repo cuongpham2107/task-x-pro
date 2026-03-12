@@ -13,7 +13,7 @@
 @endphp
 
 <!-- Sidebar Sidebar/Drawer Overlay -->
-<div x-cloak x-show="sidebarOpen" class="z-60 fixed inset-0 lg:hidden" role="dialog" aria-modal="true">
+<div x-cloak x-show="sidebarOpen" class="z-60 fixed inset-0 xl:hidden" role="dialog" aria-modal="true">
     <!-- Backdrop -->
     <div x-show="sidebarOpen" x-transition:enter="transition-opacity ease-linear duration-300"
         x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
@@ -33,7 +33,7 @@
                 <div class="flex items-center gap-3">
                     <div
                         class="bg-primary/10 ring-primary/20 flex size-9 items-center justify-center rounded-lg p-1.5 ring-1">
-                        <img src="{{ asset('images/logo.png') }}" alt="ASG logo" class="size-full object-contain">
+                        <img src="{{ asset('images/LOGO.png') }}" alt="ASG logo" class="size-full object-contain">
                     </div>
                     <h2 class="text-primary text-xl font-bold">{{ config('app.name') }}</h2>
                 </div>
@@ -93,27 +93,32 @@
                 </a>
             @endcan
 
-            @can('create', App\Models\Department::class)
-                <a class="{{ $navLink('departments.*') }} flex items-center gap-4 rounded-xl px-4 py-3"
-                    href="{{ route('departments.index') }}" wire:navigate @click="sidebarOpen = false">
-                    <span class="material-symbols-outlined">apartment</span>
-                    <span class="text-base">Phòng ban</span>
-                </a>
-            @endcan
-
-            @can('create', App\Models\User::class)
-                <a class="{{ $navLink('users.*') }} flex items-center gap-4 rounded-xl px-4 py-3"
-                    href="{{ route('users.index') }}" wire:navigate @click="sidebarOpen = false">
-                    <span class="material-symbols-outlined">group</span>
-                    <span class="text-base">Người dùng</span>
-                </a>
-            @endcan
-
-
+            {{-- Danh mục section --}}
+            @if(auth()->user()?->can('create', App\Models\Department::class) || auth()->user()?->can('create', App\Models\User::class))
+                <div class="mt-4 border-t border-slate-100 pt-4 dark:border-slate-800">
+                    <p class="mb-2 px-4 text-2xs font-bold uppercase tracking-widest text-slate-400">
+                        Danh mục
+                    </p>
+                    @can('create', App\Models\Department::class)
+                        <a class="{{ $navLink('departments.*') }} flex items-center gap-4 rounded-xl px-4 py-3"
+                            href="{{ route('departments.index') }}" wire:navigate @click="sidebarOpen = false">
+                            <span class="material-symbols-outlined">apartment</span>
+                            <span class="text-base">Phòng ban</span>
+                        </a>
+                    @endcan
+                    @can('create', App\Models\User::class)
+                        <a class="{{ $navLink('users.*') }} flex items-center gap-4 rounded-xl px-4 py-3"
+                            href="{{ route('users.index') }}" wire:navigate @click="sidebarOpen = false">
+                            <span class="material-symbols-outlined">group</span>
+                            <span class="text-base">Người dùng</span>
+                        </a>
+                    @endcan
+                </div>
+            @endif
 
             @if ($showSystemConfigGroup)
                 <div class="mt-4 border-t border-slate-100 pt-4 dark:border-slate-800">
-                    <p class="mb-2 px-4 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                    <p class="mb-2 px-4 text-2xs font-bold uppercase tracking-widest text-slate-400">
                         Hệ thống
                     </p>
                     @if ($canViewSlaConfig)

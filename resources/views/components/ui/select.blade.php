@@ -14,7 +14,12 @@
 @php
     $id = $id ?? ($name ?? md5($attributes->wire('model')));
     $hasError = $name && $errors->has($name);
-    $wireModel = $attributes->wire('model')->value();
+    $wireModel = $attributes->wire('model')->value()
+        ?? $attributes->get('wire:model.live')
+        ?? $attributes->get('wire:model.lazy')
+        ?? $attributes->get('wire:model.defer')
+        ?? $attributes->get('wire:model.blur');
+    $isLive = $attributes->get('wire:model.live') !== null;
 
     // Normalize options
     $normalized = collect($options)
@@ -36,7 +41,7 @@
 <div class="w-full" x-data="{
     open: false,
     search: '',
-    value: @entangle($attributes->wire('model')),
+    value: @entangle($wireModel){{ $isLive ? '.live' : '' }},
     optionsList: [],
     get selectedLabel() {
         if (this.value === null || this.value === undefined || this.value === '') return '{{ $placeholder }}';

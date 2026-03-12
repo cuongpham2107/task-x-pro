@@ -80,7 +80,7 @@ new class extends Component {
                  x-transition:enter-end="opacity-100 translate-y-0"
                  style="display: none;">
                 <div
-                    class="flex flex-col gap-2 rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                    class="flex flex-col gap-2 rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
                     <div class="flex items-start justify-between">
                         <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Tổng dự án đang chạy</p>
                         <span class="rounded-lg bg-blue-100 p-2 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
@@ -157,7 +157,7 @@ new class extends Component {
                             </select>
                         </div>
                     </div>
-                    <div class="relative h-[250px] w-full">
+                    <div class="relative h-62.5 w-full">
                         <canvas id="topPerformersChart" wire:ignore></canvas>
                     </div>
                 </div>
@@ -165,7 +165,7 @@ new class extends Component {
                     class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
                     <h4 class="mb-6 font-bold text-slate-900 dark:text-white">Tiến trình Phase tổng hợp</h4>
                     <div class="flex flex-col items-center justify-between gap-8 py-4 md:flex-row h-full">
-                        <div class="relative h-[250px] w-full flex items-center justify-center">
+                        <div class="relative h-62.5 w-full flex items-center justify-center">
                             <canvas id="phaseProgressChart"></canvas>
                         </div>
                     </div>
@@ -207,7 +207,7 @@ new class extends Component {
                                     </p>
                                 </div>
                                 <span
-                                    class="rounded bg-amber-100 px-2 py-1 text-[10px] font-bold uppercase text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                                    class="rounded bg-amber-100 px-2 py-1 text-2xs font-bold uppercase text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
                                     Chờ duyệt
                                 </span>
                             </div>
@@ -226,7 +226,7 @@ new class extends Component {
                     <div class="space-y-6 p-6">
                         @forelse($activityLogs as $log)
                             <div
-                                class="relative flex gap-4 before:absolute before:bottom-0 before:left-[11px] before:top-8 before:w-0.5 before:bg-slate-100 last:before:hidden dark:before:bg-slate-800">
+                                class="relative flex gap-4 before:absolute before:bottom-0 before:left-2.75 before:top-8 before:w-0.5 before:bg-slate-100 last:before:hidden dark:before:bg-slate-800">
                                 <div
                                     class="bg-primary z-10 size-6 shrink-0 rounded-full border-4 border-white dark:border-slate-900 overflow-hidden flex items-center justify-center">
                                     @if($log->user && $log->user->avatar_url)
@@ -240,7 +240,7 @@ new class extends Component {
                                         <span class="font-bold">{{ $log->user->name ?? 'System' }}</span> 
                                         {{ $log->description ?? 'đã thực hiện một hành động' }}
                                     </p>
-                                    <span class="text-[10px] text-slate-400">{{ $log->created_at->diffForHumans() }}</span>
+                                    <span class="text-2xs text-slate-400">{{ $log->created_at->diffForHumans() }}</span>
                                 </div>
                             </div>
                         @empty
@@ -253,166 +253,11 @@ new class extends Component {
     </main>
     <livewire:task.form />
 
+    {{-- expose initial data to global scope; chart logic lives in resources/js/dashboard-ceo.js --}}
     <script>
-        document.addEventListener('livewire:navigated', () => {
-            initCharts();
-        });
-
-        document.addEventListener('DOMContentLoaded', () => {
-            initCharts();
-        });
-        
-        let topPerformersChartInstance = null;
-
-        document.addEventListener('update-top-performers-chart', (event) => {
-            if (topPerformersChartInstance) {
-                const newData = event.detail.data;
-                topPerformersChartInstance.data.labels = newData.map(p => p.user_name);
-                topPerformersChartInstance.data.datasets[0].data = newData.map(p => p.final_score);
-                topPerformersChartInstance.update();
-            }
-        });
-
-        function initCharts() {
-            // Data for Top Performers
-            const topPerformers = @json(collect($data['top_performers'])->take(5));
-            const performerLabels = topPerformers.map(p => p.user_name);
-            const performerScores = topPerformers.map(p => p.final_score);
-
-            // Top Performers Chart
-            const topPerformersCtx = document.getElementById('topPerformersChart');
-            if (topPerformersCtx) {
-                if (topPerformersChartInstance) {
-                    topPerformersChartInstance.destroy();
-                }
-                
-                topPerformersChartInstance = new Chart(topPerformersCtx, {
-                    type: 'bar',
-                    data: {
-                        labels: performerLabels,
-                        datasets: [{
-                            label: 'Điểm KPI',
-                            data: performerScores,
-                            backgroundColor: 'rgba(59, 130, 246, 0.8)', // Primary color
-                            borderColor: 'rgba(59, 130, 246, 1)',
-                            borderWidth: 1,
-                            borderRadius: 4,
-                            barThickness: 30,
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                display: false
-                            },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        return 'Điểm: ' + context.parsed.y;
-                                    }
-                                }
-                            }
-                        },
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                max: 100,
-                                grid: {
-                                    color: document.documentElement.classList.contains('dark') ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)'
-                                },
-                                ticks: {
-                                    color: document.documentElement.classList.contains('dark') ? '#94a3b8' : '#64748b'
-                                }
-                            },
-                            x: {
-                                grid: {
-                                    display: false
-                                },
-                                ticks: {
-                                    color: document.documentElement.classList.contains('dark') ? '#94a3b8' : '#64748b',
-                                    callback: function(val, index) {
-                                        return this.getLabelForValue(val).substring(0, 10) + '...';
-                                    }
-                                }
-                            }
-                        }
-                    }
-                });
-            }
-
-            // Data for Phase Progress
-            const phaseTotal = {{ $data['phases']['total'] ?? 0 }};
-            const phaseActive = {{ $data['phases']['active'] ?? 0 }};
-            const phaseCompleted = {{ $data['phases']['completed'] ?? 0 }};
-            const phasePending = phaseTotal - phaseActive - phaseCompleted;
-
-            // Phase Progress Chart (Doughnut)
-            const phaseProgressCtx = document.getElementById('phaseProgressChart');
-            if (phaseProgressCtx) {
-                new Chart(phaseProgressCtx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: ['Hoàn thành', 'Đang chạy', 'Chưa bắt đầu'],
-                        datasets: [{
-                            data: [phaseCompleted, phaseActive, phasePending],
-                            backgroundColor: [
-                                '#10b981', // Emerald 500
-                                '#3b82f6', // Blue 500 (Primary)
-                                '#94a3b8'  // Slate 400
-                            ],
-                            borderWidth: 0,
-                            hoverOffset: 4
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        cutout: '75%',
-                        plugins: {
-                            legend: {
-                                position: 'bottom',
-                                labels: {
-                                    usePointStyle: true,
-                                    padding: 20,
-                                    color: document.documentElement.classList.contains('dark') ? '#94a3b8' : '#64748b'
-                                }
-                            }
-                        }
-                    },
-                    plugins: [{
-                        id: 'textCenter',
-                        beforeDraw: function(chart) {
-                            var width = chart.width,
-                                height = chart.height,
-                                ctx = chart.ctx;
-
-                            ctx.restore();
-                            var fontSize = (height / 100).toFixed(2);
-                            ctx.font = "bold " + fontSize + "em sans-serif";
-                            ctx.textBaseline = "middle";
-                            ctx.fillStyle = document.documentElement.classList.contains('dark') ? '#fff' : '#0f172a';
-
-                            var text = phaseTotal,
-                                textX = Math.round((width - ctx.measureText(text).width) / 2),
-                                textY = height / 2.2;
-
-                            ctx.fillText(text, textX, textY);
-                            
-                            var fontSizeLabel = (height / 250).toFixed(2);
-                            ctx.font = fontSizeLabel + "em sans-serif";
-                            ctx.fillStyle = "#64748b";
-                            var label = "Tổng Phase";
-                            var labelX = Math.round((width - ctx.measureText(label).width) / 2);
-                            var labelY = height / 1.7;
-                            ctx.fillText(label, labelX, labelY);
-
-                            ctx.save();
-                        }
-                    }]
-                });
-            }
-        }
+        window.__dashboardTopPerformersData = @json(collect($data['top_performers'])->take(5));
+        window.__dashboardPhaseTotal = {{ $data['phases']['total'] ?? 0 }};
+        window.__dashboardPhaseActive = {{ $data['phases']['active'] ?? 0 }};
+        window.__dashboardPhaseCompleted = {{ $data['phases']['completed'] ?? 0 }};
     </script>
 </div>

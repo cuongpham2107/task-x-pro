@@ -455,7 +455,7 @@ new #[Title('Mẫu phase')] class extends Component {
                 <label class="inline-flex cursor-pointer items-center">
                     <input type="checkbox" wire:model="isActive" class="peer sr-only">
                     <div
-                        class="bg-neutral-quaternary peer-focus:ring-brand-soft dark:peer-focus:ring-brand-soft peer-checked:after:border-buffer peer-checked:bg-brand after:inset-s-[2px] peer relative h-5 w-9 rounded-full after:absolute after:top-[2px] after:h-4 after:w-4 after:rounded-full after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-focus:outline-none peer-focus:ring-4 rtl:peer-checked:after:-translate-x-full">
+                        class="bg-neutral-quaternary peer-focus:ring-brand-soft dark:peer-focus:ring-brand-soft peer-checked:after:border-buffer peer-checked:bg-brand after:inset-s-0.5 peer relative h-5 w-9 rounded-full after:absolute after:top-0.5 after:h-4 after:w-4 after:rounded-full after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-focus:outline-none peer-focus:ring-4 rtl:peer-checked:after:-translate-x-full">
                     </div>
                     <span class="text-heading ms-3 select-none text-sm font-medium">Kích hoạt mẫu phase</span>
                 </label>

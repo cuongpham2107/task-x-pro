@@ -23,6 +23,11 @@ new class extends Component {
 
     public ?Phase $phase = null;
 
+    public ?int $project_id = null;
+
+    #[Validate('required|integer|exists:phases,id')]
+    public ?int $phase_id = null;
+
     public bool $showFormModal = false;
 
     public string $mode = 'create';
@@ -109,14 +114,20 @@ new class extends Component {
 
     public array $workflowTypeLabels = [];
 
+    public Collection $projectOptions;
+
+    public Collection $phaseOptions;
+
     public Collection $picOptions;
 
     public Collection $dependencyTaskOptions;
 
-    public function mount(Project $project, Phase $phase): void
+    public function mount(?Project $project = null, ?Phase $phase = null): void
     {
         $this->project = $project;
         $this->phase = $phase;
+        $this->project_id = $project?->id;
+        $this->phase_id = $phase?->id;
         $this->existing_attachments = collect();
         $this->taskComments = collect();
         $this->dependencyTaskOptions = collect();
@@ -125,23 +136,85 @@ new class extends Component {
 
     private function loadFormOptions(): void
     {
-        $options = app(TaskService::class)->formOptions(Auth::user(), $this->project->id);
+        $projectId = $this->project_id ?? $this->project?->id;
+        $options = app(TaskService::class)->formOptions(
+            Auth::user(),
+            $projectId !== null ? (int) $projectId : null,
+        );
         $this->taskTypeLabels = $options['task_type_labels'];
         $this->taskStatusLabels = $options['task_status_labels'];
         $this->taskPriorityLabels = $options['task_priority_labels'];
         $this->workflowTypeLabels = $options['workflow_type_labels'];
+        $this->projectOptions = $options['projects'];
+        $this->phaseOptions = $options['phases'];
         $this->picOptions = $options['pics'];
         $this->loadDependencyTaskOptions();
     }
 
     private function loadDependencyTaskOptions(): void
     {
+        $phaseId = $this->phase_id ?? $this->phase?->id;
+
+        if ($phaseId === null) {
+            $this->dependencyTaskOptions = collect();
+
+            return;
+        }
+
         $this->dependencyTaskOptions = Task::query()
-            ->where('phase_id', $this->phase->id)
+            ->where('phase_id', $phaseId)
             ->when($this->editing_task_id, fn($q) => $q->where('id', '!=', $this->editing_task_id))
             ->select(['id', 'name', 'status'])
             ->orderBy('name')
             ->get();
+    }
+
+    public function updatedProjectId(): void
+    {
+        $this->phase_id = null;
+        $this->dependency_task_id = null;
+        $this->loadFormOptions();
+    }
+
+    public function updatedPhaseId(): void
+    {
+        $this->dependency_task_id = null;
+        $this->loadDependencyTaskOptions();
+    }
+
+    #[Computed]
+    public function isPhaseScoped(): bool
+    {
+        return $this->project?->id !== null && $this->phase?->id !== null;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    #[Computed]
+    public function projectSelectOptions(): array
+    {
+        return $this->projectOptions
+            ->mapWithKeys(fn($project): array => [(string) $project->id => $project->name])
+            ->all();
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    #[Computed]
+    public function phaseSelectOptions(): array
+    {
+        $projectId = $this->project_id ?? $this->project?->id;
+        $phases = $this->phaseOptions;
+
+        if ($projectId !== null) {
+            $phases = $phases->where('project_id', (int) $projectId);
+        }
+
+        return $phases
+            ->mapWithKeys(fn($phase): array => [(string) $phase->id => $phase->name])
+            ->all();
     }
 
     #[On('task-create-requested')]
@@ -152,6 +225,9 @@ new class extends Component {
         $this->resetFormModal();
         $this->mode = 'create';
         $this->editing_task_id = null;
+        $this->project_id = $this->project?->id;
+        $this->phase_id = $this->phase?->id;
+        $this->loadFormOptions();
         $this->loadDependencyTaskOptions();
         $this->showFormModal = true;
     }
@@ -183,11 +259,14 @@ new class extends Component {
         $this->pic_id = $task->pic_id;
         $this->dependency_task_id = $task->dependency_task_id;
         $this->co_pic_ids = $task->coPics->pluck('id')->all();
+        $this->project_id = $task->phase?->project_id;
+        $this->phase_id = $task->phase_id;
         $this->existing_attachments = $task
             ->attachments()
             ->with(['uploader:id,name', 'media'])
             ->get();
         $this->taskComments = collect($task->comments ?? [])->values();
+        $this->loadFormOptions();
         $this->loadDependencyTaskOptions();
         $this->activeTab = 'general';
 
@@ -206,7 +285,7 @@ new class extends Component {
 
     public function resetFormModal(): void
     {
-        $this->reset(['name', 'type', 'status', 'priority', 'workflow_type', 'deadline', 'description', 'deliverable_url', 'progress', 'issue_note', 'recommendation', 'pic_id', 'dependency_task_id', 'newComment', 'co_pic_ids', 'editing_task_id', 'files', 'existing_attachments', 'hasDependencyBlock', 'dependencyTaskName', 'activeTab', 'showCompletionRatingModal', 'completionStarRating', 'completionApprovalComment', 'completionTaskName', 'showRejectReasonModal', 'rejectReason', 'original_status']);
+        $this->reset(['name', 'type', 'status', 'priority', 'workflow_type', 'deadline', 'description', 'deliverable_url', 'progress', 'issue_note', 'recommendation', 'pic_id', 'dependency_task_id', 'project_id', 'phase_id', 'newComment', 'co_pic_ids', 'editing_task_id', 'files', 'existing_attachments', 'hasDependencyBlock', 'dependencyTaskName', 'activeTab', 'showCompletionRatingModal', 'completionStarRating', 'completionApprovalComment', 'completionTaskName', 'showRejectReasonModal', 'rejectReason', 'original_status']);
         $this->existing_attachments = collect();
         $this->taskComments = collect();
         $this->activeTab = 'general';
@@ -216,6 +295,8 @@ new class extends Component {
         $this->priority = 'medium';
         $this->workflow_type = 'single';
         $this->mode = 'create';
+        $this->project_id = $this->project?->id;
+        $this->phase_id = $this->phase?->id;
         $this->resetValidation();
     }
 
@@ -223,6 +304,8 @@ new class extends Component {
     {
         return [
             'name.required' => 'Tên công việc là bắt buộc.',
+            'phase_id.required' => 'Giai đoạn là bắt buộc.',
+            'phase_id.exists' => 'Giai đoạn không hợp lệ.',
             'pic_id.required' => 'Người phụ trách là bắt buộc.',
         ];
     }
@@ -275,12 +358,16 @@ new class extends Component {
             return;
         }
 
+        if ($this->phase_id === null && $this->phase?->id !== null) {
+            $this->phase_id = $this->phase->id;
+        }
+
         $this->validate();
 
         try {
             $taskService = app(TaskService::class);
             $attributes = [
-                'phase_id' => $this->phase->id,
+                'phase_id' => $this->phase_id,
                 'name' => $this->name,
                 'type' => $this->type,
                 'status' => $this->status,

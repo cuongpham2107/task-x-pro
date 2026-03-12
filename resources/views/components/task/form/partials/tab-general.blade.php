@@ -4,6 +4,21 @@
         <x-ui.input label="Tên công việc" name="name" placeholder="Nhập tên công việc..." wire:model="name" required />
     </div>
 
+    @if (! $this->isPhaseScoped)
+        <div class="col-span-full grid grid-cols-1 gap-6 md:grid-cols-2">
+            <div>
+                <x-ui.select label="Dự án" name="project_id" wire:model.live="project_id" icon="folder"
+                    placeholder="Chọn dự án" :options="$this->projectSelectOptions" />
+            </div>
+
+            <div>
+                <x-ui.select label="Giai đoạn" name="phase_id" wire:model.live="phase_id" icon="timeline"
+                    placeholder="Chọn giai đoạn" :options="$this->phaseSelectOptions" required />
+                <x-ui.field-error field="phase_id" />
+            </div>
+        </div>
+    @endif
+
     {{-- Loại công việc & Trạng thái --}}
     <div>
         <x-ui.select label="Loại công việc" name="type" wire:model="type" icon="category" :options="$taskTypeLabels" required />

@@ -279,7 +279,7 @@ new #[Title('KPI toàn công ty')] class extends Component {
     }
 </style>
 
-<main class="mx-auto max-w-[1440px] p-4 sm:p-6 lg:p-8">
+<main class="mx-auto max-w-8xl p-4 sm:p-6 lg:p-8">
     <!-- Filter Bar -->
     <div class="animate-enter relative z-20 mb-8 flex flex-col justify-between gap-6 md:flex-row md:items-end"
         style="animation-delay: 0.1s">
@@ -291,7 +291,7 @@ new #[Title('KPI toàn công ty')] class extends Component {
             <div class="flex items-center gap-4 overflow-x-auto pb-2 md:overflow-visible md:pb-0">
                 {{-- Period Filters --}}
                 <div class="flex shrink-0 flex-col gap-1">
-                    <label class="ml-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">Kỳ báo cáo</label>
+                    <label class="ml-1 text-2xs font-bold uppercase tracking-wider text-slate-400">Kỳ báo cáo</label>
                     <div class="flex items-center gap-2">
                         <x-ui.filter-select model="periodType" :value="$periodType" icon="calendar_month" :permit-all="false"
                             width="w-36" :options="[
@@ -312,7 +312,7 @@ new #[Title('KPI toàn công ty')] class extends Component {
 
                 {{-- Department Filter --}}
                 <div class="flex shrink-0 flex-col gap-1">
-                    <label class="ml-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">Phòng ban</label>
+                    <label class="ml-1 text-2xs font-bold uppercase tracking-wider text-slate-400">Phòng ban</label>
                     <x-ui.filter-select model="selectedDepartmentId" :value="$selectedDepartmentId" icon="apartment"
                         all-label="Tất cả phòng ban" width="w-48" :options="$this->departments->pluck('name', 'id')->all()" />
                 </div>
@@ -328,7 +328,7 @@ new #[Title('KPI toàn công ty')] class extends Component {
     <!-- Metric Cards -->
     <div class="animate-enter mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4" style="animation-delay: 0.2s">
         <!-- Final Score Card -->
-        <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
             <div class="mb-4 flex items-center justify-between">
                 <div class="bg-primary/10 text-primary flex h-12 w-12 items-center justify-center rounded-full">
                     <span class="material-symbols-outlined">star</span>
@@ -347,7 +347,7 @@ new #[Title('KPI toàn công ty')] class extends Component {
         </div>
 
         <!-- On Time Rate Card -->
-        <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
             <div class="mb-4 flex items-center justify-between">
                 <div
                     class="flex h-12 w-12 items-center justify-center rounded-full bg-teal-100 text-teal-600 dark:bg-teal-900/30 dark:text-teal-400">
@@ -369,7 +369,7 @@ new #[Title('KPI toàn công ty')] class extends Component {
         </div>
 
         <!-- SLA Rate Card -->
-        <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
             <div class="mb-4 flex items-center justify-between">
                 <div
                     class="flex h-12 w-12 items-center justify-center rounded-full bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400">
@@ -391,7 +391,7 @@ new #[Title('KPI toàn công ty')] class extends Component {
         </div>
 
         <!-- Star Rating Card -->
-        <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
             <div class="mb-4 flex items-center justify-between">
                 <div
                     class="flex h-12 w-12 items-center justify-center rounded-full bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400">
@@ -423,7 +423,7 @@ new #[Title('KPI toàn công ty')] class extends Component {
     <div class="animate-enter grid grid-cols-1 gap-8 lg:grid-cols-3" style="animation-delay: 0.3s">
         <!-- Trend Chart Placeholder -->
         <div
-            class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm lg:col-span-2 dark:border-slate-800 dark:bg-slate-900">
+            class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm lg:col-span-2 dark:border-slate-800 dark:bg-slate-900">
             <div class="mb-6 flex items-center justify-between">
                 <h3 class="text-lg font-bold">Xu hướng Final Score (BR-002)</h3>
                 <div class="flex items-center gap-4 text-xs">
@@ -449,14 +449,14 @@ new #[Title('KPI toàn công ty')] class extends Component {
                     <circle cx="800" cy="100" fill="#0052CC" r="4"></circle>
                     <circle cx="1000" cy="80" fill="#0052CC" r="6"></circle>
                 </svg>
-                <div class="absolute bottom-0 left-0 flex w-full justify-between px-2 pt-4 text-[10px] text-slate-400">
+                <div class="absolute bottom-0 left-0 flex w-full justify-between px-2 pt-4 text-2xs text-slate-400">
                     <span>T1</span><span>T2</span><span>T3</span><span>T4</span><span>T5</span><span>T6</span><span>T7</span><span>T8</span><span>T9</span><span>T10</span><span>T11</span><span>T12</span>
                 </div>
             </div>
         </div>
 
         <!-- Rankings -->
-        <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
             <h3 class="mb-6 text-lg font-bold">Cá nhân xuất sắc</h3>
             <div class="space-y-4">
                 @forelse ($this->topPerformers as $index => $score)
@@ -487,7 +487,7 @@ new #[Title('KPI toàn công ty')] class extends Component {
                         <div class="text-right">
                             <p class="text-primary text-sm font-bold">
                                 {{ number_format((float) $score->final_score, 2) }}</p>
-                            <p class="text-[10px] text-slate-400">Score</p>
+                            <p class="text-2xs text-slate-400">Score</p>
                         </div>
                     </div>
                 @empty
@@ -504,7 +504,7 @@ new #[Title('KPI toàn công ty')] class extends Component {
     <!-- Department Table -->
     <div class="animate-enter mt-8 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900"
         style="animation-delay: 0.4s">
-        <div class="flex items-center justify-between border-b border-slate-100 p-6 dark:border-slate-800">
+        <div class="flex items-center justify-between border-b border-slate-100 p-4 dark:border-slate-800">
             <h3 class="text-lg font-bold text-slate-900 dark:text-white">Hiệu suất theo phòng ban</h3>
             <div class="flex items-center gap-4">
                 <button wire:click="exportExcel('xlsx')"
@@ -543,7 +543,7 @@ new #[Title('KPI toàn công ty')] class extends Component {
                         <tr class="transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/30">
                             <td class="px-6 py-4 font-semibold text-slate-900 dark:text-white">
                                 {{ $department->name }}
-                                <p class="text-[10px] font-normal text-slate-400">{{ $department->code }}</p>
+                                <p class="text-2xs font-normal text-slate-400">{{ $department->code }}</p>
                             </td>
                             <td class="px-6 py-4 text-slate-700 dark:text-slate-300">
                                 {{ $department->head?->name ?? '—' }}

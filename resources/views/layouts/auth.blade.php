@@ -18,9 +18,11 @@
     <div class="flex min-h-screen">
         <!-- Left Side: Background Image & Slogan -->
         <div class="hidden lg:flex lg:w-2/3 flex-col justify-end items-center relative overflow-hidden">
-            <!-- Background Image -->
-            <img src="{{ asset('images/background-login.jpg') }}" alt="Professional workspace"
-                class="absolute inset-0 w-full h-full object-cover" />
+            <!-- Background Image (only show if file is present in public/images) -->
+            @if (file_exists(public_path('images/background-login.jpg')))
+                <img src="{{ asset('images/background-login.jpg') }}" alt="Professional workspace"
+                    class="absolute inset-0 w-full h-full object-cover" />
+            @endif
 
             <!-- Gradient Overlay -->
             <div class="absolute inset-0 bg-linear-to-t from-black/80 via-black/40 to-primary/30"></div>
