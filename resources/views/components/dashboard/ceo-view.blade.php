@@ -1,0 +1,418 @@
+<?php
+use Livewire\Component;
+use App\Enums\TaskPriority;
+use App\Models\ActivityLog;
+use Illuminate\Support\Str;
+use App\Services\Dashboard\DashboardService;
+
+new class extends Component {
+    public array $data = [];
+    public $activityLogs = [];
+    public $selectedMonth;
+    public $selectedYear;
+
+    public function mount(array $data)
+    {
+        $this->data = $data;
+        $this->activityLogs = ActivityLog::with('user')
+            ->latest()
+            ->limit(5)
+            ->get();
+        $this->selectedMonth = now()->month;
+        $this->selectedYear = now()->year;
+    }
+
+    public function updatedSelectedMonth()
+    {
+        $this->updateTopPerformers();
+    }
+
+    public function updatedSelectedYear()
+    {
+        $this->updateTopPerformers();
+    }
+
+    public function updateTopPerformers()
+    {
+        $dashboardService = app(DashboardService::class);
+        $this->data['top_performers'] = $dashboardService->topPerformerList(5, $this->selectedMonth, $this->selectedYear);
+        $this->dispatch('update-top-performers-chart', data: $this->data['top_performers']);
+    }
+
+    public function exportReport()
+    {
+        // TODO: Implement report export logic
+        $this->dispatch('toast', message: 'Tính năng xuất báo cáo CEO đang được phát triển', type: 'info');
+    }
+};
+?>
+<div x-data="{ ready: false }" x-init="setTimeout(() => ready = true, 100)">
+    <main class="flex flex-1 overflow-hidden">
+      
+        <div class="dark:bg-background-dark flex-1 overflow-y-auto bg-slate-50 p-6 lg:p-8">
+            <div class="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-center"
+                 x-show="ready"
+                 x-transition:enter="transition ease-out duration-500"
+                 x-transition:enter-start="opacity-0 translate-y-4"
+                 x-transition:enter-end="opacity-100 translate-y-0"
+                 style="display: none;">
+                <div>
+                    <h2 class="text-2xl font-black tracking-tight text-slate-900 lg:text-3xl dark:text-white">Chào buổi
+                        sáng, {{ auth()->user()->name }}!</h2>
+                    <p class="mt-1 text-slate-500 dark:text-slate-400">Đây là báo cáo hiệu suất tổng quát của hệ thống
+                        TaskXPro hôm nay.</p>
+                </div>
+                <div class="flex gap-3">
+                    <x-ui.button
+                        variant="outline"
+                        size="sm"
+                        icon="download"
+                        wire:click="exportReport"
+                    >
+                        Xuất báo cáo
+                    </x-ui.button>
+                </div>
+            </div>
+            <div class="mb-8 grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4"
+                 x-show="ready"
+                 x-transition:enter="transition ease-out duration-500 delay-100"
+                 x-transition:enter-start="opacity-0 translate-y-4"
+                 x-transition:enter-end="opacity-100 translate-y-0"
+                 style="display: none;">
+                <div
+                    class="flex flex-col gap-2 rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                    <div class="flex items-start justify-between">
+                        <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Tổng dự án đang chạy</p>
+                        <span class="rounded-lg bg-blue-100 p-2 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
+                            <span class="material-symbols-outlined text-[20px]">rocket_launch</span>
+                        </span>
+                    </div>
+                    <h3 class="text-3xl font-bold text-slate-900 dark:text-white">{{ $data['projects']['running'] ?? 0 }}</h3>
+                    <p class="flex items-center gap-1 text-sm font-bold text-emerald-600">
+                        <span class="material-symbols-outlined text-[16px]">trending_up</span> +{{ $data['projects']['total'] > 0 ? round(($data['projects']['running'] / $data['projects']['total']) * 100, 1) : 0 }}% tỷ lệ
+                    </p>
+                </div>
+                <div
+                    class="flex flex-col gap-2 rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                    <div class="flex items-start justify-between">
+                        <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Công việc quá hạn</p>
+                        <span class="rounded-lg bg-red-100 p-2 text-red-600 dark:bg-red-900/30 dark:text-red-400">
+                            <span class="material-symbols-outlined text-[20px]">event_busy</span>
+                        </span>
+                    </div>
+                    <h3 class="text-3xl font-bold text-slate-900 dark:text-white">{{ $data['tasks']['late'] ?? 0 }}</h3>
+                    <p class="flex items-center gap-1 text-sm font-bold text-red-600">
+                        <span class="material-symbols-outlined text-[16px]">warning</span> Cần xử lý gấp
+                    </p>
+                </div>
+                <div
+                    class="flex flex-col gap-2 rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                    <div class="flex items-start justify-between">
+                        <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Việc chờ phê duyệt</p>
+                        <span
+                            class="rounded-lg bg-amber-100 p-2 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400">
+                            <span class="material-symbols-outlined text-[20px]">pending_actions</span>
+                        </span>
+                    </div>
+                    <h3 class="text-3xl font-bold text-slate-900 dark:text-white">{{ $data['tasks']['waiting_approval'] ?? 0 }}</h3>
+                    <p class="flex items-center gap-1 text-sm font-bold text-emerald-600">
+                        <span class="material-symbols-outlined text-[16px]">trending_up</span> Đang chờ duyệt
+                    </p>
+                </div>
+                <div
+                    class="flex flex-col gap-2 rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                    <div class="flex items-start justify-between">
+                        <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Tiến độ trung bình</p>
+                        <span
+                            class="rounded-lg bg-emerald-100 p-2 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400">
+                            <span class="material-symbols-outlined text-[20px]">verified</span>
+                        </span>
+                    </div>
+                    <h3 class="text-3xl font-bold text-slate-900 dark:text-white">{{ $data['projects']['avg_progress'] ?? 0 }}%</h3>
+                    <div class="mt-2 h-1.5 w-full rounded-full bg-slate-100 dark:bg-slate-800">
+                        <div class="h-1.5 rounded-full bg-emerald-500" style="width: {{ $data['projects']['avg_progress'] ?? 0 }}%"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="mb-8 grid grid-cols-1 gap-8 xl:grid-cols-2"
+                 x-show="ready"
+                 x-transition:enter="transition ease-out duration-500 delay-200"
+                 x-transition:enter-start="opacity-0 translate-y-4"
+                 x-transition:enter-end="opacity-100 translate-y-0"
+                 style="display: none;">
+                <div
+                    class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                    <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                        <h4 class="font-bold text-slate-900 dark:text-white">Top Nhân viên xuất sắc</h4>
+                        <div class="flex gap-2">
+                            <select wire:model.live="selectedMonth" class="rounded-lg border-slate-200 bg-slate-50 text-xs font-bold text-slate-500 focus:border-primary focus:ring-primary dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
+                                @foreach(range(1, 12) as $m)
+                                    <option value="{{ $m }}">Tháng {{ $m }}</option>
+                                @endforeach
+                            </select>
+                            <select wire:model.live="selectedYear" class="rounded-lg border-slate-200 bg-slate-50 text-xs font-bold text-slate-500 focus:border-primary focus:ring-primary dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
+                                @foreach(range(now()->year - 2, now()->year) as $y)
+                                    <option value="{{ $y }}">Năm {{ $y }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                    <div class="relative h-[250px] w-full">
+                        <canvas id="topPerformersChart" wire:ignore></canvas>
+                    </div>
+                </div>
+                <div
+                    class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                    <h4 class="mb-6 font-bold text-slate-900 dark:text-white">Tiến trình Phase tổng hợp</h4>
+                    <div class="flex flex-col items-center justify-between gap-8 py-4 md:flex-row h-full">
+                        <div class="relative h-[250px] w-full flex items-center justify-center">
+                            <canvas id="phaseProgressChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 gap-8 lg:grid-cols-3"
+                 x-show="ready"
+                 x-transition:enter="transition ease-out duration-500 delay-300"
+                 x-transition:enter-start="opacity-0 translate-y-4"
+                 x-transition:enter-end="opacity-100 translate-y-0"
+                 style="display: none;">
+                <div
+                    class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm lg:col-span-2 dark:border-slate-800 dark:bg-slate-900">
+                    <div class="flex items-center justify-between border-b border-slate-100 p-6 dark:border-slate-800">
+                        <h4 class="font-bold text-slate-900 dark:text-white">Danh sách cần duyệt (2 cấp)</h4>
+                    </div>
+                    <div class="divide-y divide-slate-100 dark:divide-slate-800">
+                        @forelse($data['approval_tasks'] as $task)
+                            <div
+                                class="flex items-center gap-4 p-4 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                                <div
+                                    class="flex size-10 shrink-0 items-center justify-center rounded-lg bg-amber-50 dark:bg-amber-900/20">
+                                    <span class="material-symbols-outlined text-[20px] text-amber-600">rate_review</span>
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    @if($task->phase && $task->phase->project)
+                                        <button 
+                                            wire:click="$dispatch('task-edit-requested', { taskId: {{ $task->id }} })"
+                                            class="truncate text-sm font-bold hover:text-primary transition-colors text-left block w-full">
+                                            {{ $task->name }}
+                                        </button>
+                                    @else
+                                        <h5 class="truncate text-sm font-bold">{{ $task->name }}</h5>
+                                    @endif
+                                    <p class="text-xs text-slate-500">
+                                        Dự án: {{ $task->phase?->project?->name ?? 'N/A' }} • 
+                                        Người gửi: {{ $task->pic->name ?? 'N/A' }} •
+                                        {{ $task->updated_at->diffForHumans() }}
+                                    </p>
+                                </div>
+                                <span
+                                    class="rounded bg-amber-100 px-2 py-1 text-[10px] font-bold uppercase text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                                    Chờ duyệt
+                                </span>
+                            </div>
+                        @empty
+                            <div class="p-8 text-center text-slate-500">
+                                Không có yêu cầu duyệt nào.
+                            </div>
+                        @endforelse
+                    </div>
+                </div>
+                <div
+                    class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                    <div class="border-b border-slate-100 p-6 dark:border-slate-800">
+                        <h4 class="font-bold text-slate-900 dark:text-white">Hoạt động gần đây</h4>
+                    </div>
+                    <div class="space-y-6 p-6">
+                        @forelse($activityLogs as $log)
+                            <div
+                                class="relative flex gap-4 before:absolute before:bottom-0 before:left-[11px] before:top-8 before:w-0.5 before:bg-slate-100 last:before:hidden dark:before:bg-slate-800">
+                                <div
+                                    class="bg-primary z-10 size-6 shrink-0 rounded-full border-4 border-white dark:border-slate-900 overflow-hidden flex items-center justify-center">
+                                    @if($log->user && $log->user->avatar_url)
+                                        <img src="{{ $log->user->avatar_url }}" class="h-full w-full object-cover" alt="{{ $log->user->name }}">
+                                    @else
+                                        <span class="text-[8px] font-bold text-white">{{ $log->user ? substr($log->user->name, 0, 1) : 'S' }}</span>
+                                    @endif
+                                </div>
+                                <div class="flex flex-col gap-1">
+                                    <p class="text-xs leading-relaxed">
+                                        <span class="font-bold">{{ $log->user->name ?? 'System' }}</span> 
+                                        {{ $log->description ?? 'đã thực hiện một hành động' }}
+                                    </p>
+                                    <span class="text-[10px] text-slate-400">{{ $log->created_at->diffForHumans() }}</span>
+                                </div>
+                            </div>
+                        @empty
+                            <div class="text-center text-sm text-slate-500">Chưa có hoạt động nào.</div>
+                        @endforelse
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    <livewire:task.form />
+
+    <script>
+        document.addEventListener('livewire:navigated', () => {
+            initCharts();
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initCharts();
+        });
+        
+        let topPerformersChartInstance = null;
+
+        document.addEventListener('update-top-performers-chart', (event) => {
+            if (topPerformersChartInstance) {
+                const newData = event.detail.data;
+                topPerformersChartInstance.data.labels = newData.map(p => p.user_name);
+                topPerformersChartInstance.data.datasets[0].data = newData.map(p => p.final_score);
+                topPerformersChartInstance.update();
+            }
+        });
+
+        function initCharts() {
+            // Data for Top Performers
+            const topPerformers = @json(collect($data['top_performers'])->take(5));
+            const performerLabels = topPerformers.map(p => p.user_name);
+            const performerScores = topPerformers.map(p => p.final_score);
+
+            // Top Performers Chart
+            const topPerformersCtx = document.getElementById('topPerformersChart');
+            if (topPerformersCtx) {
+                if (topPerformersChartInstance) {
+                    topPerformersChartInstance.destroy();
+                }
+                
+                topPerformersChartInstance = new Chart(topPerformersCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: performerLabels,
+                        datasets: [{
+                            label: 'Điểm KPI',
+                            data: performerScores,
+                            backgroundColor: 'rgba(59, 130, 246, 0.8)', // Primary color
+                            borderColor: 'rgba(59, 130, 246, 1)',
+                            borderWidth: 1,
+                            borderRadius: 4,
+                            barThickness: 30,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return 'Điểm: ' + context.parsed.y;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 100,
+                                grid: {
+                                    color: document.documentElement.classList.contains('dark') ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)'
+                                },
+                                ticks: {
+                                    color: document.documentElement.classList.contains('dark') ? '#94a3b8' : '#64748b'
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    display: false
+                                },
+                                ticks: {
+                                    color: document.documentElement.classList.contains('dark') ? '#94a3b8' : '#64748b',
+                                    callback: function(val, index) {
+                                        return this.getLabelForValue(val).substring(0, 10) + '...';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Data for Phase Progress
+            const phaseTotal = {{ $data['phases']['total'] ?? 0 }};
+            const phaseActive = {{ $data['phases']['active'] ?? 0 }};
+            const phaseCompleted = {{ $data['phases']['completed'] ?? 0 }};
+            const phasePending = phaseTotal - phaseActive - phaseCompleted;
+
+            // Phase Progress Chart (Doughnut)
+            const phaseProgressCtx = document.getElementById('phaseProgressChart');
+            if (phaseProgressCtx) {
+                new Chart(phaseProgressCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Hoàn thành', 'Đang chạy', 'Chưa bắt đầu'],
+                        datasets: [{
+                            data: [phaseCompleted, phaseActive, phasePending],
+                            backgroundColor: [
+                                '#10b981', // Emerald 500
+                                '#3b82f6', // Blue 500 (Primary)
+                                '#94a3b8'  // Slate 400
+                            ],
+                            borderWidth: 0,
+                            hoverOffset: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '75%',
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    usePointStyle: true,
+                                    padding: 20,
+                                    color: document.documentElement.classList.contains('dark') ? '#94a3b8' : '#64748b'
+                                }
+                            }
+                        }
+                    },
+                    plugins: [{
+                        id: 'textCenter',
+                        beforeDraw: function(chart) {
+                            var width = chart.width,
+                                height = chart.height,
+                                ctx = chart.ctx;
+
+                            ctx.restore();
+                            var fontSize = (height / 100).toFixed(2);
+                            ctx.font = "bold " + fontSize + "em sans-serif";
+                            ctx.textBaseline = "middle";
+                            ctx.fillStyle = document.documentElement.classList.contains('dark') ? '#fff' : '#0f172a';
+
+                            var text = phaseTotal,
+                                textX = Math.round((width - ctx.measureText(text).width) / 2),
+                                textY = height / 2.2;
+
+                            ctx.fillText(text, textX, textY);
+                            
+                            var fontSizeLabel = (height / 250).toFixed(2);
+                            ctx.font = fontSizeLabel + "em sans-serif";
+                            ctx.fillStyle = "#64748b";
+                            var label = "Tổng Phase";
+                            var labelX = Math.round((width - ctx.measureText(label).width) / 2);
+                            var labelY = height / 1.7;
+                            ctx.fillText(label, labelX, labelY);
+
+                            ctx.save();
+                        }
+                    }]
+                });
+            }
+        }
+    </script>
+</div>

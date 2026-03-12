@@ -1,0 +1,117 @@
+<?php
+
+namespace App\Services\Phases;
+
+use App\Models\Phase;
+use App\Models\Project;
+use App\Models\User;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
+
+class PhaseMutationService
+{
+    /**
+     * Create a new phase with weight validation.
+     */
+    public function create(User $actor, Project $project, array $attributes): Phase
+    {
+        return DB::transaction(function () use ($project, $attributes) {
+            // Validate total weight = 100 before creating (BR-008)
+            $this->assertValidWeightTotal($project, $attributes['weight'] ?? 0);
+
+            // Get the next order index
+            $lastOrderIndex = $project->phases()->max('order_index') ?? -1;
+            $attributes['order_index'] = $lastOrderIndex + 1;
+            $attributes['project_id'] = $project->id;
+
+            return Phase::create($attributes);
+        });
+    }
+
+    /**
+     * Update an existing phase with weight validation.
+     */
+    public function update(User $actor, Phase $phase, array $attributes): Phase
+    {
+        // Xác thực tổng trọng lượng = 100 trước khi cập nhật (BR-008)
+        $this->assertValidWeightTotal($phase->project, $attributes['weight'] ?? $phase->weight, $phase->id);
+
+        $phase->update($attributes);
+
+        return $phase;
+    }
+
+    /**
+     * Delete a phase with weight validation.
+     */
+    public function delete(User $actor, Phase $phase): void
+    {
+        // Validate remaining phases weight = 100 after deletion (BR-008)
+        $this->assertValidWeightTotalAfterDelete($phase->project, $phase->id);
+
+        $phase->delete();
+    }
+
+    /**
+     * Reorder phases for a project.
+     */
+    public function reorder(User $actor, Project $project, array $phaseIds): void
+    {
+        DB::transaction(function () use ($phaseIds) {
+            foreach ($phaseIds as $index => $id) {
+                Phase::where('id', $id)->update(['order_index' => $index]);
+            }
+        });
+
+        // Validate total weight = 100 after reorder (BR-008)
+        $this->assertValidWeightTotalAfterReorder($project);
+    }
+
+    /**
+     * Assert that total phase weight equals 100.
+     */
+    private function assertValidWeightTotal(Project $project, float $newWeight, ?int $excludePhaseId = null): void
+    {
+        $currentTotal = (float) $project->phases()
+            ->when($excludePhaseId !== null, fn ($q) => $q->whereKeyNot($excludePhaseId))
+            ->sum('weight');
+
+        $newTotal = round($currentTotal + $newWeight, 2);
+
+        if (abs($newTotal - 100.0) > 0.01) {
+            throw ValidationException::withMessages([
+                'weight' => "Tong trong so cua tat ca phase phai bang 100. Hien tai: {$newTotal}%",
+            ]);
+        }
+    }
+
+    /**
+     * Assert that remaining phases weight equals 100 after delete.
+     */
+    private function assertValidWeightTotalAfterDelete(Project $project, int $deletedPhaseId): void
+    {
+        $remainingTotal = (float) $project->phases()
+            ->whereKeyNot($deletedPhaseId)
+            ->sum('weight');
+
+        if (abs(round($remainingTotal, 2) - 100.0) > 0.01) {
+            throw ValidationException::withMessages([
+                'weight' => "Khong the xoa phase vi se lam tong trong so con lai ({$remainingTotal}%) khong bang 100.",
+            ]);
+        }
+    }
+
+    /**
+     * Assert that total weight equals 100 after reorder.
+     */
+    private function assertValidWeightTotalAfterReorder(Project $project): void
+    {
+        $totalWeight = (float) $project->phases()->sum('weight');
+
+        if (abs(round($totalWeight, 2) - 100.0) > 0.01) {
+            throw ValidationException::withMessages([
+                'weight' => "Tong trong so cua tat ca phase phai bang 100. Hien tai: {$totalWeight}%",
+            ]);
+        }
+    }
+}

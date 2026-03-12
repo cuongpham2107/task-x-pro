@@ -1,0 +1,163 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block');
+@import 'tailwindcss';
+@import '../../vendor/filament/support/resources/css/index.css';
+@import '../../vendor/filament/forms/resources/css/index.css';
+@import '../../vendor/filament/actions/resources/css/index.css';
+@import '../../vendor/filament/tables/resources/css/index.css';
+@import "flowbite/src/themes/default";
+@plugin "flowbite/plugin";
+
+@source "../../node_modules/flowbite";
+@source "../node_modules/flowbite-datepicker";
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+
+
+@variant dark (&:where(.dark, .dark *));
+
+[x-cloak] {
+    display: none !important;
+}
+
+
+@theme {
+    /* Màu sắc chính */
+    --color-primary: #1337ec;
+    --color-primary-50:  #eef1fd;
+    --color-primary-100: #dde3fb;
+    --color-primary-200: #bbc7f7;
+    --color-primary-300: #99abf3;
+    --color-primary-400: #778fef;
+    --color-primary-500: #5573eb;
+    --color-primary-600: #1337ec;
+    --color-primary-700: #0f2cc5;
+    --color-primary-800: #0b219e;
+    --color-primary-900: #081677;
+
+    /* Màu nền */
+    --color-background-light: #f6f6f8;
+    --color-background-dark:  #101322;
+
+    /* Font */
+    --font-display: 'Inter', ui-sans-serif, system-ui, sans-serif;
+    --font-sans:    'Inter', ui-sans-serif, system-ui, sans-serif;
+
+    /* Border radius */
+    --radius-DEFAULT: 0.25rem;
+    --radius-lg:      0.5rem;
+    --radius-xl:      0.75rem;
+    --radius-full:    9999px;
+}
+
+@layer base {
+    .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        display: inline-block;
+        vertical-align: middle;
+    }
+
+    select {
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+        background-position: right 0.5rem center;
+        background-repeat: no-repeat;
+        background-size: 1.5em 1.5em;
+        padding-right: 2.5rem;
+    }
+}
+
+@layer components {
+    .active-nav-item {
+        @apply bg-primary text-white shadow-lg shadow-primary/20;
+    }
+
+    .active-nav-item .material-symbols-outlined {
+        font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+
+    .chart-line {
+        stroke-dasharray: 1000;
+        stroke-dashoffset: 1000;
+        animation: dash 3s linear forwards;
+    }
+}
+@keyframes enter {
+    from { opacity: 0; transform: translateX(30px); }
+    to { opacity: 1; transform: none; }
+}
+.animate-enter {
+    animation: enter 0.5s ease-out forwards;
+    opacity: 0;
+}
+
+/* Staggered delays for table rows */
+.animate-stagger > tr:nth-child(1) { animation-delay: 0.05s; }
+.animate-stagger > tr:nth-child(2) { animation-delay: 0.10s; }
+.animate-stagger > tr:nth-child(3) { animation-delay: 0.15s; }
+.animate-stagger > tr:nth-child(4) { animation-delay: 0.20s; }
+.animate-stagger > tr:nth-child(5) { animation-delay: 0.25s; }
+.animate-stagger > tr:nth-child(6) { animation-delay: 0.30s; }
+.animate-stagger > tr:nth-child(7) { animation-delay: 0.35s; }
+.animate-stagger > tr:nth-child(8) { animation-delay: 0.40s; }
+.animate-stagger > tr:nth-child(9) { animation-delay: 0.45s; }
+.animate-stagger > tr:nth-child(10) { animation-delay: 0.50s; }
+.animate-stagger > tr:nth-child(11) { animation-delay: 0.55s; }
+.animate-stagger > tr:nth-child(12) { animation-delay: 0.60s; }
+.animate-stagger > tr:nth-child(13) { animation-delay: 0.65s; }
+.animate-stagger > tr:nth-child(14) { animation-delay: 0.70s; }
+.animate-stagger > tr:nth-child(15) { animation-delay: 0.75s; }
+
+@keyframes dash {
+    to { stroke-dashoffset: 0; }
+}
+
+@layer components {
+    .section-card {
+        @apply bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-8 mb-6 shadow-sm;
+    }
+
+    .input-field {
+        @apply w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2 text-base focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all;
+    }
+
+    .label-text {
+        @apply block text-sm font-semibold mb-2 text-slate-700 dark:text-slate-300;
+    }
+
+    .kanban-column {
+        min-width: 300px;
+        width: 300px;
+    }
+
+    .calendar-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        min-width: 1000px;
+    }
+
+    .calendar-day {
+        min-height: 120px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #d1d5db;
+        border-radius: 10px;
+    }
+
+    .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #334155;
+    }
+}

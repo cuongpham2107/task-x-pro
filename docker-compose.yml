@@ -1,0 +1,34 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: taskxpro-app
+    restart: unless-stopped
+    tty: true
+    environment:
+      SERVICE_NAME: app
+      SERVICE_TAGS: dev
+    volumes:
+      - ./:/var/www
+    networks:
+      - taskxpro-network
+
+  web:
+    image: nginx:alpine
+    container_name: taskxpro-web
+    restart: unless-stopped
+    tty: true
+    ports:
+      - "8020:80"
+    volumes:
+      - ./:/var/www
+      - ./nginx/conf.d/:/etc/nginx/conf.d/
+    networks:
+      - taskxpro-network
+    depends_on:
+      - app
+
+networks:
+  taskxpro-network:
+    driver: bridge
