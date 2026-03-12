@@ -22,18 +22,18 @@ class UserFactory extends Factory
         $middleNames = ['Minh', 'Gia', 'Hoang', 'Thanh', 'Huu', 'Ngoc', 'Duc', 'Bao'];
         $firstNames = ['Quan', 'Anh', 'Tuan', 'Linh', 'Huyen', 'Lan', 'Nam', 'Khanh'];
 
-        $fullName = fake()->randomElement($lastNames).' '.fake()->randomElement($middleNames).' '.fake()->randomElement($firstNames);
+        $fullName = $this->faker->randomElement($lastNames).' '.$this->faker->randomElement($middleNames).' '.$this->faker->randomElement($firstNames);
         $emailPrefix = Str::slug(Str::ascii($fullName), '.');
 
         return [
-            'employee_code' => 'NV'.str_pad((string) fake()->unique()->numberBetween(1, 9999), 4, '0', STR_PAD_LEFT),
+            'employee_code' => 'NV'.str_pad((string) $this->faker->unique()->numberBetween(1, 9999), 4, '0', STR_PAD_LEFT),
             'name' => $fullName,
-            'email' => fake()->unique()->numerify($emailPrefix.'##@taskxpro.vn'),
+            'email' => $this->faker->unique()->numerify($emailPrefix.'##@taskxpro.vn'),
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
-            'avatar' => fake()->optional(0.6)->passthrough('https://ui-avatars.com/api/?name='.urlencode($fullName).'&color=7F9CF5&background=EBF4FF'),
-            'phone' => '0'.fake()->numerify('#########'),
-            'job_title' => fake()->randomElement([
+            'avatar' => $this->faker->optional(0.6)->passthrough('https://ui-avatars.com/api/?name='.urlencode($fullName).'&color=7F9CF5&background=EBF4FF'),
+            'phone' => '0'.$this->faker->numerify('#########'),
+            'job_title' => $this->faker->randomElement([
                 'Truong nhom du an',
                 'Chuyen vien van hanh',
                 'Ky su he thong',
@@ -41,8 +41,8 @@ class UserFactory extends Factory
                 'Dieu phoi vien',
             ]),
             'department_id' => null,
-            'status' => fake()->randomElement(['active', 'active', 'active', 'on_leave']),
-            'telegram_id' => fake()->optional(0.5)->numerify('chat_########'),
+            'status' => $this->faker->randomElement(['active', 'active', 'active', 'on_leave']),
+            'telegram_id' => $this->faker->optional(0.5)->numerify('chat_########'),
             'remember_token' => Str::random(10),
         ];
     }
@@ -59,7 +59,7 @@ class UserFactory extends Factory
     {
         return $this->state(fn (array $attributes): array => [
             'status' => 'active',
-            'job_title' => fake()->randomElement([
+            'job_title' => $this->faker->randomElement([
                 'Truong phong',
                 'Project Leader',
                 'Team Lead',
@@ -71,7 +71,7 @@ class UserFactory extends Factory
     {
         return $this->state(fn (array $attributes): array => [
             'status' => 'active',
-            'job_title' => fake()->randomElement([
+            'job_title' => $this->faker->randomElement([
                 'Chuyen vien',
                 'Nhan vien van hanh',
                 'Ky su trien khai',
