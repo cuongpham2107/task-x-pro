@@ -44,22 +44,22 @@ new class extends Component {
                             và quy trình phê duyệt doanh nghiệp.</p>
                     </div>
                     <div class="flex gap-2">
-                        <x-ui.button
+                        {{-- <x-ui.button
                             variant="outline"
                             size="sm"
                             icon="calendar_today"
                             wire:click="filterDate"
                         >
                             7 ngày qua
-                        </x-ui.button>
-                        <x-ui.button
+                        </x-ui.button> --}}
+                        {{-- <x-ui.button
                             variant="outline"
                             size="sm"
                             icon="download"
                             wire:click="exportReport"
                         >
                             Xuất báo cáo
-                        </x-ui.button>
+                        </x-ui.button> --}}
                     </div>
                 </div>
                 <!-- Top Stats & Chart -->

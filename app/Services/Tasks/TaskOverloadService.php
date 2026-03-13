@@ -11,6 +11,7 @@ use App\Models\Task;
 use App\Models\User;
 use App\Notifications\PicOverloadWarningNotification;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 
 class TaskOverloadService
@@ -44,9 +45,13 @@ class TaskOverloadService
         $message = "PIC {$picName} dang co {$nearbyTaskCount} task co deadline trong vung +/-1 ngay quanh {$deadlineText}.";
         $this->createOverloadNotifications($actor, $task, $message);
 
-        $pic = $task->pic;
-        if ($pic !== null && trim((string) $pic->telegram_id) !== '') {
-            Notification::send($pic, new PicOverloadWarningNotification($task, $nearbyTaskCount, $deadline));
+        try {
+            $pic = $task->pic;
+            if ($pic !== null && trim((string) $pic->telegram_id) !== '') {
+                Notification::send($pic, new PicOverloadWarningNotification($task, $nearbyTaskCount, $deadline));
+            }
+        } catch (\Exception $e) {
+            Log::error('Lỗi'.$e->getMessage());
         }
 
         return $message;

@@ -204,7 +204,7 @@ class TaskQueryService
     {
         $query = Project::query();
 
-        if (! $actor->hasAnyRole(['ceo', 'leader'])) {
+        if (! $actor->hasAnyRole(['ceo', 'leader', 'super_admin'])) {
             $query->where(function (Builder $builder) use ($actor): void {
                 $builder
                     ->where('created_by', $actor->id)

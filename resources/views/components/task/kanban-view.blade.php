@@ -387,7 +387,7 @@ new class extends Component {
                             }
 
                             $isNearDeadline = $task->deadline && !$isDone && $task->deadline->lte(now()->addDays(3));
-                            $recentApprovalLogs = $task->approvalLogs->take(2);
+                            $recentApprovalLogs = $task->approvalLogs->take(1);
                         @endphp
 
                         {{-- ===== CARD ===== --}}
@@ -467,6 +467,7 @@ new class extends Component {
                                 <span class="text-[9px] font-bold uppercase tracking-wider text-slate-400">Đánh
                                     giá:</span>
                                 <div class="flex flex-row justify-between space-x-1 overflow-visible">
+                                    {{-- @dd($recentApprovalLogs) --}}
                                     @foreach ($recentApprovalLogs as $approvalLog)
                                         @php
                                             $approvalLevelLabel = match ($approvalLog->approval_level) {
@@ -475,6 +476,7 @@ new class extends Component {
                                                 default => '??',
                                             };
                                             $isApproved = $approvalLog->action === ApprovalAction::Approved->value;
+                                           
                                         @endphp
 
                                         <div class="flex flex-col gap-0.5 overflow-visible">
@@ -489,20 +491,22 @@ new class extends Component {
                                                                 <x-ui.star-rating :rating="$approvalLog->star_rating" size="3" />
                                                             </div>
                                                         @endif
+                                                        @if (!$isApproved && $approvalLog->comment)
+                                                            <div class="group/comment relative">
+                                                                <p class="truncate text-[10px] italic font-bold text-red-400 transition-colors hover:text-red-600"
+                                                                    title="{{ $approvalLog->comment }}">
+                                                                    “{{ $approvalLog->comment }}”
+                                                                </p>
+                                                            </div>
+                                                        @endif
                                                     </div>
+                                                    
                                                 </div>
 
 
                                             </div>
 
-                                            @if (!$isApproved && $approvalLog->comment)
-                                                <div class="group/comment relative">
-                                                    <p class="pl-5.5 truncate text-[10px] italic text-slate-400 transition-colors hover:text-red-400"
-                                                        title="{{ $approvalLog->comment }}">
-                                                        “{{ $approvalLog->comment }}”
-                                                    </p>
-                                                </div>
-                                            @endif
+                                            
                                         </div>
                                     @endforeach
                                 </div>

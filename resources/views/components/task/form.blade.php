@@ -762,7 +762,6 @@ new class extends Component {
         wire:key="task-form-panel-{{ $editing_task_id ?? 'create' }}">
         <x-slot name="header">
             @if (!empty($editing_task_id))
-                edit
                 <x-ui.form.heading icon="edit_square" title="Cập nhật công việc"
                     description="Chỉnh sửa thông tin công việc." />
             @else

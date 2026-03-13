@@ -62,7 +62,7 @@ new class extends Component {
                     <p class="mt-1 text-slate-500 dark:text-slate-400">Đây là báo cáo hiệu suất tổng quát của hệ thống
                         TaskXPro hôm nay.</p>
                 </div>
-                <div class="flex gap-3">
+                {{-- <div class="flex gap-3">
                     <x-ui.button
                         variant="outline"
                         size="sm"
@@ -71,7 +71,7 @@ new class extends Component {
                     >
                         Xuất báo cáo
                     </x-ui.button>
-                </div>
+                </div> --}}
             </div>
             <div class="mb-8 grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4"
                  x-show="ready"

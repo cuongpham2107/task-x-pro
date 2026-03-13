@@ -587,7 +587,7 @@ class TaskService
 
         if ($targetStatus === TaskStatus::Pending->value) {
             throw ValidationException::withMessages([
-                'status' => 'Không thể chuyển ngược task về trạng thái Chưa bắt đầu.',
+                'status' => 'Không thể chuyển ngược công việc về trạng thái "Chưa bắt đầu".',
             ]);
         }
 

@@ -13,8 +13,9 @@ use App\Models\ApprovalLog;
 use App\Models\SystemNotification;
 use App\Models\Task;
 use App\Models\User;
-use App\Notifications\ApprovalResults;
+use App\Notifications\ApprovalResultsNotification;
 use App\Notifications\TaskRejectedNotification;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\ValidationException;
 
@@ -239,10 +240,14 @@ class TaskApprovalService
             'status' => NotificationStatus::Pending->value,
             'created_at' => now(),
         ]);
-
-        $pic = $task->pic;
-        if ($pic !== null && trim((string) $pic->telegram_id) !== '') {
-            Notification::send($pic, new TaskRejectedNotification($task, $actor, $reason));
+        // đảm bảo mã gửi tin nhắn lỗi nhưng hành động vẫn được thực hiện
+        try {
+            $pic = $task->pic;
+            if ($pic !== null && trim((string) $pic->telegram_id) !== '') {
+                Notification::send($pic, new TaskRejectedNotification($task, $actor, $reason));
+            }
+        } catch (\Exception $e) {
+            Log::error('Lỗi gửi thông báo từ chối công việc: '.$e->getMessage());
         }
     }
 
@@ -307,13 +312,17 @@ class TaskApprovalService
                 'created_at' => now(),
             ]);
         }
+        try {
 
-        $telegramRecipients = $ceos->filter(function (User $ceo): bool {
-            return trim((string) $ceo->telegram_id) !== '';
-        });
+            $telegramRecipients = $ceos->filter(function (User $ceo): bool {
+                return trim((string) $ceo->telegram_id) !== '';
+            });
 
-        if ($telegramRecipients->isNotEmpty()) {
-            Notification::send($telegramRecipients, new ApprovalResults($task, $leader));
+            if ($telegramRecipients->isNotEmpty()) {
+                Notification::send($telegramRecipients, new ApprovalResultsNotification($task, $leader));
+            }
+        } catch (\Exception $e) {
+            Log::error('Lỗi'.$e->getMessage());
         }
     }
 }
