@@ -33,7 +33,7 @@
                 <div class="flex items-center gap-3">
                     <div
                         class="bg-primary/10 ring-primary/20 flex size-9 items-center justify-center rounded-lg p-1.5 ring-1">
-                        <img src="{{ asset('images/LOGO.png') }}" alt="ASG logo" class="size-full object-contain">
+                        <img src="{{ asset('images/logo.png') }}" alt="ASG logo" class="size-full object-contain">
                     </div>
                     <h2 class="text-primary text-xl font-bold">{{ config('app.name') }}</h2>
                 </div>

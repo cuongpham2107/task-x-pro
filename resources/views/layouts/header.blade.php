@@ -2,12 +2,12 @@
     class="sticky top-0 z-50 flex items-center justify-between whitespace-nowrap border-b border-solid border-slate-200 bg-white px-4 py-3 lg:px-8 dark:border-slate-800 dark:bg-slate-900">
     <div class="flex items-center gap-4 lg:gap-8">
         <button @click="sidebarOpen = true"
-            class="rounded-lg p-1 text-slate-600 transition-colors hover:bg-slate-100 xl:hidden dark:text-slate-400 dark:hover:bg-slate-800">
+            class="rounded-lg p-1 text-slate-600 transition-colors hover:bg-slate-100 lg:hidden dark:text-slate-400 dark:hover:bg-slate-800">
             <span class="material-symbols-outlined text-2xl">menu</span>
         </button>
         <div class="text-primary hidden items-center gap-3 lg:flex">
             <div class="bg-primary/10 ring-primary/20 flex size-9 items-center justify-center rounded-lg p-1.5 ring-1">
-                <img src="{{ asset('images/LOGO.png') }}" alt="ASG logo" class="size-full object-contain">
+                <img src="{{ asset('images/logo.png') }}" alt="ASG logo" class="size-full object-contain">
             </div>
             <h2 class="text-lg font-bold leading-tight tracking-tight text-slate-900 dark:text-slate-100">
                 {{ config('app.name') }}
