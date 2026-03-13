@@ -414,7 +414,7 @@ new class extends Component {
                                 {{-- Nếu là cấp 2 cấp duyệt thì đánh dấu --}}
                                 @if (($task->workflow_type->value ?? $task->workflow_type) === 'double')
                                     <x-ui.badge color="blue" size="xs" class="font-bold tracking-tight">
-                                        Phê duyệt 2 cấp
+                                        PD 2 cấp
                                     </x-ui.badge>
                                 @endif
                             </div>
