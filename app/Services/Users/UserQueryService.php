@@ -39,7 +39,7 @@ class UserQueryService
     public function findForEdit(int $userId): User
     {
         return User::query()
-            ->with('department:id,name')
+            ->with(['department:id,name', 'roles:id,name'])
             ->findOrFail($userId);
     }
 
@@ -111,9 +111,15 @@ class UserQueryService
             ->orderBy('name')
             ->get(['id', 'name', 'status']);
 
+        $roles = \Spatie\Permission\Models\Role::query()
+            ->where(fn($q) => $q->where('name', '!=', 'super_admin'))
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
         return [
             'status_labels' => UserStatus::options(),
             'departments' => $departments,
+            'roles' => $roles,
         ];
     }
 

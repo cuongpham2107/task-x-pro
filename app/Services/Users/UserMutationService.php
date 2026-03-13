@@ -20,7 +20,11 @@ class UserMutationService
             $this->normalizedAttributes($attributes, false)
         );
 
-        return $user->load('department:id,name');
+        if (isset($attributes['role_ids'])) {
+            $user->syncRoles(array_map('intval', (array) $attributes['role_ids']));
+        }
+
+        return $user->load(['department:id,name', 'roles:id,name']);
     }
 
     /**
@@ -33,7 +37,11 @@ class UserMutationService
         $targetUser->fill($this->normalizedAttributes($attributes, true));
         $targetUser->save();
 
-        return $targetUser->load('department:id,name');
+        if (isset($attributes['role_ids'])) {
+            $targetUser->syncRoles(array_map('intval', (array) $attributes['role_ids']));
+        }
+
+        return $targetUser->load(['department:id,name', 'roles:id,name']);
     }
 
     /**

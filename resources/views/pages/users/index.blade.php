@@ -63,11 +63,16 @@ new #[Title('Người dùng')] class extends Component {
 
     public string $telegramId = '';
 
+    public ?string $roleId = null;
+
     /** @var array<string, string> */
     public array $statusLabels = [];
 
     /** @var Collection<int, \App\Models\Department> */
     public Collection $departmentOptions;
+
+    /** @var Collection<int, \Spatie\Permission\Models\Role> */
+    public Collection $roleOptions;
 
     public function boot(UserService $userService): void
     {
@@ -77,7 +82,7 @@ new #[Title('Người dùng')] class extends Component {
     public function mount(): void
     {
         $this->statusLabels = UserStatus::options();
-        $this->loadDepartmentOptions();
+        $this->loadFormOptions();
     }
 
     public function updatedFilterSearch(): void
@@ -122,6 +127,7 @@ new #[Title('Người dùng')] class extends Component {
             'departmentId' => ['nullable', 'exists:departments,id'],
             'status' => ['required', Rule::in(UserStatus::values())],
             'telegramId' => ['nullable', 'string', 'max:100'],
+            'roleId' => ['required', 'exists:roles,id'],
         ];
     }
 
@@ -148,6 +154,8 @@ new #[Title('Người dùng')] class extends Component {
             'status.required' => 'Trạng thái là bắt buộc.',
             'status.in' => 'Trạng thái không hợp lệ.',
             'telegramId.max' => 'Telegram ID không được vượt quá 100 ký tự.',
+            'roleId.required' => 'Vui lòng chọn quyền hạn.',
+            'roleId.exists' => 'Quyền hạn đã chọn không tồn tại.',
         ];
     }
 
@@ -156,9 +164,10 @@ new #[Title('Người dùng')] class extends Component {
         Gate::forUser(auth()->user())->authorize('create', User::class);
 
         $this->resetFormModal();
-        $this->loadDepartmentOptions();
+        $this->loadFormOptions();
         $this->mode = 'create';
         $this->editingUserId = null;
+        $this->roleId = null;
         $this->showFormModal = true;
     }
 
@@ -175,7 +184,7 @@ new #[Title('Người dùng')] class extends Component {
 
         Gate::forUser($actor)->authorize('update', $targetUser);
 
-        $this->loadDepartmentOptions();
+        $this->loadFormOptions();
         $this->mode = 'edit';
         $this->editingUserId = $targetUser->id;
         $this->employeeCode = (string) ($targetUser->employee_code ?? '');
@@ -187,6 +196,7 @@ new #[Title('Người dùng')] class extends Component {
         $this->departmentId = $targetUser->department_id !== null ? (string) $targetUser->department_id : null;
         $this->status = $targetUser->status instanceof \BackedEnum ? (string) $targetUser->status->value : (string) $targetUser->status;
         $this->telegramId = (string) ($targetUser->telegram_id ?? '');
+        $this->roleId = (string) ($targetUser->roles->first()?->id ?? '');
 
         $this->showFormModal = true;
     }
@@ -199,15 +209,17 @@ new #[Title('Người dùng')] class extends Component {
 
     public function resetFormModal(): void
     {
-        $this->reset(['employeeCode', 'name', 'email', 'password', 'phone', 'jobTitle', 'departmentId', 'telegramId', 'editingUserId']);
+        $this->reset(['employeeCode', 'name', 'email', 'password', 'phone', 'jobTitle', 'departmentId', 'telegramId', 'editingUserId', 'roleId']);
         $this->status = UserStatus::Active->value;
         $this->mode = 'create';
         $this->resetValidation();
     }
 
-    private function loadDepartmentOptions(): void
+    private function loadFormOptions(): void
     {
-        $this->departmentOptions = $this->userService->formOptions()['departments'];
+        $options = $this->userService->formOptions();
+        $this->departmentOptions = $options['departments'];
+        $this->roleOptions = $options['roles'];
     }
 
     public function save(): void
@@ -229,6 +241,7 @@ new #[Title('Người dùng')] class extends Component {
             'department_id' => $this->departmentId,
             'status' => $this->status,
             'telegram_id' => $this->telegramId,
+            'role_ids' => $this->roleId ? [$this->roleId] : [],
         ];
 
         try {
@@ -516,7 +529,11 @@ new #[Title('Người dùng')] class extends Component {
 
                 <div class="md:col-span-2">
                     <x-ui.input label="Telegram ID" name="telegramId" wire:model="telegramId" icon="chat" />
-                    
+                </div>
+
+                <div class="md:col-span-2">
+                    <x-ui.select label="Quyền hạn" name="roleId" wire:model="roleId" icon="shield"
+                        placeholder="-- Chọn quyền --" :options="$roleOptions->mapWithKeys(fn($r) => [$r->id => strtoupper($r->name)])->all()" required />
                 </div>
             </div>
         </form>
