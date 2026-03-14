@@ -30,13 +30,13 @@
 
         <div class="border-b border-slate-100 p-6 dark:border-slate-800">
             <div class="mb-6 flex items-center justify-between">
-                <div class="flex items-center gap-3">
+                <a href="{{ route('dashboard.index') }}" class="flex items-center gap-3">
                     <div
                         class="bg-primary/10 ring-primary/20 flex size-9 items-center justify-center rounded-lg p-1.5 ring-1">
                         <img src="{{ asset('images/logo.png') }}" alt="ASG logo" class="size-full object-contain">
                     </div>
                     <h2 class="text-primary text-xl font-bold">{{ config('app.name') }}</h2>
-                </div>
+                </a>
                 <button @click="sidebarOpen = false"
                     class="text-slate-400 transition-colors hover:text-slate-600 dark:hover:text-slate-200">
                     <span class="material-symbols-outlined text-2xl">close</span>
@@ -94,9 +94,10 @@
             @endcan
 
             {{-- Danh mục section --}}
-            @if(auth()->user()?->can('create', App\Models\Department::class) || auth()->user()?->can('create', App\Models\User::class))
+            @if (auth()->user()?->can('create', App\Models\Department::class) ||
+                    auth()->user()?->can('create', App\Models\User::class))
                 <div class="mt-4 border-t border-slate-100 pt-4 dark:border-slate-800">
-                    <p class="mb-2 px-4 text-2xs font-bold uppercase tracking-widest text-slate-400">
+                    <p class="text-2xs mb-2 px-4 font-bold uppercase tracking-widest text-slate-400">
                         Danh mục
                     </p>
                     @can('create', App\Models\Department::class)
@@ -118,7 +119,7 @@
 
             @if ($showSystemConfigGroup)
                 <div class="mt-4 border-t border-slate-100 pt-4 dark:border-slate-800">
-                    <p class="mb-2 px-4 text-2xs font-bold uppercase tracking-widest text-slate-400">
+                    <p class="text-2xs mb-2 px-4 font-bold uppercase tracking-widest text-slate-400">
                         Hệ thống
                     </p>
                     @if ($canViewSlaConfig)

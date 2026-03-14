@@ -20,16 +20,33 @@ new #[Title('Thông tin cá nhân')] class extends Component {
     public bool $showEditModal = false;
     public bool $showPasswordModal = false;
 
+    #[Validate(['required', 'string', 'max:255'])]
     public string $editName = '';
+
+    #[Validate]
     public string $editEmail = '';
+
+    #[Validate(['nullable', 'string', 'max:20'])]
     public string $editPhone = '';
+
+    #[Validate(['nullable', 'string', 'max:50'])]
     public string $editTelegramId = '';
+
+    #[Validate(['nullable', 'string', 'max:100'])]
     public string $editJobTitle = '';
+
+    #[Validate(['nullable', 'exists:departments,id'])]
     public ?int $editDepartmentId = null;
+
+    #[Validate(['nullable', 'image', 'max:2048'])]
     public $newAvatar;
 
+    #[Validate(['required', 'current_password'])]
     public string $currentPassword = '';
+
+    #[Validate(['required', 'confirmed', 'min:8'])]
     public string $newPassword = '';
+
     public string $newPassword_confirmation = '';
 
     public $departmentOptions = [];
@@ -87,13 +104,13 @@ new #[Title('Thông tin cá nhân')] class extends Component {
         }
 
         $this->validate([
-            'editName' => 'required|string|max:255',
+            'editName' => 'required',
             'editEmail' => 'required|email|unique:users,email,' . $this->user->id,
-            'editPhone' => 'nullable|string|max:20',
-            'editTelegramId' => 'nullable|string|max:50',
-            'editJobTitle' => 'nullable|string|max:100',
-            'editDepartmentId' => 'nullable|exists:departments,id',
-            'newAvatar' => 'nullable|image|max:2048', // 2MB Max
+            'editPhone' => 'nullable',
+            'editTelegramId' => 'nullable',
+            'editJobTitle' => 'nullable',
+            'editDepartmentId' => 'nullable',
+            'newAvatar' => 'nullable',
         ]);
 
         $payload = [
@@ -135,8 +152,8 @@ new #[Title('Thông tin cá nhân')] class extends Component {
         }
 
         $this->validate([
-            'currentPassword' => 'required|current_password',
-            'newPassword' => 'required|confirmed|min:8',
+            'currentPassword' => 'required',
+            'newPassword' => 'required',
         ]);
 
         $this->userService->update(auth()->user(), $this->user, [

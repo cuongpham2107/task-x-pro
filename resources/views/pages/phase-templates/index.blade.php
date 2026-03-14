@@ -113,20 +113,20 @@ new #[Title('Mẫu phase')] class extends Component {
     protected function messages(): array
     {
         return [
-            'projectType.required' => 'Loai du an la bat buoc.',
-            'projectType.in' => 'Loai du an khong hop le.',
-            'phaseName.required' => 'Ten phase la bat buoc.',
-            'phaseName.max' => 'Ten phase khong duoc vuot qua 255 ky tu.',
-            'orderIndex.required' => 'Thu tu phase la bat buoc.',
-            'orderIndex.integer' => 'Thu tu phase phai la so nguyen.',
-            'orderIndex.unique' => 'Thu tu phase da ton tai trong loai du an nay.',
-            'defaultWeight.required' => 'Trong so mac dinh la bat buoc.',
-            'defaultWeight.numeric' => 'Trong so mac dinh phai la so.',
-            'defaultWeight.min' => 'Trong so mac dinh phai lon hon 0.',
-            'defaultWeight.max' => 'Trong so mac dinh khong duoc vuot qua 100.',
-            'defaultDurationDays.integer' => 'Thoi gian mac dinh phai la so nguyen.',
-            'defaultDurationDays.min' => 'Thoi gian mac dinh toi thieu 1 ngay.',
-            'defaultDurationDays.max' => 'Thoi gian mac dinh khong hop le.',
+            'projectType.required' => 'Loại dự án là bắt buộc.',
+            'projectType.in' => 'Loại dự án không hợp lệ.',
+            'phaseName.required' => 'Tên phase là bắt buộc.',
+            'phaseName.max' => 'Tên phase không được vượt quá 255 ký tự.',
+            'orderIndex.required' => 'Thứ tự phase là bắt buộc.',
+            'orderIndex.integer' => 'Thứ tự phase phải là số nguyên.',
+            'orderIndex.unique' => 'Thứ tự phase đã tồn tại trong loại dự án này.',
+            'defaultWeight.required' => 'Trọng số mặc định là bắt buộc.',
+            'defaultWeight.numeric' => 'Trọng số mặc định phải là số.',
+            'defaultWeight.min' => 'Trọng số mặc định phải lớn hơn 0.',
+            'defaultWeight.max' => 'Trọng số mặc định không được vượt quá 100.',
+            'defaultDurationDays.integer' => 'Thời gian mặc định phải là số nguyên.',
+            'defaultDurationDays.min' => 'Thời gian mặc định tối thiểu 1 ngày.',
+            'defaultDurationDays.max' => 'Thời gian mặc định không hợp lệ.',
         ];
     }
 
@@ -204,10 +204,10 @@ new #[Title('Mẫu phase')] class extends Component {
             if ($this->mode === 'edit' && $this->editingTemplateId !== null) {
                 $template = $this->phaseTemplateService->findForEdit($actor, $this->editingTemplateId);
                 $this->phaseTemplateService->update($actor, $template, $payload);
-                $message = 'Cap nhat mau phase thanh cong!';
+                $message = 'Cập nhật mẫu phase thành công!';
             } else {
                 $this->phaseTemplateService->create($actor, $payload);
-                $message = 'Tao mau phase thanh cong!';
+                $message = 'Tạo mẫu phase thành công!';
             }
 
             $this->closeFormModal();
@@ -218,7 +218,7 @@ new #[Title('Mẫu phase')] class extends Component {
         } catch (ValidationException $e) {
             $this->setErrorBag($e->validator->errors());
         } catch (\Exception $e) {
-            $message = 'Khong the luu mau phase: ' . $e->getMessage();
+            $message = 'Không thể lưu mẫu phase: ' . $e->getMessage();
             session()->flash('error', $message);
             $this->dispatch('toast', message: $message, type: 'error');
         }
@@ -261,11 +261,11 @@ new #[Title('Mẫu phase')] class extends Component {
             $this->resetPage();
             unset($this->templates, $this->summaryStats);
 
-            $message = 'Xoa mau phase thanh cong!';
+            $message = 'Xóa mẫu phase thành công!';
             session()->flash('success', $message);
             $this->dispatch('toast', message: $message, type: 'success');
         } catch (\Exception $e) {
-            $message = 'Khong the xoa mau phase: ' . $e->getMessage();
+            $message = 'Không thể xóa mẫu phase: ' . $e->getMessage();
             session()->flash('error', $message);
             $this->dispatch('toast', message: $message, type: 'error');
         }
@@ -330,7 +330,7 @@ new #[Title('Mẫu phase')] class extends Component {
         </div>
     </div>
 
-    <x-ui.table :paginator="$this->templates" paginator-label="mau phase">
+    <x-ui.table :paginator="$this->templates" paginator-label="mẫu phase">
         <x-ui.table.head>
             <x-ui.table.sort-column field="order_index" :sort-by="$sortBy" :sort-dir="$sortDir" width="min-w-18">Thứ
                 tự</x-ui.table.sort-column>
@@ -342,7 +342,7 @@ new #[Title('Mẫu phase')] class extends Component {
             <x-ui.table.sort-column field="default_duration_days" :sort-by="$sortBy" :sort-dir="$sortDir"
                 width="min-w-24">Ngày mặc định</x-ui.table.sort-column>
             <x-ui.table.column width="min-w-22">Trạng thái</x-ui.table.column>
-            <x-ui.table.column width="min-w-20" align="right" :muted="true">Thao tac</x-ui.table.column>
+            <x-ui.table.column width="min-w-20" align="right" :muted="true">Thao tác</x-ui.table.column>
         </x-ui.table.head>
 
         <x-ui.table.body>
@@ -395,11 +395,11 @@ new #[Title('Mẫu phase')] class extends Component {
                     <x-ui.table.cell align="right" x-on:click.stop>
                         <div class="flex items-center justify-end gap-1">
                             @can('update', $template)
-                                <x-ui.icon-button icon="edit" size="sm" tooltip="Sua"
+                                <x-ui.icon-button icon="edit" size="sm" tooltip="Sửa"
                                     wire:click="openEditFormModal({{ $template->id }})" />
                             @endcan
                             @can('delete', $template)
-                                <x-ui.icon-button icon="delete" size="sm" color="red" tooltip="Xoa"
+                                <x-ui.icon-button icon="delete" size="sm" color="red" tooltip="Xóa"
                                     wire:click="confirmDeleteTemplate({{ $template->id }})" />
                             @endcan
                         </div>
@@ -468,7 +468,7 @@ new #[Title('Mẫu phase')] class extends Component {
                 Hủy
             </x-ui.button>
             <x-ui.button type="submit" form="phase-template-form" :icon="$mode === 'edit' ? 'save' : 'add'" loading="save">
-                {{ $mode === 'edit' ? 'Cap nhat mau phase' : 'Tao mau phase' }}
+                {{ $mode === 'edit' ? 'Cập nhật mẫu phase' : 'Tạo mẫu phase' }}
             </x-ui.button>
         </x-slot>
     </x-ui.slide-panel>

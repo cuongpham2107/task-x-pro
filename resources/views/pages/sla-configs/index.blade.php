@@ -11,6 +11,7 @@ use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
+use Livewire\Attributes\Validate;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Carbon\Carbon;
@@ -53,18 +54,25 @@ new #[Title('Cấu hình SLA')] class extends Component {
 
     public string $pendingDeleteSlaConfigLabel = '';
 
+    #[Validate(['nullable', 'exists:departments,id'])]
     public ?string $departmentId = null;
 
+    #[Validate(['required'])]
     public string $taskType = SlaTaskType::All->value;
 
+    #[Validate(['required'])]
     public string $projectType = SlaProjectType::All->value;
 
+    #[Validate(['required', 'numeric', 'min:0.25', 'max:999.99'])]
     public string $standardHours = '24.00';
 
+    #[Validate(['required', 'date'])]
     public string $effectiveDate = '';
 
+    #[Validate(['nullable', 'date', 'after_or_equal:effectiveDate'])]
     public ?string $expiredDate = null;
 
+    #[Validate(['nullable', 'string', 'max:5000'])]
     public string $note = '';
 
     /** @var array<string, string> */
@@ -141,21 +149,7 @@ new #[Title('Cấu hình SLA')] class extends Component {
         $this->resetPage();
     }
 
-    /**
-     * @return array<string, array<int|string, \Illuminate\Contracts\Validation\ValidationRule|string>>
-     */
-    protected function rules(): array
-    {
-        return [
-            'departmentId' => ['nullable', 'exists:departments,id'],
-            'taskType' => ['required', Rule::in(SlaTaskType::values())],
-            'projectType' => ['required', Rule::in(SlaProjectType::values())],
-            'standardHours' => ['required', 'numeric', 'min:0.25', 'max:999.99'],
-            'effectiveDate' => ['required', 'date'],
-            'expiredDate' => ['nullable', 'date', 'after_or_equal:effectiveDate'],
-            'note' => ['nullable', 'string', 'max:5000'],
-        ];
-    }
+
 
     /**
      * @return array<string, string>
@@ -233,7 +227,7 @@ new #[Title('Cấu hình SLA')] class extends Component {
 
     public function save(): void
     {
-        $this->validate();
+        // dd($this->validate());
 
         $actor = auth()->user();
         if ($actor === null) {

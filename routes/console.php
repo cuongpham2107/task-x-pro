@@ -11,14 +11,9 @@ use App\Notifications\TaskApprovalPendingReminderNotification;
 use App\Notifications\TaskDeadlineReminderNotification;
 use App\Notifications\WeeklySummaryNotification;
 use App\Services\Tasks\TaskService;
-use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Schedule;
-
-Artisan::command('inspire', function () {
-    $this->comment(Inspiring::quote());
-})->purpose('Display an inspiring quote');
 
 Artisan::command('tasks:mark-late', function (TaskService $taskService): void {
     $affectedTasks = $taskService->markLateTasks();
@@ -36,13 +31,20 @@ Artisan::command('tasks:daily-reminders', function (): void {
         ->whereNotNull('deadline')
         ->whereBetween('deadline', [$deadlineFrom, $deadlineTo])
         ->where('status', '!=', TaskStatus::Completed->value)
-        ->with(['pic:id,name,telegram_id', 'phase.project:id,name'])
+        ->with(['pic:id,name,telegram_id,email', 'phase.project:id,name'])
         ->get();
 
     $deadlineNotifications = 0;
     foreach ($deadlineTasks as $task) {
         $pic = $task->pic;
-        if ($pic === null || trim((string) $pic->telegram_id) === '') {
+        if ($pic === null) {
+            continue;
+        }
+
+        $hasTelegram = trim((string) $pic->telegram_id) !== '';
+        $hasEmail = trim((string) $pic->email) !== '';
+
+        if (! $hasTelegram && ! $hasEmail) {
             continue;
         }
 
@@ -116,7 +118,7 @@ Artisan::command('tasks:daily-reminders', function (): void {
     $this->info("Deadline reminders: {$deadlineNotifications}");
     $this->info("Pending approval reminders: {$pendingNotifications}");
     $this->info("Overdue PIC reminders: {$overdueNotifications}");
-})->purpose('Gui nhac viec hang ngay theo logic deadline va cho duyet');
+})->purpose('Gửi nhắc việc hàng ngày theo logic deadline và chờ duyệt');
 
 Artisan::command('reports:weekly', function (): void {
     $now = now();
@@ -143,13 +145,13 @@ Artisan::command('reports:weekly', function (): void {
             ->count(),
     ];
 
-    $recipients = User::role(['leader', 'ceo'])->get(['id', 'telegram_id']);
-    $telegramRecipients = $recipients->filter(function (User $user): bool {
-        return trim((string) $user->telegram_id) !== '';
+    $recipients = User::role(['leader', 'ceo'])->get(['id', 'telegram_id', 'email']);
+    $validRecipients = $recipients->filter(function (User $user): bool {
+        return trim((string) $user->telegram_id) !== '' || trim((string) $user->email) !== '';
     });
 
-    if ($telegramRecipients->isNotEmpty()) {
-        foreach ($telegramRecipients as $recipient) {
+    if ($validRecipients->isNotEmpty()) {
+        foreach ($validRecipients as $recipient) {
             try {
                 Notification::send($recipient, new WeeklySummaryNotification($summary, $periodStart, $periodEnd));
             } catch (\Throwable $exception) {
@@ -159,7 +161,7 @@ Artisan::command('reports:weekly', function (): void {
     }
 
     $this->info('Weekly report sent.');
-})->purpose('Gui bao cao task hang tuan cho leader va ceo');
+})->purpose('Gửi báo cáo task hàng tuần cho leader và ceo');
 
 Artisan::command('kpi:monthly-sync', function (): void {
     $now = now();
@@ -188,9 +190,22 @@ Artisan::command('kpi:monthly-sync', function (): void {
     }
 
     $this->info("Monthly KPI synced for {$users->count()} users.");
-})->purpose('Dong bo KPI hang thang va gui thong bao');
+})->purpose('Đồng bộ KPI hàng tháng và gửi thông báo');
+
+Artisan::command('kpi:daily-sync', function (): void {
+    $users = User::query()
+        ->where('status', UserStatus::Active->value)
+        ->get(['id']);
+
+    foreach ($users as $user) {
+        KpiScore::syncForUser($user->id);
+    }
+
+    $this->info("Daily KPI synced for {$users->count()} users.");
+})->purpose('Đồng bộ KPI hàng ngày để tránh sync đồng bộ khi lưu task');
 
 Schedule::command('tasks:mark-late')->everyFiveMinutes();
 Schedule::command('tasks:daily-reminders')->daily()->at('07:00');
 Schedule::command('reports:weekly')->weekly()->fridays()->at('17:00');
+Schedule::command('kpi:daily-sync')->daily()->at('01:00');
 Schedule::command('kpi:monthly-sync')->lastDayOfMonth('23:59');

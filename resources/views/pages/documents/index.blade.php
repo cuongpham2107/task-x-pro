@@ -14,10 +14,11 @@ use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
+use Livewire\Attributes\Validate;
 use Livewire\Component;
 use Livewire\WithPagination;
 
-new #[Title('Tai lieu')] class extends Component {
+new #[Title('Tài liệu')] class extends Component {
     use WithPagination;
 
     protected DocumentServiceInterface $documentService;
@@ -41,20 +42,25 @@ new #[Title('Tai lieu')] class extends Component {
 
     public bool $showDocumentFormModal = false;
 
-    public ?int $editingDocumentId = null;
-
+    #[Validate]
     public string $documentName = '';
 
+    #[Validate]
     public string $documentType = DocumentType::Other->value;
 
+    #[Validate(['nullable', 'string'])]
     public string $documentDescription = '';
 
+    #[Validate]
     public string $documentPermission = DocumentPermission::View->value;
 
+    #[Validate(['nullable', 'string', 'max:255'])]
     public string $googleDriveId = '';
 
+    #[Validate(['nullable', 'string', 'max:1000'])]
     public string $googleDriveUrl = '';
 
+    #[Validate(['required', 'integer', 'min:1', 'max:9999'])]
     public int $currentVersion = 1;
 
     public bool $showVersionFormModal = false;
@@ -63,14 +69,19 @@ new #[Title('Tai lieu')] class extends Component {
 
     public ?int $editingVersionDocumentId = null;
 
+    #[Validate]
     public int $versionNumber = 1;
 
+    #[Validate(['required', 'string', 'max:1000'])]
     public string $storedPath = '';
 
+    #[Validate(['nullable', 'string', 'max:255'])]
     public string $googleDriveRevisionId = '';
 
+    #[Validate(['nullable', 'string'])]
     public string $changeSummary = '';
 
+    #[Validate(['nullable', 'integer', 'min:0'])]
     public ?string $fileSizeBytes = null;
 
     public bool $showDeleteDocumentModal = false;
@@ -140,11 +151,7 @@ new #[Title('Tai lieu')] class extends Component {
         return [
             'documentName' => ['required', 'string', 'max:500'],
             'documentType' => ['required', Rule::in(DocumentType::values())],
-            'documentDescription' => ['nullable', 'string'],
             'documentPermission' => ['required', Rule::in(DocumentPermission::values())],
-            'googleDriveId' => ['nullable', 'string', 'max:255'],
-            'googleDriveUrl' => ['nullable', 'string', 'max:1000'],
-            'currentVersion' => ['required', 'integer', 'min:1', 'max:9999'],
         ];
     }
 
@@ -155,10 +162,6 @@ new #[Title('Tai lieu')] class extends Component {
     {
         return [
             'versionNumber' => ['required', 'integer', 'min:1', 'max:9999', Rule::unique('document_versions', 'version_number')->where(fn($query) => $query->where('document_id', $this->editingVersionDocumentId))->ignore($this->editingVersionId)],
-            'storedPath' => ['required', 'string', 'max:1000'],
-            'googleDriveRevisionId' => ['nullable', 'string', 'max:255'],
-            'changeSummary' => ['nullable', 'string'],
-            'fileSizeBytes' => ['nullable', 'integer', 'min:0'],
         ];
     }
 
@@ -168,17 +171,17 @@ new #[Title('Tai lieu')] class extends Component {
     protected function documentMessages(): array
     {
         return [
-            'documentName.required' => 'Ten tai lieu la bat buoc.',
-            'documentName.max' => 'Ten tai lieu khong duoc vuot qua 500 ky tu.',
-            'documentType.required' => 'Loai tai lieu la bat buoc.',
-            'documentType.in' => 'Loai tai lieu khong hop le.',
-            'documentPermission.required' => 'Quyen tai lieu la bat buoc.',
-            'documentPermission.in' => 'Quyen tai lieu khong hop le.',
-            'googleDriveId.max' => 'Google Drive ID khong duoc vuot qua 255 ky tu.',
-            'googleDriveUrl.max' => 'Google Drive URL khong duoc vuot qua 1000 ky tu.',
-            'currentVersion.required' => 'Current version la bat buoc.',
-            'currentVersion.integer' => 'Current version phai la so nguyen.',
-            'currentVersion.min' => 'Current version toi thieu la 1.',
+            'documentName.required' => 'Tên tài liệu là bắt buộc.',
+            'documentName.max' => 'Tên tài liệu không được vượt quá 500 ký tự.',
+            'documentType.required' => 'Loại tài liệu là bắt buộc.',
+            'documentType.in' => 'Loại tài liệu không hợp lệ.',
+            'documentPermission.required' => 'Quyền tài liệu là bắt buộc.',
+            'documentPermission.in' => 'Quyền tài liệu không hợp lệ.',
+            'googleDriveId.max' => 'Google Drive ID không được vượt quá 255 ký tự.',
+            'googleDriveUrl.max' => 'Google Drive URL không được vượt quá 1000 ký tự.',
+            'currentVersion.required' => 'Phiên bản hiện tại là bắt buộc.',
+            'currentVersion.integer' => 'Phiên bản hiện tại phải là số nguyên.',
+            'currentVersion.min' => 'Phiên bản hiện tại tối thiểu là 1.',
         ];
     }
 
@@ -188,14 +191,14 @@ new #[Title('Tai lieu')] class extends Component {
     protected function versionMessages(): array
     {
         return [
-            'versionNumber.required' => 'So phien ban la bat buoc.',
-            'versionNumber.integer' => 'So phien ban phai la so nguyen.',
-            'versionNumber.unique' => 'So phien ban da ton tai trong tai lieu nay.',
-            'storedPath.required' => 'Duong dan luu tru la bat buoc.',
-            'storedPath.max' => 'Duong dan luu tru khong duoc vuot qua 1000 ky tu.',
-            'googleDriveRevisionId.max' => 'Revision ID khong duoc vuot qua 255 ky tu.',
-            'fileSizeBytes.integer' => 'Kich thuoc file phai la so nguyen.',
-            'fileSizeBytes.min' => 'Kich thuoc file khong hop le.',
+            'versionNumber.required' => 'Số phiên bản là bắt buộc.',
+            'versionNumber.integer' => 'Số phiên bản phải là số nguyên.',
+            'versionNumber.unique' => 'Số phiên bản đã tồn tại trong tài liệu này.',
+            'storedPath.required' => 'Đường dẫn lưu trữ là bắt buộc.',
+            'storedPath.max' => 'Đường dẫn lưu trữ không được vượt quá 1000 ký tự.',
+            'googleDriveRevisionId.max' => 'Revision ID không được vượt quá 255 ký tự.',
+            'fileSizeBytes.integer' => 'Kích thước tệp phải là số nguyên.',
+            'fileSizeBytes.min' => 'Kích thước tệp không hợp lệ.',
         ];
     }
 
@@ -240,7 +243,7 @@ new #[Title('Tai lieu')] class extends Component {
 
     public function saveDocument(): void
     {
-        $this->validate($this->documentRules(), $this->documentMessages());
+        $this->validate($this->documentRules());
 
         if ($this->editingDocumentId === null) {
             return;
@@ -318,7 +321,7 @@ new #[Title('Tai lieu')] class extends Component {
 
     public function saveVersion(): void
     {
-        $this->validate($this->versionRules(), $this->versionMessages());
+        $this->validate($this->versionRules());
 
         if ($this->editingVersionId === null) {
             return;

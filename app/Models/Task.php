@@ -15,8 +15,6 @@ class Task extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected ?int $previousPicId = null;
-
     protected ?int $previousPhaseId = null;
 
     /**
@@ -59,10 +57,6 @@ class Task extends Model
         });
 
         static::updating(function (Task $task): void {
-            $task->previousPicId = $task->getOriginal('pic_id') !== null
-                ? (int) $task->getOriginal('pic_id')
-                : null;
-
             $task->previousPhaseId = $task->getOriginal('phase_id') !== null
                 ? (int) $task->getOriginal('phase_id')
                 : null;
@@ -70,22 +64,18 @@ class Task extends Model
 
         static::saved(function (Task $task): void {
             $task->syncPhaseAndProjectProgress();
-            $task->syncKpiScores();
         });
 
         static::deleting(function (Task $task): void {
-            $task->previousPicId = $task->pic_id;
             $task->previousPhaseId = $task->phase_id;
         });
 
         static::deleted(function (Task $task): void {
             $task->syncPhaseAndProjectProgress();
-            $task->syncKpiScores();
         });
 
         static::restored(function (Task $task): void {
             $task->syncPhaseAndProjectProgress();
-            $task->syncKpiScores();
         });
 
         static::updated(function (Task $task): void {
@@ -277,20 +267,6 @@ class Task extends Model
             if ($oldPhase !== null) {
                 $oldPhase->refreshProgressFromTasks();
             }
-        }
-    }
-
-    /**
-     * Sau khi task thay doi, dong bo KPI cho PIC cu va PIC moi.
-     */
-    private function syncKpiScores(): void
-    {
-        if ($this->pic_id !== null) {
-            KpiScore::syncForUser((int) $this->pic_id);
-        }
-
-        if ($this->previousPicId !== null && $this->previousPicId !== $this->pic_id) {
-            KpiScore::syncForUser($this->previousPicId);
         }
     }
 }

@@ -337,7 +337,13 @@ class TaskService
             });
 
             if ($telegramRecipients->isNotEmpty()) {
-                Notification::send($telegramRecipients, new TaskApprovalRequestLeaderNotification($task, $actor));
+                foreach ($telegramRecipients as $leader) {
+                    try {
+                        Notification::send($leader, new TaskApprovalRequestLeaderNotification($task, $actor));
+                    } catch (\Throwable $exception) {
+                        report($exception);
+                    }
+                }
             }
         } catch (\Exception $e) {
             // Không phá vỡ luồng chính nếu gửi notification thất bại; ghi log nếu cần

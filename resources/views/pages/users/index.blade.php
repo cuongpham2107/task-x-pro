@@ -10,6 +10,7 @@ use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
+use Livewire\Attributes\Validate;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -45,24 +46,34 @@ new #[Title('Người dùng')] class extends Component {
 
     public string $pendingDeleteUserName = '';
 
+    #[Validate]
     public string $employeeCode = '';
 
+    #[Validate]
     public string $name = '';
 
+    #[Validate]
     public string $email = '';
 
+    #[Validate]
     public string $password = '';
 
+    #[Validate(['nullable', 'string', 'max:20'])]
     public string $phone = '';
 
+    #[Validate(['nullable', 'string', 'max:255'])]
     public string $jobTitle = '';
 
+    #[Validate(['nullable', 'exists:departments,id'])]
     public ?string $departmentId = null;
 
+    #[Validate]
     public string $status = UserStatus::Active->value;
 
+    #[Validate(['nullable', 'string', 'max:100'])]
     public string $telegramId = '';
 
+    #[Validate(['required', 'exists:roles,id'])]
     public ?string $roleId = null;
 
     /** @var array<string, string> */
@@ -122,12 +133,7 @@ new #[Title('Người dùng')] class extends Component {
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', Rule::unique(User::class, 'email')->ignore($this->editingUserId)],
             'password' => $this->mode === 'create' ? ['required', 'string', 'min:6', 'max:255'] : ['nullable', 'string', 'min:6', 'max:255'],
-            'phone' => ['nullable', 'string', 'max:20'],
-            'jobTitle' => ['nullable', 'string', 'max:255'],
-            'departmentId' => ['nullable', 'exists:departments,id'],
             'status' => ['required', Rule::in(UserStatus::values())],
-            'telegramId' => ['nullable', 'string', 'max:100'],
-            'roleId' => ['required', 'exists:roles,id'],
         ];
     }
 

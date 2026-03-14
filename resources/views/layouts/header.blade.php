@@ -5,14 +5,14 @@
             class="rounded-lg p-1 text-slate-600 transition-colors hover:bg-slate-100 lg:hidden dark:text-slate-400 dark:hover:bg-slate-800">
             <span class="material-symbols-outlined text-2xl">menu</span>
         </button>
-        <div class="text-primary hidden items-center gap-3 lg:flex">
+        <a href="{{route('dashboard.index')}}" class="text-primary hidden items-center gap-3 lg:flex">
             <div class="bg-primary/10 ring-primary/20 flex size-9 items-center justify-center rounded-lg p-1.5 ring-1">
                 <img src="{{ asset('images/logo.png') }}" alt="ASG logo" class="size-full object-contain">
             </div>
             <h2 class="text-lg font-bold leading-tight tracking-tight text-slate-900 dark:text-slate-100">
                 {{ config('app.name') }}
             </h2>
-        </div>
+        </a>
         <div class="relative hidden w-80 2xl:flex" x-data="{
             query: '',
             open: false,

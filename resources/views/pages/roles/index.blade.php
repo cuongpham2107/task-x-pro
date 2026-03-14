@@ -8,6 +8,7 @@ use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
+use Livewire\Attributes\Validate;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Spatie\Permission\Models\Role;
@@ -32,9 +33,11 @@ new #[Title('Phân quyền')] class extends Component {
 
     public ?int $editingRoleId = null;
 
+    #[Validate]
     public string $roleName = '';
 
     /** @var list<string> */
+    #[Validate]
     public array $selectedPermissions = [];
 
     public bool $showDeleteRoleModal = false;
@@ -127,7 +130,7 @@ new #[Title('Phân quyền')] class extends Component {
     /**
      * @return array<string, array<int|string, \Illuminate\Contracts\Validation\ValidationRule|string>>
      */
-    protected function roleRules(): array
+    protected function rules(): array
     {
         return [
             'roleName' => ['required', 'string', 'min:2', 'max:125', 'regex:/^[A-Za-z0-9._-]+$/', Rule::unique('roles', 'name')->where(fn($query) => $query->where('guard_name', 'web'))->ignore($this->editingRoleId)],
@@ -139,7 +142,7 @@ new #[Title('Phân quyền')] class extends Component {
     /**
      * @return array<string, string>
      */
-    protected function roleMessages(): array
+    protected function messages(): array
     {
         return [
             'roleName.required' => 'Tên vai trò là bắt buộc.',
@@ -153,7 +156,7 @@ new #[Title('Phân quyền')] class extends Component {
 
     public function saveRole(): void
     {
-        $this->validate($this->roleRules(), $this->roleMessages());
+        $this->validate();
 
         $actor = auth()->user();
         if ($actor === null) {

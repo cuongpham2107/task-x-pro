@@ -11,6 +11,7 @@ use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
+use Livewire\Attributes\Validate;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -43,12 +44,16 @@ new #[Title('Phòng ban')] class extends Component {
 
     public string $pendingDeleteDepartmentName = '';
 
+    #[Validate]
     public string $code = '';
 
+    #[Validate(['required', 'string', 'max:255'])]
     public string $name = '';
 
+    #[Validate(['nullable', 'exists:users,id'])]
     public ?string $headUserId = null;
 
+    #[Validate]
     public string $status = DepartmentStatus::Active->value;
 
     /** @var Collection<int, User>|null */
@@ -100,8 +105,6 @@ new #[Title('Phòng ban')] class extends Component {
     {
         return [
             'code' => ['required', 'string', 'max:20', 'regex:/^[A-Za-z0-9_-]+$/', Rule::unique(Department::class, 'code')->ignore($this->editingDepartmentId)],
-            'name' => ['required', 'string', 'max:255'],
-            'headUserId' => ['nullable', 'exists:users,id'],
             'status' => ['required', Rule::in(DepartmentStatus::values())],
         ];
     }
@@ -116,11 +119,6 @@ new #[Title('Phòng ban')] class extends Component {
             'code.max' => 'Mã phòng ban không được vượt quá 20 ký tự.',
             'code.regex' => 'Mã phòng ban chỉ chấp nhận chữ, số, dấu gạch ngang hoặc gạch dưới.',
             'code.unique' => 'Mã phòng ban đã tồn tại.',
-            'name.required' => 'Tên phòng ban là bắt buộc.',
-            'name.max' => 'Tên phòng ban không được vượt quá 255 ký tự.',
-            'headUserId.exists' => 'Trưởng phòng đã chọn không tồn tại.',
-            'status.required' => 'Trạng thái là bắt buộc.',
-            'status.in' => 'Trạng thái không hợp lệ.',
         ];
     }
 

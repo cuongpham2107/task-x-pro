@@ -3,6 +3,7 @@
 namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
+use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Carbon;
 use NotificationChannels\Telegram\TelegramChannel;
@@ -31,7 +32,17 @@ class WeeklySummaryNotification extends Notification
      */
     public function via(object $notifiable): array
     {
-        return [TelegramChannel::class];
+        $channels = [];
+
+        if (trim((string) ($notifiable->telegram_id ?? '')) !== '') {
+            $channels[] = TelegramChannel::class;
+        }
+
+        if (trim((string) ($notifiable->email ?? '')) !== '') {
+            $channels[] = 'mail';
+        }
+
+        return $channels;
     }
 
     public function toTelegram(object $notifiable): TelegramMessage
@@ -51,6 +62,25 @@ class WeeklySummaryNotification extends Notification
         $dashboardUrl = $this->resolveDashboardUrl();
         if ($dashboardUrl !== null) {
             $message->button('Mở Dashboard', $dashboardUrl);
+        }
+
+        return $message;
+    }
+
+    public function toMail(object $notifiable): MailMessage
+    {
+        $periodLabel = $this->periodStart->format('d/m/Y').' - '.$this->periodEnd->format('d/m/Y');
+
+        $message = (new MailMessage)
+            ->subject("Báo cáo cuối tuần ({$periodLabel})")
+            ->line("Hoàn thành: {$this->summary['completed']}")
+            ->line("Trễ hạn: {$this->summary['late']}")
+            ->line("Chờ duyệt: {$this->summary['waiting_approval']}")
+            ->line("Sắp đến hạn (<=3 ngày): {$this->summary['due_soon']}");
+
+        $dashboardUrl = $this->resolveDashboardUrl();
+        if ($dashboardUrl !== null) {
+            $message->action('Mở Dashboard', $dashboardUrl);
         }
 
         return $message;

@@ -13,7 +13,7 @@ use App\Models\ApprovalLog;
 use App\Models\SystemNotification;
 use App\Models\Task;
 use App\Models\User;
-use App\Notifications\ApprovalResultsNotification;
+use App\Notifications\ApprovalResults;
 use App\Notifications\TaskRejectedNotification;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
@@ -312,17 +312,20 @@ class TaskApprovalService
                 'created_at' => now(),
             ]);
         }
-        try {
+        $telegramRecipients = $ceos->filter(function (User $ceo): bool {
+            return trim((string) $ceo->telegram_id) !== '';
+        });
 
-            $telegramRecipients = $ceos->filter(function (User $ceo): bool {
-                return trim((string) $ceo->telegram_id) !== '';
-            });
+        if ($telegramRecipients->isEmpty()) {
+            return;
+        }
 
-            if ($telegramRecipients->isNotEmpty()) {
-                Notification::send($telegramRecipients, new ApprovalResultsNotification($task, $leader));
+        foreach ($telegramRecipients as $recipient) {
+            try {
+                Notification::send($recipient, new ApprovalResults($task, $leader));
+            } catch (\Throwable $exception) {
+                report($exception);
             }
-        } catch (\Exception $e) {
-            Log::error('Lỗi'.$e->getMessage());
         }
     }
 }
