@@ -170,29 +170,20 @@ class TaskQueryService
         $query = Task::query();
 
         // 1. Admins/CEOs see everything
-        if ($actor->hasAnyRole(['super_admin', 'ceo', 'leader'])) {
+        if ($actor->hasAnyRole(['super_admin', 'ceo'])) {
             return $query;
         }
 
-        // 2. Check if user is a designated Project Leader for this specific project
-        $isProjectLeader = false;
-        if ($projectId) {
-            $isProjectLeader = \App\Models\ProjectLeader::where('project_id', $projectId)
-                ->where('user_id', $actor->id)
-                ->exists();
-        }
-
-        if ($isProjectLeader) {
-            return $query;
-        }
-
-        // 3. Regular users only see tasks they are involved in
+        // 2. Regular users and Leaders (restricted to their projects)
         return $query->where(function (Builder $builder) use ($actor): void {
             $builder
                 ->where('pic_id', $actor->id)
                 ->orWhere('created_by', $actor->id)
                 ->orWhereHas('coPics', function (Builder $coPicQuery) use ($actor): void {
                     $coPicQuery->where('users.id', $actor->id);
+                })
+                ->orWhereHas('phase.project.leaders', function (Builder $leaderQuery) use ($actor): void {
+                    $leaderQuery->where('users.id', $actor->id);
                 });
         });
     }
