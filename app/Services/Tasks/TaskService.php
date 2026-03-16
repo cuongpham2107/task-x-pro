@@ -15,6 +15,7 @@ use App\Notifications\TaskApprovalRequestLeaderNotification;
 use App\Notifications\TaskAssignedNotification;
 use App\Services\Documents\Contracts\DocumentServiceInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -433,7 +434,14 @@ class TaskService
      */
     public function addAttachments(User $actor, Task $task, array $files): Collection
     {
-        if (empty($files)) {
+        $files = collect($files)
+            ->filter(function (mixed $file): bool {
+                return $file instanceof UploadedFile;
+            })
+            ->values()
+            ->all();
+
+        if ($files === []) {
             return collect();
         }
 
