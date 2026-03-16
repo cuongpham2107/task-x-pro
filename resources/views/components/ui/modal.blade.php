@@ -23,7 +23,7 @@
 @endphp
 
 <div
-    x-data="{ isOpen: @entangle($wireModel) }"
+    x-data="{ isOpen: @entangle($wireModel).live }"
     x-effect="document.body.classList.toggle('overflow-hidden', isOpen)"
     {{ $attributes->except(['maxWidth', 'closeable'])->whereDoesntStartWith('wire:model') }}
 >
