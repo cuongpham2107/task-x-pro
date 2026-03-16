@@ -38,7 +38,8 @@
         <span class="material-symbols-outlined text-base text-slate-400">attach_file</span>
         {{ $label }}
         @php
-            $count = count($newFiles) + (is_countable($existingAttachments) ? count($existingAttachments) : 0);
+            $newFilesCount = collect($newFiles)->filter()->count();
+            $count = $newFilesCount + (is_countable($existingAttachments) ? count($existingAttachments) : 0);
         @endphp
         @if ($count > 0)
             <span class="rounded-full bg-slate-100 px-1.5 py-0.5 text-xs font-normal text-slate-500 dark:bg-slate-800">
@@ -86,24 +87,26 @@
     @endif
 
     {{-- Danh sách file mới đang chờ --}}
-    @if (count($newFiles) > 0)
+    @if ($newFilesCount > 0)
         <div class="space-y-1.5">
             <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Tệp mới chuẩn bị tải lên</p>
             @foreach ($newFiles as $index => $file)
-                <div class="border-primary/20 bg-primary/5 flex items-center gap-3 rounded-lg border px-3 py-2">
-                    <span class="material-symbols-outlined text-primary shrink-0 text-lg">upload_file</span>
-                    <div class="min-w-0 flex-1">
-                        <p class="truncate text-sm font-medium text-slate-800 dark:text-slate-200">{{ $file->getClientOriginalName() }}</p>
-                        <p class="text-xs text-slate-400">{{ number_format($file->getSize() / 1024, 1) }} KB</p>
+                @if ($file !== null)
+                    <div class="border-primary/20 bg-primary/5 flex items-center gap-3 rounded-lg border px-3 py-2">
+                        <span class="material-symbols-outlined text-primary shrink-0 text-lg">upload_file</span>
+                        <div class="min-w-0 flex-1">
+                            <p class="truncate text-sm font-medium text-slate-800 dark:text-slate-200">{{ $file->getClientOriginalName() }}</p>
+                            <p class="text-xs text-slate-400">{{ number_format($file->getSize() / 1024, 1) }} KB</p>
+                        </div>
+                        <button
+                            class="shrink-0 text-slate-400 transition-colors hover:text-red-500"
+                            type="button"
+                            wire:click="$set('{{ $name }}.{{ $index }}', null)"
+                        >
+                            <span class="material-symbols-outlined text-base">close</span>
+                        </button>
                     </div>
-                    <button
-                        class="shrink-0 text-slate-400 transition-colors hover:text-red-500"
-                        type="button"
-                        wire:click="$set('{{ $name }}.{{ $index }}', null)"
-                    >
-                        <span class="material-symbols-outlined text-base">close</span>
-                    </button>
-                </div>
+                @endif
             @endforeach
         </div>
     @endif

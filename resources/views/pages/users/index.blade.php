@@ -258,10 +258,8 @@ new #[Title('Người dùng')] class extends Component {
                 $message = 'Cập nhật người dùng thành công!';
             } else {
                 $this->userService->create($actor, $payload);
-
                 $message = 'Tạo người dùng thành công!';
             }
-
             $this->closeFormModal();
             unset($this->users, $this->summaryStats);
 

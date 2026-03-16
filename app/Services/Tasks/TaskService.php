@@ -12,6 +12,7 @@ use App\Models\Task;
 use App\Models\TaskAttachment;
 use App\Models\User;
 use App\Notifications\TaskApprovalRequestLeaderNotification;
+use App\Notifications\TaskAssignedNotification;
 use App\Services\Documents\Contracts\DocumentServiceInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
@@ -97,6 +98,7 @@ class TaskService
             $this->payloadService->syncCoPics($task, $coPicIds);
 
             $task = $task->refresh();
+            $this->sendAssignmentNotification($actor, $task);
             $overloadWarning = $this->overloadService->warnIfPicOverloaded($actor, $task);
 
             return new TaskMutationResult(
@@ -391,6 +393,22 @@ class TaskService
             // Logic xoa phu (attachment, etc.) neu can
             return $task->delete();
         });
+    }
+
+    private function sendAssignmentNotification(User $actor, Task $task): void
+    {
+        $task->loadMissing(['pic:id,name,telegram_id', 'phase.project:id,name']);
+        $pic = $task->pic;
+
+        if ($pic === null || trim((string) $pic->telegram_id) === '') {
+            return;
+        }
+
+        try {
+            Notification::send($pic, new TaskAssignedNotification($task, $actor));
+        } catch (\Throwable $exception) {
+            report($exception);
+        }
     }
 
     /**
