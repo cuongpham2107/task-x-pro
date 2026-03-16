@@ -148,6 +148,7 @@ class DocumentMutationService
                 $attachmentMedia->getPathRelativeToRoot(),
                 $attachmentMedia->disk,
             )
+                ->preservingOriginal()
                 ->usingFileName($attachmentMedia->file_name)
                 ->toMediaCollection('version_file');
 

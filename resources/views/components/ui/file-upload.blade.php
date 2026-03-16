@@ -110,7 +110,23 @@
                     $uploaderName = $attachment->uploader->name ?? 'Unknown';
                 @endphp
                 <div class="flex items-center gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-900">
-                    <span class="material-symbols-outlined text-primary shrink-0 text-lg">description</span>
+                    @php
+                        $isImage = false;
+                        if ($media !== null) {
+                            $isImage = str_starts_with($media->mime_type, 'image/');
+                        } else {
+                            $mimeType = $attachment->mime_type ?? '';
+                            $isImage = str_starts_with($mimeType, 'image/');
+                        }
+                    @endphp
+
+                    @if ($isImage && $attachmentUrl !== '#' && $attachmentUrl !== '')
+                        <div class="h-10 w-10 shrink-0 overflow-hidden rounded-md border border-slate-100 dark:border-slate-800">
+                            <img src="{{ $attachmentUrl }}" class="h-full w-full object-cover" alt="Preview">
+                        </div>
+                    @else
+                        <span class="material-symbols-outlined text-primary shrink-0 text-lg">description</span>
+                    @endif
                     <div class="min-w-0 flex-1">
                         <p class="truncate text-sm font-medium text-slate-800 dark:text-slate-200">{{ $originalName }}</p>
                         <p class="text-xs text-slate-400">{{ number_format($size / 1024, 1) }} KB • {{ $uploaderName }}</p>

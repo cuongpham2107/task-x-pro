@@ -235,8 +235,11 @@ new #[Title('Tài liệu')] class extends Component {
 
     public function resetDocumentFormModal(): void
     {
-        $this->reset(['editingDocumentId', 'documentName', 'documentDescription', 'googleDriveId', 'googleDriveUrl']);
-
+        $this->editingDocumentId = null;
+        $this->documentName = '';
+        $this->documentDescription = '';
+        $this->googleDriveId = '';
+        $this->googleDriveUrl = '';
         $this->documentType = DocumentType::Other->value;
         $this->documentPermission = DocumentPermission::View->value;
         $this->currentVersion = 1;
@@ -315,8 +318,12 @@ new #[Title('Tài liệu')] class extends Component {
 
     public function resetVersionFormModal(): void
     {
-        $this->reset(['editingVersionId', 'editingVersionDocumentId', 'storedPath', 'googleDriveRevisionId', 'changeSummary', 'fileSizeBytes']);
-
+        $this->editingVersionId = null;
+        $this->editingVersionDocumentId = null;
+        $this->storedPath = '';
+        $this->googleDriveRevisionId = '';
+        $this->changeSummary = '';
+        $this->fileSizeBytes = null;
         $this->versionNumber = 1;
         $this->resetValidation();
     }

@@ -29,6 +29,7 @@ services:
     volumes:
       - ./:/var/www
       - public_build:/var/www/public/build:ro
+      - storage:/var/www/storage:ro
       - ./nginx/conf.d/:/etc/nginx/conf.d/
     networks:
       - taskxpro-network
