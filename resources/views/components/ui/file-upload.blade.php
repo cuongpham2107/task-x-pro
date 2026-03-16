@@ -54,10 +54,57 @@
             <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Tệp đã tải lên</p>
             @foreach ($existingAttachments as $attachment)
                 @php
-                    // Handle different attachment structures if needed, defaulting to standard media library
-                    $attachmentUrl = method_exists($attachment, 'getFirstMediaUrl') 
-                        ? $attachment->getFirstMediaUrl('attachment') 
-                        : ($attachment->url ?? '#');
+                    $attachmentUrl = null;
+                    $media = method_exists($attachment, 'getFirstMedia')
+                        ? $attachment->getFirstMedia('attachment')
+                        : null;
+
+                    if ($media !== null) {
+                        try {
+                            if (method_exists($media, 'getTemporaryUrl')) {
+                                $attachmentUrl = $media->getTemporaryUrl(now()->addMinutes(10));
+                            }
+                        } catch (\Throwable) {
+                            $attachmentUrl = null;
+                        }
+
+                        if ($attachmentUrl === null) {
+                            try {
+                                $attachmentUrl = $media->getFullUrl();
+                            } catch (\Throwable) {
+                                $attachmentUrl = null;
+                            }
+                        }
+                    }
+
+                    if ($attachmentUrl === null) {
+                        $storedPath = trim((string) ($attachment->stored_path ?? ''));
+                        $diskName = (string) ($attachment->disk ?? config('media-library.disk_name'));
+
+                        if ($storedPath !== '' && $diskName !== '') {
+                            try {
+                                $diskInstance = \Illuminate\Support\Facades\Storage::disk($diskName);
+
+                                if ($diskInstance->exists($storedPath)) {
+                                    try {
+                                        if (method_exists($diskInstance, 'temporaryUrl')) {
+                                            $attachmentUrl = $diskInstance->temporaryUrl($storedPath, now()->addMinutes(10));
+                                        }
+                                    } catch (\Throwable) {
+                                        $attachmentUrl = null;
+                                    }
+
+                                    if ($attachmentUrl === null && method_exists($diskInstance, 'url')) {
+                                        $attachmentUrl = $diskInstance->url($storedPath);
+                                    }
+                                }
+                            } catch (\Throwable) {
+                                $attachmentUrl = null;
+                            }
+                        }
+                    }
+
+                    $attachmentUrl = $attachmentUrl ?? ($attachment->url ?? '#');
                     $originalName = $attachment->original_name ?? $attachment->file_name ?? 'Unknown';
                     $size = $attachment->size_bytes ?? $attachment->size ?? 0;
                     $uploaderName = $attachment->uploader->name ?? 'Unknown';
@@ -68,11 +115,11 @@
                         <p class="truncate text-sm font-medium text-slate-800 dark:text-slate-200">{{ $originalName }}</p>
                         <p class="text-xs text-slate-400">{{ number_format($size / 1024, 1) }} KB • {{ $uploaderName }}</p>
                     </div>
-                    @if ($attachmentUrl !== '#' && $attachmentUrl !== '')
-                        <a href="{{ $attachmentUrl }}" target="_blank" class="shrink-0 text-slate-400 transition-colors hover:text-primary">
-                            <span class="material-symbols-outlined text-base">open_in_new</span>
-                        </a>
-                    @endif
+                        @if ($attachmentUrl !== '#' && $attachmentUrl !== '')
+                            <a href="{{ $attachmentUrl }}" target="_blank" class="shrink-0 text-slate-400 transition-colors hover:text-primary">
+                                <span class="material-symbols-outlined text-base">open_in_new</span>
+                            </a>
+                        @endif
                     <button
                         class="shrink-0 text-slate-400 transition-colors hover:text-red-500"
                         type="button"
