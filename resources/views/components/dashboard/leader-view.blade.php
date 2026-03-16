@@ -29,12 +29,9 @@ new class extends Component {
     <main class="flex flex-1 overflow-hidden">
         <!-- Content Area -->
         <div class="bg-background-light dark:bg-background-dark flex-1 overflow-y-auto p-8">
-            <div class="mx-auto max-w-7xl space-y-8"
-                 x-show="ready"
-                 x-transition:enter="transition ease-out duration-500"
-                 x-transition:enter-start="opacity-0 translate-y-4"
-                 x-transition:enter-end="opacity-100 translate-y-0"
-                 style="display: none;">
+            <div class="mx-auto max-w-7xl space-y-8" x-show="ready" x-transition:enter="transition ease-out duration-500"
+                x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0"
+                style="display: none;">
                 <!-- Page Header -->
                 <div class="flex flex-col justify-between gap-4 md:flex-row md:items-end">
                     <div>
@@ -71,7 +68,8 @@ new class extends Component {
                             <div>
                                 <h3 class="text-lg font-bold text-slate-900 dark:text-white">Tiến độ Dự án: Thực tế vs
                                     Kế hoạch</h3>
-                                <p class="text-sm text-slate-500">Tổng hợp dữ liệu từ {{ $data['projects']['running'] ?? 0 }} dự án đang chạy</p>
+                                <p class="text-sm text-slate-500">Tổng hợp dữ liệu từ
+                                    {{ $data['projects']['running'] ?? 0 }} dự án đang chạy</p>
                             </div>
                             <div class="flex items-center gap-4 text-xs font-semibold">
                                 <div class="flex items-center gap-1.5"><span
@@ -122,28 +120,34 @@ new class extends Component {
                             <div class="flex items-center justify-between">
                                 <div>
                                     <p class="text-sm font-medium text-slate-500">Tổng số dự án</p>
-                                    <p class="text-2xl font-bold text-slate-900 dark:text-white">{{ $data['projects']['total'] ?? 0 }}</p>
+                                    <p class="text-2xl font-bold text-slate-900 dark:text-white">
+                                        {{ $data['projects']['total'] ?? 0 }}</p>
                                 </div>
-                                <span class="material-symbols-outlined text-3xl text-primary opacity-50">folder_shared</span>
+                                <span
+                                    class="material-symbols-outlined text-primary text-3xl opacity-50">folder_shared</span>
                             </div>
                             <div class="flex items-center justify-between">
                                 <div>
                                     <p class="text-sm font-medium text-slate-500">Công việc đang chạy</p>
-                                    <p class="text-2xl font-bold text-slate-900 dark:text-white">{{ $data['tasks']['in_progress'] ?? 0 }}</p>
+                                    <p class="text-2xl font-bold text-slate-900 dark:text-white">
+                                        {{ $data['tasks']['in_progress'] ?? 0 }}</p>
                                 </div>
                                 <span class="material-symbols-outlined text-3xl text-blue-500 opacity-50">pending</span>
                             </div>
                             <div class="flex items-center justify-between">
                                 <div>
                                     <p class="text-sm font-medium text-slate-500">Chờ phê duyệt</p>
-                                    <p class="text-2xl font-bold text-slate-900 dark:text-white">{{ $data['tasks']['waiting_approval'] ?? 0 }}</p>
+                                    <p class="text-2xl font-bold text-slate-900 dark:text-white">
+                                        {{ $data['tasks']['waiting_approval'] ?? 0 }}</p>
                                 </div>
-                                <span class="material-symbols-outlined text-3xl text-amber-500 opacity-50">fact_check</span>
+                                <span
+                                    class="material-symbols-outlined text-3xl text-amber-500 opacity-50">fact_check</span>
                             </div>
                             <div class="flex items-center justify-between">
                                 <div>
                                     <p class="text-sm font-medium text-slate-500">Công việc quá hạn</p>
-                                    <p class="text-2xl font-bold text-slate-900 dark:text-white">{{ $data['tasks']['late'] ?? 0 }}</p>
+                                    <p class="text-2xl font-bold text-slate-900 dark:text-white">
+                                        {{ $data['tasks']['late'] ?? 0 }}</p>
                                 </div>
                                 <span class="material-symbols-outlined text-3xl text-red-500 opacity-50">warning</span>
                             </div>
@@ -175,27 +179,43 @@ new class extends Component {
                             </thead>
                             <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
                                 @forelse($data['recent_tasks'] as $task)
+                                    @php
+                                        $priorityEnum =
+                                            $task->priority instanceof \App\Enums\TaskPriority
+                                                ? $task->priority
+                                                : \App\Enums\TaskPriority::tryFrom($task->priority ?? '');
+                                        $priorityColor = match ($priorityEnum?->value ?? '') {
+                                            'urgent' => 'red',
+                                            'high' => 'orange',
+                                            'medium' => 'amber',
+                                            default => 'blue',
+                                        };
+                                    @endphp
                                     <tr class="transition-colors hover:bg-slate-50 dark:hover:bg-slate-800">
                                         <td class="px-6 py-4">
-                                            @if($task->phase && $task->phase->project)
-                                                <button 
+                                            @if ($task->phase && $task->phase->project)
+                                                <button
                                                     wire:click="$dispatch('task-edit-requested', { taskId: {{ $task->id }} })"
-                                                    class="font-semibold text-slate-900 dark:text-slate-100 hover:text-primary transition-colors text-left block">
+                                                    class="hover:text-primary block text-left font-semibold text-slate-900 transition-colors dark:text-slate-100">
                                                     {{ $task->name }}
                                                 </button>
                                             @else
-                                                <div class="font-semibold text-slate-900 dark:text-slate-100">{{ $task->name }}</div>
+                                                <div class="font-semibold text-slate-900 dark:text-slate-100">
+                                                    {{ $task->name }}</div>
                                             @endif
                                             <div class="mt-1 flex items-center gap-2">
-                                                <span class="rounded bg-slate-100 px-2 py-0.5 text-[10px] font-bold uppercase text-slate-600 dark:bg-slate-800 dark:text-slate-400">
-                                                    {{ $task->priority instanceof TaskPriority ? $task->priority->label() : $task->priority }}
-                                                </span>
-                                                @if($task->comments_count > 0)
-                                                    <span class="flex items-center gap-1 text-[10px] text-slate-400" title="{{ $task->comments_count }} bình luận">
-                                                        <span class="material-symbols-outlined text-[14px]">chat_bubble</span>
+                                                <x-ui.badge :color="$priorityColor" size="xs">
+                                                    {{ $priorityEnum?->label() ?? '—' }}
+                                                </x-ui.badge>
+                                                @if ($task->comments_count > 0)
+                                                    <span class="flex items-center gap-1 text-[10px] text-slate-400"
+                                                        title="{{ $task->comments_count }} bình luận">
+                                                        <span
+                                                            class="material-symbols-outlined text-[14px]">chat_bubble</span>
                                                         {{ $task->comments_count }}
                                                     </span>
                                                 @endif
+
                                             </div>
                                         </td>
                                         <td class="px-6 py-4 text-sm text-slate-500">
@@ -203,20 +223,26 @@ new class extends Component {
                                         </td>
                                         <td class="px-6 py-4">
                                             <div class="flex items-center gap-2">
-                                                @if($task->pic)
-                                                    <a href="{{ route('users.show', $task->pic) }}" 
-                                                       class="size-8 rounded-full bg-slate-200 overflow-hidden block border-2 border-transparent hover:border-primary transition-all"
-                                                       title="{{ $task->pic->name }}{{ $task->pic->job_title ? ' - ' . $task->pic->job_title : '' }}">
-                                                        @if($task->pic->avatar_url)
-                                                            <img src="{{ $task->pic->avatar_url }}" alt="{{ $task->pic->name }}" class="h-full w-full object-cover">
+                                                @if ($task->pic)
+                                                    <a href="{{ route('users.show', $task->pic) }}"
+                                                        class="hover:border-primary block size-8 overflow-hidden rounded-full border-2 border-transparent bg-slate-200 transition-all"
+                                                        title="{{ $task->pic->name }}{{ $task->pic->job_title ? ' - ' . $task->pic->job_title : '' }}">
+                                                        @if ($task->pic->avatar_url)
+                                                            <img src="{{ $task->pic->avatar_url }}"
+                                                                alt="{{ $task->pic->name }}"
+                                                                class="h-full w-full object-cover">
                                                         @else
-                                                            <span class="flex h-full w-full items-center justify-center text-[10px] font-bold text-slate-500">{{ substr($task->pic->name, 0, 1) }}</span>
+                                                            <span
+                                                                class="flex h-full w-full items-center justify-center text-[10px] font-bold text-slate-500">{{ substr($task->pic->name, 0, 1) }}</span>
                                                         @endif
                                                     </a>
                                                     <div class="flex flex-col">
-                                                        <span class="text-sm font-medium">{{ $task->pic->name }}</span>
-                                                        @if($task->coPics->isNotEmpty())
-                                                            <span class="text-[10px] text-slate-400">+{{ $task->coPics->count() }} người khác</span>
+                                                        <span
+                                                            class="text-sm font-medium">{{ $task->pic->name }}</span>
+                                                        @if ($task->coPics->isNotEmpty())
+                                                            <span
+                                                                class="text-[10px] text-slate-400">+{{ $task->coPics->count() }}
+                                                                người khác</span>
                                                         @endif
                                                     </div>
                                                 @else
@@ -226,30 +252,38 @@ new class extends Component {
                                         </td>
                                         <td class="px-6 py-4 text-sm text-slate-500">
                                             {{ $task->deadline ? \Carbon\Carbon::parse($task->deadline)->format('d/m/Y') : 'N/A' }}
-                                            @if($task->deadline && \Carbon\Carbon::parse($task->deadline)->isPast() && $task->status !== \App\Enums\TaskStatus::Completed)
-                                                <span class="block text-[10px] text-rose-500 font-bold mt-0.5">Quá hạn</span>
+                                            @if (
+                                                $task->deadline &&
+                                                    \Carbon\Carbon::parse($task->deadline)->isPast() &&
+                                                    $task->status !== \App\Enums\TaskStatus::Completed)
+                                                <span class="mt-0.5 block text-[10px] font-bold text-rose-500">Quá
+                                                    hạn</span>
                                             @endif
                                         </td>
                                         <td class="px-6 py-4">
-                                            <span class="rounded px-2 py-1 text-[10px] font-bold uppercase {{ $task->status instanceof TaskStatus ? $task->status->badgeClass() : 'bg-slate-100 text-slate-600' }}">
+                                            <span
+                                                class="{{ $task->status instanceof TaskStatus ? $task->status->badgeClass() : 'bg-slate-100 text-slate-600' }} rounded px-2 py-1 text-[10px] font-bold uppercase">
                                                 {{ $task->status instanceof TaskStatus ? $task->status->label() : $task->status }}
                                             </span>
                                         </td>
                                         <td class="px-6 py-4">
                                             <div class="w-full max-w-[100px]">
-                                                <div class="flex items-center justify-between text-[10px] text-slate-500 mb-1">
+                                                <div
+                                                    class="mb-1 flex items-center justify-between text-[10px] text-slate-500">
                                                     <span>{{ $task->progress }}%</span>
                                                 </div>
-                                                <div class="h-1.5 w-full rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
-                                                    <div class="h-full rounded-full {{ $task->progress >= 100 ? 'bg-green-500' : 'bg-primary' }}" style="width: {{ $task->progress }}%"></div>
+                                                <div
+                                                    class="h-1.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+                                                    <div class="{{ $task->progress >= 100 ? 'bg-green-500' : 'bg-primary' }} h-full rounded-full"
+                                                        style="width: {{ $task->progress }}%"></div>
                                                 </div>
                                             </div>
                                         </td>
                                         <td class="px-6 py-4 text-right">
-                                            @if($task->phase && $task->phase->project)
+                                            @if ($task->phase && $task->phase->project)
                                                 <button
                                                     wire:click="$dispatch('task-edit-requested', { taskId: {{ $task->id }} })"
-                                                    class="flex size-8 ml-auto items-center justify-center rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400 transition-colors"
+                                                    class="ml-auto flex size-8 items-center justify-center rounded-lg bg-slate-100 text-slate-600 transition-colors hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400"
                                                     title="Chi tiết">
                                                     <span class="material-symbols-outlined text-lg">visibility</span>
                                                 </button>
@@ -271,4 +305,4 @@ new class extends Component {
         </div>
     </main>
     <livewire:task.form />
-</div>                                       
+</div>
