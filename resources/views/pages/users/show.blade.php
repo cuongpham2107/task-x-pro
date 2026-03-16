@@ -164,15 +164,16 @@ new #[Title('Thông tin cá nhân')] class extends Component {
         $this->dispatch('toast', message: 'Đổi mật khẩu thành công!', type: 'success');
     }
 
-    public function getTelegramId(){
+    public function getTelegramId()
+    {
         try {
             $response = Http::get('https://api.telegram.org/bot' . env('TELEGRAM_TOKEN') . '/getUpdates');
-            $result =$response->json()['result'][0]['message']['from']['id'];
+            $result = $response->json()['result'][0]['message']['from']['id'];
             $this->editTelegramId = $result;
             $this->dispatch('toast', message: 'Lấy ID Telegram thành công!', type: 'success');
         } catch (\Exception $e) {
             $this->dispatch('toast', message: 'Lỗi: ' . $e->getMessage(), type: 'error');
-        }   
+        }
     }
 };
 ?>
@@ -472,9 +473,11 @@ new #[Title('Thông tin cá nhân')] class extends Component {
         <x-ui.input label="Số điện thoại" name="editPhone" wire:model="editPhone" />
 
         <x-ui.input label="Telegram ID" name="editTelegramId" wire:model="editTelegramId" />
-        <p class="text-xs text-slate-600">Cách lấy id telegram: 
-            <a class="text-blue-500 hover:underline" href="https://web.telegram.org/a/#8053328462" target="_blank">Nhấn vào link và gửi 1 tin nhắn cho bot</a> ->
-            <a wire:click.stop="getTelegramId"  class="text-blue-500 hover:underline cursor-pointer">Nhấn vào đây để lấy ID Telegram</a>
+        <p class="text-xs text-slate-600">Cách lấy id telegram:
+            <a class="text-blue-500 hover:underline" href="https://web.telegram.org/a/#8053328462"
+                target="_blank">Nhấn vào link và gửi 1 tin nhắn cho bot</a> ->
+            <a wire:click.stop="getTelegramId" class="cursor-pointer text-blue-500 hover:underline">Nhấn vào đây để
+                lấy ID Telegram</a>
         </p>
 
         <div class="flex justify-end gap-3 pt-4">
