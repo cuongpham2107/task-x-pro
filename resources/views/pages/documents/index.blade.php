@@ -42,6 +42,8 @@ new #[Title('Tài liệu')] class extends Component {
 
     public bool $showDocumentFormModal = false;
 
+    public ?int $editingDocumentId = null;
+
     #[Validate]
     public string $documentName = '';
 
