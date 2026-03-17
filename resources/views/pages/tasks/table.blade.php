@@ -41,6 +41,8 @@ new #[Title('Công việc')] class extends Component
     #[Url(as: 'dir', except: 'asc')]
     public string $sortDir = 'asc';
 
+    public string $viewMode = 'table';
+
     public Collection $projectOptions;
 
     public Collection $phaseOptions;
@@ -94,6 +96,13 @@ new #[Title('Công việc')] class extends Component
         }
 
         $this->resetPage();
+    }
+
+    public function switchView(string $mode): void
+    {
+        if (in_array($mode, ['table', 'gantt'], true)) {
+            $this->viewMode = $mode;
+        }
     }
 
     #[On('task-saved')]
@@ -196,11 +205,25 @@ new #[Title('Công việc')] class extends Component
     <div class="flex flex-wrap items-center justify-between gap-4">
         <x-ui.heading title="Danh sách công việc"
             description="Theo dõi và quản lý tiến độ công việc trên toàn hệ thống." class="mb-0" />
-        @can('create', App\Models\Task::class)
-            <x-ui.button icon="add" size="md" @click="$dispatch('task-create-requested')">
-                Thêm công việc
-            </x-ui.button>
-        @endcan
+        <div class="flex items-center gap-3">
+            <div class="flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-100 p-1 dark:border-slate-700 dark:bg-slate-800">
+                <x-ui.button
+                    size="sm"
+                    :variant="$viewMode === 'table' ? 'primary' : 'ghost'"
+                    wire:click="switchView('table')"
+                >Bảng</x-ui.button>
+                <x-ui.button
+                    size="sm"
+                    :variant="$viewMode === 'gantt' ? 'primary' : 'ghost'"
+                    wire:click="switchView('gantt')"
+                >Gantt</x-ui.button>
+            </div>
+            @can('create', App\Models\Task::class)
+                <x-ui.button icon="add" size="md" @click="$dispatch('task-create-requested')">
+                    Thêm công việc
+                </x-ui.button>
+            @endcan
+        </div>
     </div>
 
     <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -245,7 +268,11 @@ new #[Title('Công việc')] class extends Component
         </div>
     </div>
 
-    <x-task.table :tasks="$this->tasks" :sort-by="$sortBy" :sort-dir="$sortDir" />
+    @if ($viewMode === 'table')
+        <x-task.table :tasks="$this->tasks" :sort-by="$sortBy" :sort-dir="$sortDir" />
+    @else
+        <x-task.gantt :tasks="$this->tasks" />
+    @endif
 
     <livewire:task.form />
 </div>
