@@ -161,7 +161,7 @@ new class extends Component {
             x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0"
             style="display: none;">
             <div class="flex items-center justify-between">
-                <h2 class="text-xl font-bold tracking-tight text-slate-900 dark:text-white">Công việc gần đây</h2>
+                <h2 class="text-lg font-bold tracking-tight text-slate-900 dark:text-white">Công việc gần đây</h2>
                 <div class="flex gap-2">
                     <x-ui.button size="xs" variant="{{ $this->filter === 'all' ? 'outline' : 'ghost' }}"
                         wire:click="setFilter('all')">

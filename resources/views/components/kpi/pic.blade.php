@@ -149,12 +149,11 @@ new class extends Component {
         <!-- Header Section -->
         <div class="animate-enter relative z-20 flex flex-col justify-between gap-6 md:flex-row md:items-end"
             style="animation-delay: 0.1s">
-            <x-ui.heading title="Báo cáo KPI Cá nhân"
-                description="Phân tích hiệu suất định kỳ và đánh giá mục tiêu" />
+            <x-ui.heading title="Báo cáo KPI Cá nhân" description="Phân tích hiệu suất định kỳ và đánh giá mục tiêu" />
             <div class="flex flex-col gap-4 md:flex-row md:items-center">
                 <div class="flex items-center gap-2 overflow-x-auto pb-2 md:overflow-visible md:pb-0">
                     <div class="flex shrink-0 flex-col gap-1">
-                        <label class="ml-1 text-2xs font-bold uppercase tracking-wider text-slate-400">Kỳ báo
+                        <label class="text-2xs ml-1 font-bold uppercase tracking-wider text-slate-400">Kỳ báo
                             cáo</label>
                         <div class="flex items-center gap-2">
                             <x-ui.filter-select model="periodType" :value="$periodType" icon="calendar_month"
@@ -176,13 +175,13 @@ new class extends Component {
 
                     <div class="mb-0.5 flex shrink-0 flex-col gap-1 self-end">
                         <div class="flex items-center gap-2">
-                             <button wire:click="exportExcel('xlsx')"
-                                class="bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white border-emerald-200 flex h-[38px] items-center rounded-xl border px-3 shadow-sm transition-all"
+                            <button wire:click="exportExcel('xlsx')"
+                                class="flex h-[38px] items-center rounded-xl border border-emerald-200 bg-emerald-50 px-3 text-emerald-600 shadow-sm transition-all hover:bg-emerald-600 hover:text-white"
                                 title="Xuất Excel">
                                 <span class="material-symbols-outlined text-[20px]">table_view</span>
                             </button>
                             <button wire:click="exportExcel('pdf')"
-                                class="bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white border-rose-200 flex h-[38px] items-center rounded-xl border px-3 shadow-sm transition-all"
+                                class="flex h-[38px] items-center rounded-xl border border-rose-200 bg-rose-50 px-3 text-rose-600 shadow-sm transition-all hover:bg-rose-600 hover:text-white"
                                 title="Xuất PDF">
                                 <span class="material-symbols-outlined text-[20px]">picture_as_pdf</span>
                             </button>
@@ -310,7 +309,7 @@ new class extends Component {
             <div class="rounded-2xl border border-slate-100 bg-white p-8 dark:border-slate-700 dark:bg-slate-800">
                 <div class="mb-8 flex items-center justify-between">
                     <div>
-                        <h3 class="text-xl font-bold text-slate-900 dark:text-white">Breakdown Công thức BR-002</h3>
+                        <h3 class="text-lg font-bold text-slate-900 dark:text-white">Chi tiết chỉ số</h3>
                         <p class="text-sm text-slate-500">Phân rã các chỉ số thành phần cấu thành điểm số</p>
                     </div>
                     <span class="material-symbols-outlined text-4xl text-slate-300 dark:text-slate-600">info</span>
@@ -378,8 +377,8 @@ new class extends Component {
                     </div>
                     <!-- Abstract radar/chart representation using SVG -->
                     <svg class="size-full overflow-visible" viewbox="0 0 100 100">
-                        <circle class="text-slate-200 dark:text-slate-700" cx="50" cy="50" fill="none"
-                            r="40" stroke="currentColor" stroke-width="0.5"></circle>
+                        <circle class="text-slate-200 dark:text-slate-700" cx="50" cy="50"
+                            fill="none" r="40" stroke="currentColor" stroke-width="0.5"></circle>
                         <circle class="text-slate-200 dark:text-slate-700" cx="50" cy="50"
                             fill="none" r="30" stroke="currentColor" stroke-width="0.5"></circle>
                         <circle class="text-slate-200 dark:text-slate-700" cx="50" cy="50"

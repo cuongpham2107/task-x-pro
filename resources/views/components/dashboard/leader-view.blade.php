@@ -157,7 +157,7 @@ new class extends Component {
                     class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
                     <div class="flex items-center justify-between border-b border-slate-200 p-6 dark:border-slate-800">
                         <div class="flex items-center gap-3">
-                            <h2 class="text-xl font-bold text-slate-900 dark:text-white">Công việc gần đây</h2>
+                            <h2 class="text-lg font-bold text-slate-900 dark:text-white">Công việc gần đây</h2>
                         </div>
                         <button class="text-primary text-sm font-bold hover:underline">Xem tất cả</button>
                     </div>
