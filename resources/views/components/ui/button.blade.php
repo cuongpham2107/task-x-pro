@@ -1,7 +1,7 @@
 @props([
     'tag' => 'button', // button | a
     'variant' => 'primary', // primary | secondary | ghost | danger | outline | white | ghost-light
-    'size' => 'md', // xs | sm | md | lg | xl
+    'size' => 'sm', // xs | sm | md | lg | xl
     'icon' => null, // material-symbols-outlined icon name (left)
     'iconRight' => null, // icon on the right
     'href' => null, // auto-switch tag to <a>

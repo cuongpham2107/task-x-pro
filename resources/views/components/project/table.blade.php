@@ -17,7 +17,7 @@
         <x-ui.table.column width="min-w-40">
             Ngân sách dự kiến
         </x-ui.table.column>
-        <x-ui.table.column width="min-w-30" align="center">
+        <x-ui.table.column width="min-w-30" align="start">
             <button wire:click="setSort('start_date')"
                 class="hover:text-primary flex items-center gap-1 uppercase tracking-wider transition-colors">
                 Ngày bắt đầu
@@ -28,7 +28,7 @@
             </button>
         </x-ui.table.column>
 
-        <x-ui.table.column width="min-w-30" align="center">
+        <x-ui.table.column width="min-w-30" align="start">
             <button wire:click="setSort('end_date')"
                 class="hover:text-primary flex items-center gap-1 uppercase tracking-wider transition-colors">
                 Hạn chót
@@ -39,7 +39,7 @@
             </button>
         </x-ui.table.column>
         <x-ui.table.column width="min-w-40">Tiến độ</x-ui.table.column>
-        <x-ui.table.column width="min-w-35">Trạng thái</x-ui.table.column>
+        <x-ui.table.column width="min-w-30">Trạng thái</x-ui.table.column>
         <x-ui.table.column width="w-16" align="center" :muted="true">Thao tác</x-ui.table.column>
     </x-ui.table.head>
 
@@ -55,8 +55,22 @@
             <x-ui.table.row :href="route('projects.phases.index', $project)">
                 <x-ui.table.cell>
                     <div class="flex items-center gap-3">
+                        @php
+                            $__avatarColorOptions = [
+                                'bg-primary/10 text-primary',
+                                'bg-emerald-100 text-emerald-700',
+                                'bg-blue-50 text-blue-600',
+                                'bg-amber-100 text-amber-700',
+                                'bg-purple-100 text-purple-700',
+                                'bg-pink-100 text-pink-700',
+                                'bg-slate-100 text-slate-700',
+                                'bg-indigo-50 text-indigo-700',
+                            ];
+                            $avatarColorClass = $__avatarColorOptions[array_rand($__avatarColorOptions)];
+                        @endphp
+
                         <div
-                            class="bg-primary/10 text-primary flex size-10 items-center justify-center rounded-lg text-lg font-bold">
+                            class="{{ $avatarColorClass }} flex size-10 items-center justify-center rounded-full text-lg font-bold">
                             {{ strtoupper(substr($project->name, 0, 1)) }}
                         </div>
                         <div>
@@ -64,17 +78,10 @@
                                 {{ $project->name }}</p>
                             <p class="text-xs text-slate-500">Loại: {{ $project->type->label() }}</p>
                         </div>
+                    </div>
                 </x-ui.table.cell>
 
                 <x-ui.table.cell align="center">
-                    {{-- <div class="flex items-center gap-2">
-                        <div
-                            class="bg-primary/20 text-primary flex size-6 items-center justify-center rounded-full text-xs font-bold">
-                            {{ strtoupper(substr($project->creator?->name ?? '?', 0, 1)) }}
-                        </div>
-                        <span
-                            class="text-xs text-slate-600 dark:text-slate-400">{{ $project->creator?->name ?? '—' }}</span>
-                    </div> --}}
                     <x-ui.avatar-stack :users="collect([$project->creator])" :max="1" />
                 </x-ui.table.cell>
 
@@ -88,11 +95,11 @@
                         VNĐ</span>
                 </x-ui.table.cell>
 
-                <x-ui.table.cell align="center" class="text-xs text-slate-600 dark:text-slate-400">
+                <x-ui.table.cell align="start" class="text-xs text-slate-600 dark:text-slate-400">
                     {{ $project->start_date ? \Carbon\Carbon::parse($project->start_date)->format('d/m/Y') : '—' }}
                 </x-ui.table.cell>
 
-                <x-ui.table.cell align="center" class="text-xs text-slate-600 dark:text-slate-400">
+                <x-ui.table.cell align="start" class="text-xs text-slate-600 dark:text-slate-400">
                     {{ $project->end_date ? \Carbon\Carbon::parse($project->end_date)->format('d/m/Y') : '—' }}
                 </x-ui.table.cell>
 

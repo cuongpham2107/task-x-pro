@@ -219,7 +219,7 @@ new #[Title('Công việc')] class extends Component
                 >Gantt</x-ui.button>
             </div>
             @can('create', App\Models\Task::class)
-                <x-ui.button icon="add" size="md" @click="$dispatch('task-create-requested')">
+                <x-ui.button icon="add" size="sm" @click="$dispatch('task-create-requested')">
                     Thêm công việc
                 </x-ui.button>
             @endcan

@@ -301,7 +301,7 @@ new #[Title('Mẫu phase')] class extends Component {
 };
 ?>
 
-<div class="flex flex-col gap-6">
+<div class="flex flex-col gap-4">
     <div class="mb-2 flex flex-wrap items-center justify-between gap-4">
         <x-ui.heading title="Mẫu phase" description="Quản lý phase template và group theo project type." class="mb-0" />
 

@@ -408,7 +408,7 @@ new #[Title('Cấu hình SLA')] class extends Component {
 };
 ?>
 
-<div class="flex flex-col gap-6">
+<div class="flex flex-col gap-4">
     <div class="mb-2 flex flex-wrap items-center justify-between gap-4">
         <x-ui.heading title="Cấu hình SLA"
             description="Quản lý quy tắc SLA theo phòng ban, loại công việc, loại dự án và khoảng thời gian hiệu lực."

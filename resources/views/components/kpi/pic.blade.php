@@ -149,14 +149,12 @@ new class extends Component {
         <!-- Header Section -->
         <div class="animate-enter relative z-20 flex flex-col justify-between gap-6 md:flex-row md:items-end"
             style="animation-delay: 0.1s">
-            <div>
-                <h2 class="text-3xl font-black tracking-tight text-slate-900 dark:text-white">Báo cáo KPI Cá nhân</h2>
-                <p class="mt-1 text-slate-500 dark:text-slate-400">Phân tích hiệu suất định kỳ và đánh giá mục tiêu</p>
-            </div>
+            <x-ui.heading title="Báo cáo KPI Cá nhân"
+                description="Phân tích hiệu suất định kỳ và đánh giá mục tiêu" />
             <div class="flex flex-col gap-4 md:flex-row md:items-center">
                 <div class="flex items-center gap-2 overflow-x-auto pb-2 md:overflow-visible md:pb-0">
                     <div class="flex shrink-0 flex-col gap-1">
-                        <label class="ml-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">Kỳ báo
+                        <label class="ml-1 text-2xs font-bold uppercase tracking-wider text-slate-400">Kỳ báo
                             cáo</label>
                         <div class="flex items-center gap-2">
                             <x-ui.filter-select model="periodType" :value="$periodType" icon="calendar_month"

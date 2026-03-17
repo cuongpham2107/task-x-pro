@@ -158,7 +158,7 @@ new #[Title('Dự án')] class extends Component {
             class="mb-0" />
         <div class="flex items-center gap-3">
             @if (auth()->user()?->can('create', App\Models\Project::class))
-                <x-ui.button icon="add" size="md" wire:click="$dispatch('project-create-requested')">
+                <x-ui.button icon="add" size="sm" wire:click="$dispatch('project-create-requested')">
                     Tạo dự án
                 </x-ui.button>
             @endif
@@ -167,7 +167,7 @@ new #[Title('Dự án')] class extends Component {
     </div>
     <!-- Tabs Section -->
     <div
-        class="mb-6 flex flex-col gap-4 border-b border-slate-200 pb-4 md:flex-row md:items-center md:justify-between md:gap-4 md:pb-0 dark:border-slate-800">
+        class="mb-2 flex flex-col gap-4 border-b border-slate-200 pb-4 md:flex-row md:items-center md:justify-between md:gap-4 md:pb-0 dark:border-slate-800">
         {{-- Tabs --}}
         <div class="hidden min-w-0 flex-1 gap-1 overflow-x-auto md:flex">
             @foreach ($this->tabs as $key => $tab)

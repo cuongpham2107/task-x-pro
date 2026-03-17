@@ -71,6 +71,25 @@
 
             <x-ui.table.row wire:key="task-row-{{ $task->id }}" wire:click.stop="openEditTask({{ $task->id }})" class="cursor-pointer">
                 <x-ui.table.cell>
+                    <div class="flex items-center gap-3">
+@php
+                        $__avatarColorOptions = [
+                            'bg-primary/10 text-primary',
+                            'bg-emerald-100 text-emerald-700',
+                            'bg-blue-50 text-blue-600',
+                            'bg-amber-100 text-amber-700',
+                            'bg-purple-100 text-purple-700',
+                            'bg-pink-100 text-pink-700',
+                            'bg-slate-100 text-slate-700',
+                            'bg-indigo-50 text-indigo-700',
+                        ];
+                        $avatarColorClass = $__avatarColorOptions[array_rand($__avatarColorOptions)];
+                    @endphp
+
+                    <div
+                        class="{{ $avatarColorClass }} flex size-10 items-center justify-center rounded-full text-lg font-bold">
+                        {{ strtoupper(substr($task->name, 0, 1)) }}
+                    </div>
                     <div class="flex flex-col gap-1">
                         <span class="text-sm font-semibold text-slate-900 dark:text-slate-100">
                             {{ $task->name }}
@@ -83,6 +102,8 @@
                             <span class="text-xs text-slate-400">#{{ str_pad((string) $task->id, 4, '0', STR_PAD_LEFT) }}</span>
                         @endif
                     </div>
+                    </div>
+                    
                 </x-ui.table.cell>
 
                 <x-ui.table.cell>

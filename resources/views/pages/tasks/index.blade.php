@@ -162,7 +162,7 @@ new class extends Component
 };
 ?>
 
-<div class="flex flex-col gap-6" x-data="{ activeTab: 'kanban' }"
+<div class="flex flex-col gap-4" x-data="{ activeTab: 'kanban' }"
     @task-deleted.window="$dispatch('toast', { message: 'Đã xóa \'' + $event.detail.taskTitle + '\'', type: 'error' })"
 >
     {{-- Trigger task edit modal if taskId is present in URL --}}
@@ -191,7 +191,7 @@ new class extends Component
                 <x-ui.avatar-stack :users="$this->members" :max="5" :size="10" placement="bottom" />
             </div>
             @can('create', App\Models\Task::class)
-                <x-ui.button icon="add" size="md" @click="$dispatch('task-create-requested')">
+                <x-ui.button icon="add" size="sm" @click="$dispatch('task-create-requested')">
                     Thêm công việc
                 </x-ui.button>
             @endcan

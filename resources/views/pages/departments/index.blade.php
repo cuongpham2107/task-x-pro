@@ -322,7 +322,7 @@ new #[Title('Phòng ban')] class extends Component {
             class="mb-0" />
 
         @can('create', App\Models\Department::class)
-            <x-ui.button icon="add" size="md" wire:click="openCreateFormModal">
+            <x-ui.button icon="add" size="sm" wire:click="openCreateFormModal">
                 Thêm phòng ban
             </x-ui.button>
         @endcan

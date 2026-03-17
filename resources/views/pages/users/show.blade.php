@@ -5,6 +5,7 @@ use App\Models\User;
 use App\Models\Project;
 use App\Models\Task;
 use App\Services\Users\UserService;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Validate;
@@ -110,7 +111,7 @@ new #[Title('Thông tin cá nhân')] class extends Component {
             'editTelegramId' => 'nullable',
             'editJobTitle' => 'nullable',
             'editDepartmentId' => 'nullable',
-            'newAvatar' => 'nullable',
+            'newAvatar' => 'nullable|image|max:2048',
         ]);
 
         $payload = [
@@ -123,13 +124,12 @@ new #[Title('Thông tin cá nhân')] class extends Component {
         ];
 
         if ($this->newAvatar) {
-            // $path = $this->newAvatar->store('avatars', 'public');
-            // Assuming the mutation service handles file upload if passed as UploadedFile or we need to handle it here.
-            // Let's check UserMutationService.
-            $payload['avatar'] = $this->newAvatar;
+            $path = $this->newAvatar->store('avatars', 'public');
+            $payload['avatar_path'] = Storage::disk('public')->url($path);
         }
 
-        $this->userService->update(auth()->user(), $this->user, $payload);
+        $this->user = $this->userService->update(auth()->user(), $this->user, $payload);
+        $this->newAvatar = null;
 
         $this->showEditModal = false;
         $this->dispatch('toast', message: 'Cập nhật thông tin thành công!', type: 'success');

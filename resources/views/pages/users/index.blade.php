@@ -386,7 +386,7 @@ new #[Title('Người dùng')] class extends Component {
             description="Quản lý nhân sự nội bộ: thông tin liên hệ, phòng ban và trạng thái làm việc." class="mb-0" />
 
         @can('create', App\Models\User::class)
-            <x-ui.button icon="add" size="md" wire:click="openCreateFormModal">
+            <x-ui.button icon="add" size="sm" wire:click="openCreateFormModal">
                 Thêm người dùng
             </x-ui.button>
         @endcan

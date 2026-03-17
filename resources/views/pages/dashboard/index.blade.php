@@ -19,6 +19,11 @@ new #[Title('Dashboard')] class extends Component
 ?>
 
 <div>
+    <div class="mb-2 flex flex-wrap items-center justify-between gap-4">
+        <x-ui.heading title="Tổng quan" description="Thông tin tổng quan về công việc." class="mb-0" />
+
+        
+    </div>
     @if(auth()->user()->hasRole('ceo'))
         <livewire:dashboard.ceo-view :data="$data" />
     @elseif(auth()->user()->hasRole('leader'))
