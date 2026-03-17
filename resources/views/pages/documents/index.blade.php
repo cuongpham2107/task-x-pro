@@ -696,8 +696,10 @@ new #[Title('Tài liệu')] class extends Component {
                             <div>
                                 <h3
                                     class="group-hover:text-primary text-sm font-bold text-slate-900 transition-colors dark:text-white">
-                                    {{ $project->name }} <span>({{ $project->phases ? $project->phases->sum(function($phase) { return $phase->tasks->sum(function($task) { return $task->documents->count(); }); }) : 0 }})</span></h3>
-                                <p class="mt-0.5 text-2xs text-slate-500">Dự án</p>
+                                    {{ $project->name }}
+                                    <span>({{ $project->phases? $project->phases->sum(function ($phase) {return $phase->tasks->sum(function ($task) {return $task->documents->count();});}): 0 }})</span>
+                                </h3>
+                                <p class="text-2xs mt-0.5 text-slate-500">Dự án</p>
                             </div>
                         </div>
                     </x-ui.table.cell>
@@ -749,14 +751,16 @@ new #[Title('Tài liệu')] class extends Component {
                                     <div>
                                         <h4
                                             class="group-hover:text-primary text-sm font-semibold text-slate-700 transition-colors dark:text-slate-300">
-                                            {{ $phase->name }} <span>({{ $phase->tasks ? $phase->tasks->sum(function($task) { return $task->documents->count(); }) : 0 }})</span></h4>
-                                        <p class="mt-0.5 text-2xs text-slate-500">Giai đoạn</p>
+                                            {{ $phase->name }}
+                                            <span>({{ $phase->tasks? $phase->tasks->sum(function ($task) {return $task->documents->count();}): 0 }})</span>
+                                        </h4>
+                                        <p class="text-2xs mt-0.5 text-slate-500">Giai đoạn</p>
                                     </div>
                                 </div>
                             </x-ui.table.cell>
                             <x-ui.table.cell class="px-6 py-3">
                                 <span
-                                    class="inline-flex items-center rounded-full bg-slate-50 px-2 py-0.5 text-2xs font-bold uppercase tracking-wide text-slate-500 dark:bg-slate-800/50">
+                                    class="text-2xs inline-flex items-center rounded-full bg-slate-50 px-2 py-0.5 font-bold uppercase tracking-wide text-slate-500 dark:bg-slate-800/50">
                                     Phase
                                 </span>
                             </x-ui.table.cell>
@@ -810,14 +814,15 @@ new #[Title('Tài liệu')] class extends Component {
                                             </div>
                                             <div>
                                                 <h5 class="group-hover:text-primary line-clamp-1 text-sm font-medium text-slate-700 transition-colors dark:text-slate-300"
-                                                    title="{{ $task->name }}">{{ $task->name }} <span>({{ $task->documents->count() }})</span></h5>
-                                                <p class="mt-0.5 text-2xs text-slate-500">Nhiệm vụ</p>
+                                                    title="{{ $task->name }}">{{ $task->name }}
+                                                    <span>({{ $task->documents->count() }})</span></h5>
+                                                <p class="text-2xs mt-0.5 text-slate-500">Nhiệm vụ</p>
                                             </div>
                                         </div>
                                     </x-ui.table.cell>
                                     <x-ui.table.cell class="px-6 py-3">
                                         <span
-                                            class="inline-flex items-center rounded-full bg-slate-50 px-2 py-0.5 text-2xs font-bold uppercase tracking-wide text-slate-500 dark:bg-slate-800/50">
+                                            class="text-2xs inline-flex items-center rounded-full bg-slate-50 px-2 py-0.5 font-bold uppercase tracking-wide text-slate-500 dark:bg-slate-800/50">
                                             Task
                                         </span>
                                     </x-ui.table.cell>
@@ -833,7 +838,7 @@ new #[Title('Tài liệu')] class extends Component {
                                                         src="{{ $task->pic->avatar }}" alt="{{ $task->pic->name }}">
                                                 @else
                                                     <div
-                                                        class="bg-primary/10 text-primary border-primary/20 flex h-6 w-6 items-center justify-center rounded-full border text-2xs font-bold">
+                                                        class="bg-primary/10 text-primary border-primary/20 text-2xs flex h-6 w-6 items-center justify-center rounded-full border font-bold">
                                                         {{ substr($task->pic->name, 0, 1) }}
                                                     </div>
                                                 @endif
