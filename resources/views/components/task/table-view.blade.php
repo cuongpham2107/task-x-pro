@@ -68,8 +68,7 @@
     >
         <x-ui.table.head>
             <x-ui.table.column
-                width="w-2/5"
-            >
+                width="w-2/5">
                 <button
                     wire:click="sort('name')"
                     class="hover:text-primary flex items-center gap-1 transition-colors"
@@ -125,7 +124,8 @@
                     $hasDependencyBlock = $depTask !== null && $depStatus !== 'completed';
                 @endphp
 
-                <x-ui.table.row
+                <x-ui.table.row 
+                    wire:click="openEditTask({{ $task->id }})"
                     class="{{ $isDone ? 'opacity-70' : '' }} {{ $isNearDeadline ? 'bg-amber-50/60 dark:bg-amber-900/10' : '' }}"
                 >
                     {{-- Tên công việc --}}
@@ -133,11 +133,6 @@
                         <div
                             class="flex items-center gap-3"
                         >
-                            <span
-                                class="material-symbols-outlined shrink-0 cursor-grab text-slate-300 group-hover:text-slate-500"
-                            >
-                                drag_indicator
-                            </span>
                             <div
                                 class="min-w-0"
                             >
