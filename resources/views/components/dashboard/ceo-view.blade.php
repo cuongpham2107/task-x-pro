@@ -14,10 +14,7 @@ new class extends Component {
     public function mount(array $data)
     {
         $this->data = $data;
-        $this->activityLogs = ActivityLog::with('user')
-            ->latest()
-            ->limit(5)
-            ->get();
+        $this->activityLogs = ActivityLog::with('user')->latest()->limit(5)->get();
         $this->selectedMonth = now()->month;
         $this->selectedYear = now()->year;
     }
@@ -48,19 +45,15 @@ new class extends Component {
 ?>
 <div x-data="{ ready: false }" x-init="setTimeout(() => ready = true, 100)">
     <main class="flex flex-1 overflow-hidden">
-      
+
         <div class="dark:bg-background-dark flex-1 overflow-y-auto bg-slate-50 p-6 lg:p-8">
-            <div class="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-center"
-                 x-show="ready"
-                 x-transition:enter="transition ease-out duration-500"
-                 x-transition:enter-start="opacity-0 translate-y-4"
-                 x-transition:enter-end="opacity-100 translate-y-0"
-                 style="display: none;">
+            <div class="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-center" x-show="ready"
+                x-transition:enter="transition ease-out duration-500" x-transition:enter-start="opacity-0 translate-y-4"
+                x-transition:enter-end="opacity-100 translate-y-0" style="display: none;">
                 <div>
-                    <h2 class="text-2xl font-black tracking-tight text-slate-900 lg:text-3xl dark:text-white">Chào buổi
-                        sáng, {{ auth()->user()->name }}!</h2>
-                    <p class="mt-1 text-slate-500 dark:text-slate-400">Đây là báo cáo hiệu suất tổng quát của hệ thống
-                        TaskXPro hôm nay.</p>
+                    <x-ui.heading title="Chào, {{ auth()->user()->name }}!"
+                        description="Đây là báo cáo hiệu suất tổng quát của hệ thống TaskXPro hôm nay."
+                        class="mb-0" />
                 </div>
                 {{-- <div class="flex gap-3">
                     <x-ui.button
@@ -73,12 +66,10 @@ new class extends Component {
                     </x-ui.button>
                 </div> --}}
             </div>
-            <div class="mb-8 grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4"
-                 x-show="ready"
-                 x-transition:enter="transition ease-out duration-500 delay-100"
-                 x-transition:enter-start="opacity-0 translate-y-4"
-                 x-transition:enter-end="opacity-100 translate-y-0"
-                 style="display: none;">
+            <div class="mb-8 grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4" x-show="ready"
+                x-transition:enter="transition ease-out duration-500 delay-100"
+                x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0"
+                style="display: none;">
                 <div
                     class="flex flex-col gap-2 rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
                     <div class="flex items-start justify-between">
@@ -87,9 +78,12 @@ new class extends Component {
                             <span class="material-symbols-outlined text-[20px]">rocket_launch</span>
                         </span>
                     </div>
-                    <h3 class="text-3xl font-bold text-slate-900 dark:text-white">{{ $data['projects']['running'] ?? 0 }}</h3>
+                    <h3 class="text-3xl font-bold text-slate-900 dark:text-white">
+                        {{ $data['projects']['running'] ?? 0 }}</h3>
                     <p class="flex items-center gap-1 text-sm font-bold text-emerald-600">
-                        <span class="material-symbols-outlined text-[16px]">trending_up</span> +{{ $data['projects']['total'] > 0 ? round(($data['projects']['running'] / $data['projects']['total']) * 100, 1) : 0 }}% tỷ lệ
+                        <span class="material-symbols-outlined text-[16px]">trending_up</span>
+                        +{{ $data['projects']['total'] > 0 ? round(($data['projects']['running'] / $data['projects']['total']) * 100, 1) : 0 }}%
+                        tỷ lệ
                     </p>
                 </div>
                 <div
@@ -114,7 +108,8 @@ new class extends Component {
                             <span class="material-symbols-outlined text-[20px]">pending_actions</span>
                         </span>
                     </div>
-                    <h3 class="text-3xl font-bold text-slate-900 dark:text-white">{{ $data['tasks']['waiting_approval'] ?? 0 }}</h3>
+                    <h3 class="text-3xl font-bold text-slate-900 dark:text-white">
+                        {{ $data['tasks']['waiting_approval'] ?? 0 }}</h3>
                     <p class="flex items-center gap-1 text-sm font-bold text-emerald-600">
                         <span class="material-symbols-outlined text-[16px]">trending_up</span> Đang chờ duyệt
                     </p>
@@ -128,55 +123,55 @@ new class extends Component {
                             <span class="material-symbols-outlined text-[20px]">verified</span>
                         </span>
                     </div>
-                    <h3 class="text-3xl font-bold text-slate-900 dark:text-white">{{ $data['projects']['avg_progress'] ?? 0 }}%</h3>
+                    <h3 class="text-3xl font-bold text-slate-900 dark:text-white">
+                        {{ $data['projects']['avg_progress'] ?? 0 }}%</h3>
                     <div class="mt-2 h-1.5 w-full rounded-full bg-slate-100 dark:bg-slate-800">
-                        <div class="h-1.5 rounded-full bg-emerald-500" style="width: {{ $data['projects']['avg_progress'] ?? 0 }}%"></div>
+                        <div class="h-1.5 rounded-full bg-emerald-500"
+                            style="width: {{ $data['projects']['avg_progress'] ?? 0 }}%"></div>
                     </div>
                 </div>
             </div>
-            <div class="mb-8 grid grid-cols-1 gap-8 xl:grid-cols-2"
-                 x-show="ready"
-                 x-transition:enter="transition ease-out duration-500 delay-200"
-                 x-transition:enter-start="opacity-0 translate-y-4"
-                 x-transition:enter-end="opacity-100 translate-y-0"
-                 style="display: none;">
+            <div class="mb-8 grid grid-cols-1 gap-8 xl:grid-cols-2" x-show="ready"
+                x-transition:enter="transition ease-out duration-500 delay-200"
+                x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0"
+                style="display: none;">
                 <div
                     class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
                     <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                         <h4 class="font-bold text-slate-900 dark:text-white">Top Nhân viên xuất sắc</h4>
                         <div class="flex gap-2">
-                            <select wire:model.live="selectedMonth" class="rounded-lg border-slate-200 bg-slate-50 text-xs font-bold text-slate-500 focus:border-primary focus:ring-primary dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
-                                @foreach(range(1, 12) as $m)
+                            <select wire:model.live="selectedMonth"
+                                class="focus:border-primary focus:ring-primary rounded-lg border-slate-200 bg-slate-50 text-xs font-bold text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
+                                @foreach (range(1, 12) as $m)
                                     <option value="{{ $m }}">Tháng {{ $m }}</option>
                                 @endforeach
                             </select>
-                            <select wire:model.live="selectedYear" class="rounded-lg border-slate-200 bg-slate-50 text-xs font-bold text-slate-500 focus:border-primary focus:ring-primary dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
-                                @foreach(range(now()->year - 2, now()->year) as $y)
+                            <select wire:model.live="selectedYear"
+                                class="focus:border-primary focus:ring-primary rounded-lg border-slate-200 bg-slate-50 text-xs font-bold text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
+                                @foreach (range(now()->year - 2, now()->year) as $y)
                                     <option value="{{ $y }}">Năm {{ $y }}</option>
                                 @endforeach
                             </select>
                         </div>
                     </div>
-                    <div class="relative h-62.5 w-full">
+                    <div class="h-62.5 relative w-full">
                         <canvas id="topPerformersChart" wire:ignore></canvas>
                     </div>
                 </div>
                 <div
                     class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
                     <h4 class="mb-6 font-bold text-slate-900 dark:text-white">Tiến trình Phase tổng hợp</h4>
-                    <div class="flex flex-col items-center justify-between gap-8 py-4 md:flex-row h-full">
-                        <div class="relative h-62.5 w-full flex items-center justify-center">
+                    <div class="flex h-full flex-col items-center justify-between gap-8 py-4 md:flex-row">
+                        <div class="h-62.5 relative flex w-full items-center justify-center">
                             <canvas id="phaseProgressChart"></canvas>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="grid grid-cols-1 gap-8 lg:grid-cols-3"
-                 x-show="ready"
-                 x-transition:enter="transition ease-out duration-500 delay-300"
-                 x-transition:enter-start="opacity-0 translate-y-4"
-                 x-transition:enter-end="opacity-100 translate-y-0"
-                 style="display: none;">
+            <div class="grid grid-cols-1 gap-8 lg:grid-cols-3" x-show="ready"
+                x-transition:enter="transition ease-out duration-500 delay-300"
+                x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0"
+                style="display: none;">
                 <div
                     class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm lg:col-span-2 dark:border-slate-800 dark:bg-slate-900">
                     <div class="flex items-center justify-between border-b border-slate-100 p-6 dark:border-slate-800">
@@ -188,26 +183,27 @@ new class extends Component {
                                 class="flex items-center gap-4 p-4 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50">
                                 <div
                                     class="flex size-10 shrink-0 items-center justify-center rounded-lg bg-amber-50 dark:bg-amber-900/20">
-                                    <span class="material-symbols-outlined text-[20px] text-amber-600">rate_review</span>
+                                    <span
+                                        class="material-symbols-outlined text-[20px] text-amber-600">rate_review</span>
                                 </div>
                                 <div class="min-w-0 flex-1">
-                                    @if($task->phase && $task->phase->project)
-                                        <button 
+                                    @if ($task->phase && $task->phase->project)
+                                        <button
                                             wire:click="$dispatch('task-edit-requested', { taskId: {{ $task->id }} })"
-                                            class="truncate text-sm font-bold hover:text-primary transition-colors text-left block w-full">
+                                            class="hover:text-primary block w-full truncate text-left text-sm font-bold transition-colors">
                                             {{ $task->name }}
                                         </button>
                                     @else
                                         <h5 class="truncate text-sm font-bold">{{ $task->name }}</h5>
                                     @endif
                                     <p class="text-xs text-slate-500">
-                                        Dự án: {{ $task->phase?->project?->name ?? 'N/A' }} • 
+                                        Dự án: {{ $task->phase?->project?->name ?? 'N/A' }} •
                                         Người gửi: {{ $task->pic->name ?? 'N/A' }} •
                                         {{ $task->updated_at->diffForHumans() }}
                                     </p>
                                 </div>
                                 <span
-                                    class="rounded bg-amber-100 px-2 py-1 text-2xs font-bold uppercase text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                                    class="text-2xs rounded bg-amber-100 px-2 py-1 font-bold uppercase text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
                                     Chờ duyệt
                                 </span>
                             </div>
@@ -226,21 +222,24 @@ new class extends Component {
                     <div class="space-y-6 p-6">
                         @forelse($activityLogs as $log)
                             <div
-                                class="relative flex gap-4 before:absolute before:bottom-0 before:left-2.75 before:top-8 before:w-0.5 before:bg-slate-100 last:before:hidden dark:before:bg-slate-800">
+                                class="before:left-2.75 relative flex gap-4 before:absolute before:bottom-0 before:top-8 before:w-0.5 before:bg-slate-100 last:before:hidden dark:before:bg-slate-800">
                                 <div
-                                    class="bg-primary z-10 size-6 shrink-0 rounded-full border-4 border-white dark:border-slate-900 overflow-hidden flex items-center justify-center">
-                                    @if($log->user && $log->user->avatar_url)
-                                        <img src="{{ $log->user->avatar_url }}" class="h-full w-full object-cover" alt="{{ $log->user->name }}">
+                                    class="bg-primary z-10 flex size-6 shrink-0 items-center justify-center overflow-hidden rounded-full border-4 border-white dark:border-slate-900">
+                                    @if ($log->user && $log->user->avatar_url)
+                                        <img src="{{ $log->user->avatar_url }}" class="h-full w-full object-cover"
+                                            alt="{{ $log->user->name }}">
                                     @else
-                                        <span class="text-[8px] font-bold text-white">{{ $log->user ? substr($log->user->name, 0, 1) : 'S' }}</span>
+                                        <span
+                                            class="text-[8px] font-bold text-white">{{ $log->user ? substr($log->user->name, 0, 1) : 'S' }}</span>
                                     @endif
                                 </div>
                                 <div class="flex flex-col gap-1">
                                     <p class="text-xs leading-relaxed">
-                                        <span class="font-bold">{{ $log->user->name ?? 'System' }}</span> 
+                                        <span class="font-bold">{{ $log->user->name ?? 'System' }}</span>
                                         {{ $log->description ?? 'đã thực hiện một hành động' }}
                                     </p>
-                                    <span class="text-2xs text-slate-400">{{ $log->created_at->diffForHumans() }}</span>
+                                    <span
+                                        class="text-2xs text-slate-400">{{ $log->created_at->diffForHumans() }}</span>
                                 </div>
                             </div>
                         @empty

@@ -11,8 +11,7 @@ use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
 
-new class extends Component
-{
+new class extends Component {
     use WithPagination;
 
     public Project $project;
@@ -95,7 +94,7 @@ new class extends Component
             unset($this->tasks);
             unset($this->taskStats);
         } catch (\Exception $e) {
-            $this->dispatch('toast', message: 'Lỗi: '.$e->getMessage(), type: 'error');
+            $this->dispatch('toast', message: 'Lỗi: ' . $e->getMessage(), type: 'error');
         }
     }
 
@@ -110,7 +109,7 @@ new class extends Component
             unset($this->tasks);
             unset($this->taskStats);
         } catch (\Exception $e) {
-            $this->dispatch('toast', message: 'Lỗi khi xóa: '.$e->getMessage(), type: 'error');
+            $this->dispatch('toast', message: 'Lỗi khi xóa: ' . $e->getMessage(), type: 'error');
         }
     }
 
@@ -162,29 +161,24 @@ new class extends Component
 };
 ?>
 
-<div class="flex flex-col gap-4" x-data="{ activeTab: 'kanban' }"
-    @task-deleted.window="$dispatch('toast', { message: 'Đã xóa \'' + $event.detail.taskTitle + '\'', type: 'error' })"
->
+<div class="flex flex-col gap-2" x-data="{ activeTab: 'kanban' }"
+    @task-deleted.window="$dispatch('toast', { message: 'Đã xóa \'' + $event.detail.taskTitle + '\'', type: 'error' })">
     {{-- Trigger task edit modal if taskId is present in URL --}}
-    <div x-data="{ taskId: @js($urlTaskId) }"
-         x-init="if(taskId) $dispatch('task-edit-requested', { taskId: taskId })"
-         class="hidden"></div>
+    <div x-data="{ taskId: @js($urlTaskId) }" x-init="if (taskId) $dispatch('task-edit-requested', { taskId: taskId })" class="hidden"></div>
 
     <!-- Breadcrumbs and Action Header -->
-    <div class="flex flex-wrap items-center justify-between gap-4">
+    <div class="flex flex-wrap items-center justify-between gap-2">
         <div class="flex flex-col gap-1.5">
             <x-ui.breadcrumbs :items="[
-        ['label' => 'Dự án', 'url' => route('projects.index'), 'icon' => 'folder'],
-        ['label' => $project->name, 'url' => route('projects.phases.index', $project)],
-        ['label' => $phase->name, 'url' => route('projects.phases.tasks.index', [$project, $phase])],
-        ['label' => 'Công việc'],
-    ]" />
-            <h1 class="text-3xl font-extrabold leading-tight tracking-tight text-slate-900 dark:text-white">
-                {{ $phase->name }}
-            </h1>
-            <p class="mt-1 font-medium text-slate-500 dark:text-slate-400">
-                Giai đoạn: {{ $phase->name }} | Trình trạng: {{ $phase->progress }}% | {{ $project->name }}
-            </p>
+                ['label' => 'Dự án', 'url' => route('projects.index'), 'icon' => 'folder'],
+                ['label' => $project->name, 'url' => route('projects.phases.index', $project)],
+                ['label' => $phase->name, 'url' => route('projects.phases.tasks.index', [$project, $phase])],
+                ['label' => 'Công việc'],
+            ]" />
+
+            <x-ui.heading title="{{ $phase->name }}"
+                description="Giai đoạn: {{ $phase->name }} | Trình trạng: {{ $phase->progress }}% | {{ $project->name }}"
+                class="mb-0" />
         </div>
         <div class="flex items-center gap-3">
             <div class="mr-4">
@@ -200,13 +194,15 @@ new class extends Component
 
     <!-- Tabs Navigation -->
     <div class="flex gap-8 border-b border-slate-200 dark:border-slate-800">
-        <button @click="activeTab = 'list'" :class="activeTab === 'list' ? 'border-primary text-primary' :
+        <button @click="activeTab = 'list'"
+            :class="activeTab === 'list' ? 'border-primary text-primary' :
                 'border-transparent text-slate-500 dark:text-slate-400 hover:text-primary'"
             class="flex items-center gap-2 border-b-2 py-3 text-sm font-semibold transition-colors">
             <span class="material-symbols-outlined text-xl">list_alt</span>
             <span>Danh sách</span>
         </button>
-        <button @click="activeTab = 'kanban'" :class="activeTab === 'kanban' ? 'border-primary text-primary' :
+        <button @click="activeTab = 'kanban'"
+            :class="activeTab === 'kanban' ? 'border-primary text-primary' :
                 'border-transparent text-slate-500 dark:text-slate-400 hover:text-primary'"
             class="flex items-center gap-2 border-b-2 py-3 text-sm font-semibold transition-colors">
             <span class="material-symbols-outlined text-xl">view_kanban</span>
@@ -216,8 +212,8 @@ new class extends Component
 
     {{-- LIST VIEW --}}
     <div x-show="activeTab === 'list'">
-        <x-task.table-view :tasks="$this->tasks" :task-stats="$this->taskStats" :project="$project"
-            :filter-status="$filterStatus" :filter-priority="$filterPriority" :sort-by="$sortBy" :sort-dir="$sortDir" />
+        <x-task.table-view :tasks="$this->tasks" :task-stats="$this->taskStats" :project="$project" :filter-status="$filterStatus" :filter-priority="$filterPriority"
+            :sort-by="$sortBy" :sort-dir="$sortDir" />
     </div>
 
     {{-- KANBAN VIEW --}}

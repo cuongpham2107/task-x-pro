@@ -226,7 +226,7 @@ new #[Title('KPI phòng ban')] class extends Component {
 
         $title = 'Báo cáo KPI Phòng ban';
         $periodLabel = $this->periodLabel($this->periodType, $this->selectedYear, $this->selectedValue);
-        $filename = 'kpi-team-' . ($this->selectedValue) . '-' . $this->selectedYear . '.' . ($format === 'pdf' ? 'pdf' : 'xlsx');
+        $filename = 'kpi-team-' . $this->selectedValue . '-' . $this->selectedYear . '.' . ($format === 'pdf' ? 'pdf' : 'xlsx');
         $writer = $format === 'pdf' ? \Maatwebsite\Excel\Excel::DOMPDF : \Maatwebsite\Excel\Excel::XLSX;
 
         $this->dispatch('toast', message: 'Bắt đầu xuất file ' . strtoupper($format), type: 'info');
@@ -268,10 +268,7 @@ new #[Title('KPI phòng ban')] class extends Component {
     <!-- Page Header & Filters -->
     <div class="animate-enter relative z-20 mb-8 flex flex-col justify-between gap-6 md:flex-row md:items-end"
         style="animation-delay: 0.1s">
-        <div class="space-y-1">
-            <h1 class="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">Báo cáo hiệu suất KPI</h1>
-            <p class="text-slate-500 dark:text-slate-400">Dữ liệu tổng hợp của Team</p>
-        </div>
+        <x-ui.heading title="Báo cáo hiệu suất KPI" description="Dữ liệu tổng hợp của Team" class="mb-0" />
         <div class="flex flex-col gap-4 md:flex-row md:items-center">
             <div class="flex items-center gap-2 overflow-x-auto pb-2 md:overflow-visible md:pb-0">
                 <div class="flex shrink-0 flex-col gap-1">
@@ -304,12 +301,12 @@ new #[Title('KPI phòng ban')] class extends Component {
                 <div class="mb-0.5 flex shrink-0 flex-col gap-1 self-end">
                     <div class="flex items-center gap-2">
                         <button wire:click="exportExcel('xlsx')"
-                            class="bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white border-emerald-200 flex h-[38px] items-center rounded-xl border px-3 shadow-sm transition-all"
+                            class="flex h-[38px] items-center rounded-xl border border-emerald-200 bg-emerald-50 px-3 text-emerald-600 shadow-sm transition-all hover:bg-emerald-600 hover:text-white"
                             title="Xuất Excel">
                             <span class="material-symbols-outlined text-[20px]">table_view</span>
                         </button>
                         <button wire:click="exportExcel('pdf')"
-                            class="bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white border-rose-200 flex h-[38px] items-center rounded-xl border px-3 shadow-sm transition-all"
+                            class="flex h-[38px] items-center rounded-xl border border-rose-200 bg-rose-50 px-3 text-rose-600 shadow-sm transition-all hover:bg-rose-600 hover:text-white"
                             title="Xuất PDF">
                             <span class="material-symbols-outlined text-[20px]">picture_as_pdf</span>
                         </button>

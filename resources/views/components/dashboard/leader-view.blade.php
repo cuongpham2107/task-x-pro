@@ -35,10 +35,8 @@ new class extends Component {
                 <!-- Page Header -->
                 <div class="flex flex-col justify-between gap-4 md:flex-row md:items-end">
                     <div>
-                        <h1 class="text-3xl font-black tracking-tight text-slate-900 dark:text-white">Bảng điều khiển
-                            Vận hành &amp; Phê duyệt</h1>
-                        <p class="mt-1 text-slate-500 dark:text-slate-400">Theo dõi thời gian thực các chỉ số vận hành
-                            và quy trình phê duyệt doanh nghiệp.</p>
+                        <x-ui.heading title="Bảng điều khiển Vận hành và Phê duyệt"
+                            description="Theo dõi thời gian thực các chỉ số vận hành và quy trình phê duyệt doanh nghiệp." />
                     </div>
                     <div class="flex gap-2">
                         {{-- <x-ui.button
