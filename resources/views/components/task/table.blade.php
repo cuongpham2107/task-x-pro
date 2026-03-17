@@ -69,7 +69,7 @@
                 };
             @endphp
 
-            <x-ui.table.row wire:key="task-row-{{ $task->id }}">
+            <x-ui.table.row wire:key="task-row-{{ $task->id }}" wire:click.stop="openEditTask({{ $task->id }})" class="cursor-pointer">
                 <x-ui.table.cell>
                     <div class="flex flex-col gap-1">
                         <span class="text-sm font-semibold text-slate-900 dark:text-slate-100">

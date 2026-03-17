@@ -696,7 +696,7 @@ new #[Title('Tài liệu')] class extends Component {
                             <div>
                                 <h3
                                     class="group-hover:text-primary text-sm font-bold text-slate-900 transition-colors dark:text-white">
-                                    {{ $project->name }}</h3>
+                                    {{ $project->name }} <span>({{ $project->phases ? $project->phases->count() : 0 }})</span></h3>
                                 <p class="mt-0.5 text-2xs text-slate-500">Dự án</p>
                             </div>
                         </div>
@@ -749,7 +749,7 @@ new #[Title('Tài liệu')] class extends Component {
                                     <div>
                                         <h4
                                             class="group-hover:text-primary text-sm font-semibold text-slate-700 transition-colors dark:text-slate-300">
-                                            {{ $phase->name }}</h4>
+                                            {{ $phase->name }} <span>({{ $phase->tasks ? $phase->tasks->count() : 0 }})</span></h4>
                                         <p class="mt-0.5 text-2xs text-slate-500">Giai đoạn</p>
                                     </div>
                                 </div>
