@@ -1,6 +1,8 @@
 <?php
 
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
+use Laravel\Socialite\Facades\Socialite;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Validate;
@@ -17,11 +19,17 @@ new #[Layout('layouts.auth')] #[Title('Đăng nhập')] class extends Component 
 
     public bool $showPassword = false;
 
+    public bool $showPendingPopup = false;
+
     protected \App\Services\Auth\AuthService $authService;
 
     public function boot(\App\Services\Auth\AuthService $authService): void
     {
         $this->authService = $authService;
+
+        if (session()->has('showPendingPopup')) {
+            $this->showPendingPopup = true;
+        }
     }
 
     public function login(): void
@@ -32,6 +40,17 @@ new #[Layout('layouts.auth')] #[Title('Đăng nhập')] class extends Component 
             throw ValidationException::withMessages([
                 'email' => 'Thông tin đăng nhập không chính xác.',
             ]);
+        }
+
+        $user = Auth::user();
+        if ($user->status === \App\Enums\UserStatus::Pending || $user->status === 'pending') {
+            Auth::logout();
+            session()->invalidate();
+            session()->regenerateToken();
+
+            $this->showPendingPopup = true;
+
+            return;
         }
 
         session()->regenerate();
@@ -106,5 +125,25 @@ new #[Layout('layouts.auth')] #[Title('Đăng nhập')] class extends Component 
     <div class="flex flex-col gap-4">
         {!! Socialite::driver('telegram')->getButton() !!}
     </div>
+
+    {{-- Pending Approval Modal --}}
+    <x-ui.modal wire:model="showPendingPopup" maxWidth="md">
+        <div class="flex flex-col items-center gap-4 py-4 text-center">
+            <div class="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/30">
+                <span class="material-symbols-outlined text-4xl text-emerald-600 dark:text-emerald-400">check_circle</span>
+            </div>
+            
+            <div class="space-y-2">
+                <h3 class="text-xl font-bold text-slate-900 dark:text-slate-100">Đăng ký thành công</h3>
+                <p class="text-sm text-slate-500 dark:text-slate-400">
+                    Bạn đã đăng ký thành công, đang chờ admin xét duyệt
+                </p>
+            </div>
+
+            <x-ui.button variant="primary" :full="true" @click="isOpen = false" class="mt-2">
+                Đã hiểu
+            </x-ui.button>
+        </div>
+    </x-ui.modal>
 
 </div>

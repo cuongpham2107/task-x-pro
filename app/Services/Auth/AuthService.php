@@ -2,10 +2,10 @@
 
 namespace App\Services\Auth;
 
+use App\Enums\UserStatus;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 use Laravel\Socialite\Contracts\User as SocialiteUser;
 use Laravel\Socialite\Facades\Socialite;
 
@@ -50,10 +50,10 @@ class AuthService
 
         return User::create([
             'name' => $socialUser->getName() ?? $socialUser->getNickname() ?? $socialUser->getEmail(),
-            'email' => $socialUser->getEmail(),
-            'password' => Hash::make(Str::random(24)),
+            'email' => $socialUser->getEmail() ?? $socialUser->getId().'@'.$driver.'.com',
+            'password' => Hash::make('password'),
             $column => $socialUser->getId(),
-            'status' => 'active',
+            'status' => UserStatus::Pending,
         ]);
     }
 }

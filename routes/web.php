@@ -24,6 +24,11 @@ Route::middleware('guest')->group(function () {
     Route::get('/auth/{driver}/callback', function (string $driver, \App\Services\Auth\AuthService $authService) {
         try {
             $user = $authService->handleSocialCallback($driver);
+
+            if ($user->status === \App\Enums\UserStatus::Pending || $user->status === 'pending') {
+                return redirect()->route('login')->with('showPendingPopup', true);
+            }
+
             Auth::login($user, true);
             session()->regenerate();
 

@@ -194,7 +194,10 @@ class TaskService
 
             $phaseId = (int) ($payload['phase_id'] ?? $task->phase_id);
             $phase = $this->payloadService->resolvePhaseForTaskPayload($phaseId);
-            Gate::forUser($actor)->authorize('update', $phase->project);
+
+            if (array_key_exists('phase_id', $payload) && (int) $payload['phase_id'] !== (int) $task->phase_id) {
+                Gate::forUser($actor)->authorize('update', $phase->project);
+            }
 
             $targetStatus = $this->normalizeStatus($payload['status'] ?? $task->status);
             $workflowType = $this->resolveWorkflowType($payload['workflow_type'] ?? $workflowType);
