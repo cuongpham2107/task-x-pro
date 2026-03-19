@@ -474,7 +474,7 @@ new #[Title('Thông tin cá nhân')] class extends Component {
 
         <x-ui.input label="Telegram ID" name="editTelegramId" wire:model="editTelegramId" />
         <p class="text-xs text-slate-600">Cách lấy id telegram:
-            <a class="text-blue-500 hover:underline" href="https://web.telegram.org/a/#8053328462"
+            <a class="text-blue-500 hover:underline" href="https://web.telegram.org/a/#8701320064"
                 target="_blank">Nhấn vào link và gửi 1 tin nhắn cho bot</a> ->
             <a wire:click.stop="getTelegramId" class="cursor-pointer text-blue-500 hover:underline">Nhấn vào đây để
                 lấy ID Telegram</a>

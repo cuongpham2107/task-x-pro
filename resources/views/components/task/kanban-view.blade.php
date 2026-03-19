@@ -476,7 +476,7 @@ new class extends Component {
                                                 default => '??',
                                             };
                                             $isApproved = $approvalLog->action === ApprovalAction::Approved->value;
-                                           
+
                                         @endphp
 
                                         <div class="flex flex-col gap-0.5 overflow-visible">
@@ -493,20 +493,20 @@ new class extends Component {
                                                         @endif
                                                         @if (!$isApproved && $approvalLog->comment)
                                                             <div class="group/comment relative">
-                                                                <p class="truncate text-[10px] italic font-bold text-red-400 transition-colors hover:text-red-600"
+                                                                <p class="truncate text-[10px] font-bold italic text-red-400 transition-colors hover:text-red-600"
                                                                     title="{{ $approvalLog->comment }}">
                                                                     “{{ $approvalLog->comment }}”
                                                                 </p>
                                                             </div>
                                                         @endif
                                                     </div>
-                                                    
+
                                                 </div>
 
 
                                             </div>
 
-                                            
+
                                         </div>
                                     @endforeach
                                 </div>

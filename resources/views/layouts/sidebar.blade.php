@@ -78,6 +78,13 @@
                     <span class="text-base">Dự án</span>
                 </a>
             @endcan
+            @can('viewAny', App\Models\Task::class)
+                <a class="{{ $navLink('tasks.*') }} flex items-center gap-4 rounded-xl px-4 py-3"
+                    href="{{ route('tasks.index') }}" wire:navigate @click="sidebarOpen = false">
+                    <span class="material-symbols-outlined">document_scanner</span>
+                    <span class="text-base">Công việc</span>
+                </a>
+            @endcan
             @can('viewAny', App\Models\KpiScore::class)
                 <a class="{{ $navLink('kpi-scores.*') }} flex items-center gap-4 rounded-xl px-4 py-3"
                     href="{{ route('kpi-scores.index') }}" wire:navigate @click="sidebarOpen = false">
