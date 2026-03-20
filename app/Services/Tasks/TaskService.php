@@ -189,7 +189,18 @@ class TaskService
             }
 
             if ($coPicIds !== null) {
-                Gate::forUser($actor)->authorize('assign', $task);
+                $currentCoPicIds = $task->coPics->pluck('id')->sort()->values()->all();
+                $incomingCoPicIds = collect($coPicIds)
+                    ->filter(fn ($id) => $id !== null && $id !== '')
+                    ->map(fn ($id) => (int) $id)
+                    ->unique()
+                    ->sort()
+                    ->values()
+                    ->all();
+
+                if ($currentCoPicIds !== $incomingCoPicIds) {
+                    Gate::forUser($actor)->authorize('assign', $task);
+                }
             }
 
             $phaseId = (int) ($payload['phase_id'] ?? $task->phase_id);

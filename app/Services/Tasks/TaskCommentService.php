@@ -35,13 +35,13 @@ class TaskCommentService
         $normalizedContent = trim($content);
         if ($normalizedContent === '') {
             throw ValidationException::withMessages([
-                'newComment' => 'Noi dung binh luan khong duoc de trong.',
+                'newComment' => 'Nội dung bình luận không được để trống.',
             ]);
         }
 
         if (mb_strlen($normalizedContent) > 5000) {
             throw ValidationException::withMessages([
-                'newComment' => 'Noi dung binh luan khong duoc vuot qua 5000 ky tu.',
+                'newComment' => 'Nội dung bình luận không được vượt quá 5000 ký tự.',
             ]);
         }
 

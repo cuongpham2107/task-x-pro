@@ -80,7 +80,7 @@ class PhaseMutationService
 
         if (abs($newTotal - 100.0) > 0.01) {
             throw ValidationException::withMessages([
-                'weight' => "Tong trong so cua tat ca phase phai bang 100. Hien tai: {$newTotal}%",
+                'weight' => "Tổng trọng số của tất cả giai đoạn phải bằng 100. Hiện tại: {$newTotal}%",
             ]);
         }
     }
@@ -96,7 +96,7 @@ class PhaseMutationService
 
         if (abs(round($remainingTotal, 2) - 100.0) > 0.01) {
             throw ValidationException::withMessages([
-                'weight' => "Khong the xoa phase vi se lam tong trong so con lai ({$remainingTotal}%) khong bang 100.",
+                'weight' => "Không thể xóa giai đoạn vì sẽ làm tổng trọng số còn lại ({$remainingTotal}%) không bằng 100.",
             ]);
         }
     }
@@ -110,7 +110,7 @@ class PhaseMutationService
 
         if (abs(round($totalWeight, 2) - 100.0) > 0.01) {
             throw ValidationException::withMessages([
-                'weight' => "Tong trong so cua tat ca phase phai bang 100. Hien tai: {$totalWeight}%",
+                'weight' => "Tổng trọng số của tất cả giai đoạn phải bằng 100. Hiện tại: {$totalWeight}%",
             ]);
         }
     }

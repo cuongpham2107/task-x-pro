@@ -78,17 +78,31 @@ class DashboardService
             ->whereBetween('deadline', [$now->startOfDay(), $threeDaysLater->endOfDay()])
             ->count();
 
-        // Tasks Needing Approval (KPI A)
         $approvalTasks = (clone $taskScope)
             ->where('status', TaskStatus::WaitingApproval->value)
             ->where('workflow_type', TaskWorkflowType::Double->value)
             ->with([
+                'phase:id,project_id,name',
+                'phase.project:id,name,type,status',
                 'pic:id,name,email,avatar,job_title',
-                'phase.project:id,name',
+                'coPics:id,name,email,avatar,job_title',
             ])
+            ->withCount('comments')
             ->orderBy('updated_at', 'desc')
-            ->limit(6)
-            ->get();
+            ->limit(10)
+            ->get([
+                'id',
+                'phase_id',
+                'name',
+                'status',
+                'priority',
+                'progress',
+                'pic_id',
+                'deadline',
+                'workflow_type',
+                'type',
+                'updated_at',
+            ]);
 
         $recentTasks = (clone $taskScope)
             ->with([

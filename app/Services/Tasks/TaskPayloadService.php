@@ -54,7 +54,7 @@ class TaskPayloadService
             foreach ($requiredFields as $requiredField) {
                 if (! array_key_exists($requiredField, $payload) || $payload[$requiredField] === null || $payload[$requiredField] === '') {
                     throw ValidationException::withMessages([
-                        $requiredField => 'Truong nay la bat buoc khi tao task.',
+                        $requiredField => 'Trường này là bắt buộc khi tạo công việc.',
                     ]);
                 }
             }
@@ -62,25 +62,25 @@ class TaskPayloadService
 
         if (array_key_exists('type', $payload) && ! in_array((string) $payload['type'], TaskType::values(), true)) {
             throw ValidationException::withMessages([
-                'type' => 'Loai task khong hop le.',
+                'type' => 'Loại công việc không hợp lệ.',
             ]);
         }
 
         if (array_key_exists('status', $payload) && ! in_array((string) $payload['status'], TaskStatus::values(), true)) {
             throw ValidationException::withMessages([
-                'status' => 'Trang thai task khong hop le.',
+                'status' => 'Trạng thái công việc không hợp lệ.',
             ]);
         }
 
         if (array_key_exists('priority', $payload) && ! in_array((string) $payload['priority'], TaskPriority::values(), true)) {
             throw ValidationException::withMessages([
-                'priority' => 'Muc uu tien task khong hop le.',
+                'priority' => 'Mức ưu tiên công việc không hợp lệ.',
             ]);
         }
 
         if (array_key_exists('workflow_type', $payload) && ! in_array((string) $payload['workflow_type'], TaskWorkflowType::values(), true)) {
             throw ValidationException::withMessages([
-                'workflow_type' => 'Workflow khong hop le.',
+                'workflow_type' => 'Quy trình phê duyệt không hợp lệ.',
             ]);
         }
 
@@ -104,7 +104,7 @@ class TaskPayloadService
                 }
 
                 throw ValidationException::withMessages([
-                    $field => 'Truong nay khong duoc de trong.',
+                    $field => 'Trường này không được để trống.',
                 ]);
             }
 
@@ -151,7 +151,7 @@ class TaskPayloadService
 
         if (array_key_exists('deadline', $payload) && $payload['deadline'] === null) {
             throw ValidationException::withMessages([
-                'deadline' => 'Deadline khong duoc de trong.',
+                'deadline' => 'Hạn chót không được để trống.',
             ]);
         }
 
@@ -169,7 +169,7 @@ class TaskPayloadService
 
         if ($taskId !== null && $dependencyTaskId === $taskId) {
             throw ValidationException::withMessages([
-                'dependency_task_id' => 'Task khong the phu thuoc chinh no.',
+                'dependency_task_id' => 'Công việc không thể phụ thuộc chính nó.',
             ]);
         }
 
@@ -179,7 +179,7 @@ class TaskPayloadService
 
         if (! $dependencyTask instanceof Task) {
             throw ValidationException::withMessages([
-                'dependency_task_id' => 'Task phu thuoc khong ton tai.',
+                'dependency_task_id' => 'Công việc phụ thuộc không tồn tại.',
             ]);
         }
 
@@ -200,7 +200,7 @@ class TaskPayloadService
             && $dependencyStatus !== TaskStatus::Completed->value
         ) {
             throw ValidationException::withMessages([
-                'dependency_task_id' => 'Task phu thuoc chua hoan thanh nen khong the tiep tuc.',
+                'dependency_task_id' => 'Công việc phụ thuộc chưa hoàn thành nên không thể tiếp tục.',
             ]);
         }
     }
@@ -216,7 +216,7 @@ class TaskPayloadService
 
         if (! $phase instanceof Phase) {
             throw ValidationException::withMessages([
-                'phase_id' => 'Phase khong ton tai.',
+                'phase_id' => 'Giai đoạn không tồn tại.',
             ]);
         }
 
@@ -258,7 +258,7 @@ class TaskPayloadService
 
         if ($validCoPicIds->count() !== $normalizedCoPicIds->count()) {
             throw ValidationException::withMessages([
-                'co_pic_ids' => 'Danh sach PIC phoi hop co user khong hop le hoac da ngung hoat dong.',
+                'co_pic_ids' => 'Danh sách người hỗ trợ (Co-PIC) có người dùng không hợp lệ hoặc đã ngừng hoạt động.',
             ]);
         }
 

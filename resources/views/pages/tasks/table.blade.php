@@ -13,8 +13,7 @@ use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
 
-new #[Title('Công việc')] class extends Component
-{
+new #[Title('Công việc')] class extends Component {
     use WithPagination;
 
     #[Url(as: 'q', except: '')]
@@ -121,17 +120,16 @@ new #[Title('Công việc')] class extends Component
         $this->dispatch('task-edit-requested', taskId: $task->id);
     }
 
-    public function deleteTask(int $taskId): void
+    public function deleteTask(int $taskId)
     {
         try {
             $task = Task::query()->findOrFail($taskId);
 
             app(TaskService::class)->delete(auth()->user(), $task);
 
-            $this->resetPage();
             $this->dispatch('toast', message: 'Công việc đã được xóa!', type: 'success');
         } catch (\Exception $e) {
-            $this->dispatch('toast', message: 'Lỗi khi xóa: '.$e->getMessage(), type: 'error');
+            $this->dispatch('toast', message: 'Lỗi khi xóa: ' . $e->getMessage(), type: 'error');
         }
     }
 
@@ -160,9 +158,7 @@ new #[Title('Công việc')] class extends Component
     #[Computed]
     public function projectFilterOptions(): array
     {
-        return $this->projectOptions
-            ->mapWithKeys(fn ($project): array => [(string) $project->id => $project->name])
-            ->all();
+        return $this->projectOptions->mapWithKeys(fn($project): array => [(string) $project->id => $project->name])->all();
     }
 
     /**
@@ -171,9 +167,7 @@ new #[Title('Công việc')] class extends Component
     #[Computed]
     public function phaseFilterOptions(): array
     {
-        return $this->phaseOptions
-            ->mapWithKeys(fn ($phase): array => [(string) $phase->id => $phase->name])
-            ->all();
+        return $this->phaseOptions->mapWithKeys(fn($phase): array => [(string) $phase->id => $phase->name])->all();
     }
 
     /**
@@ -182,17 +176,12 @@ new #[Title('Công việc')] class extends Component
     #[Computed]
     public function picFilterOptions(): array
     {
-        return $this->picOptions
-            ->mapWithKeys(fn ($user): array => [(string) $user->id => $user->name])
-            ->all();
+        return $this->picOptions->mapWithKeys(fn($user): array => [(string) $user->id => $user->name])->all();
     }
 
     private function loadFilterOptions(): void
     {
-        $options = app(TaskQueryService::class)->formOptions(
-            auth()->user(),
-            $this->filterProjectId ? (int) $this->filterProjectId : null,
-        );
+        $options = app(TaskQueryService::class)->formOptions(auth()->user(), $this->filterProjectId ? (int) $this->filterProjectId : null);
 
         $this->projectOptions = $options['projects'];
         $this->phaseOptions = $options['phases'];
@@ -203,20 +192,13 @@ new #[Title('Công việc')] class extends Component
 
 <div class="flex flex-col gap-4">
     <div class="flex flex-wrap items-center justify-between gap-4">
-        <x-ui.heading title="Danh sách công việc"
-            description="Theo dõi và quản lý tiến độ công việc trên toàn hệ thống." class="mb-0" />
+        <x-ui.heading title="Danh sách công việc" description="Theo dõi và quản lý tiến độ công việc trên toàn hệ thống."
+            class="mb-0" />
         <div class="flex items-center gap-3">
-            <div class="flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-100 p-1 dark:border-slate-700 dark:bg-slate-800">
-                <x-ui.button
-                    size="sm"
-                    :variant="$viewMode === 'table' ? 'primary' : 'ghost'"
-                    wire:click="switchView('table')"
-                >Bảng</x-ui.button>
-                <x-ui.button
-                    size="sm"
-                    :variant="$viewMode === 'gantt' ? 'primary' : 'ghost'"
-                    wire:click="switchView('gantt')"
-                >Gantt</x-ui.button>
+            <div
+                class="flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-100 p-1 dark:border-slate-700 dark:bg-slate-800">
+                <x-ui.button size="sm" :variant="$viewMode === 'table' ? 'primary' : 'ghost'" wire:click="switchView('table')">Bảng</x-ui.button>
+                <x-ui.button size="sm" :variant="$viewMode === 'gantt' ? 'primary' : 'ghost'" wire:click="switchView('gantt')">Gantt</x-ui.button>
             </div>
             @can('create', App\Models\Task::class)
                 <x-ui.button icon="add" size="sm" @click="$dispatch('task-create-requested')">

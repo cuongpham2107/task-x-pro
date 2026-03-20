@@ -3,8 +3,7 @@
     <div class="col-span-full">
         <x-ui.input label="Tên công việc" name="name" placeholder="Nhập tên công việc..." wire:model="name" required />
     </div>
-
-    @if (! $this->isPhaseScoped)
+    @if (!$this->isPhaseScoped)
         <div class="col-span-full grid grid-cols-1 gap-6 md:grid-cols-2">
             <div>
                 <x-ui.select label="Dự án" name="project_id" wire:model.live="project_id" icon="folder"
@@ -14,20 +13,19 @@
             <div>
                 <x-ui.select label="Giai đoạn" name="phase_id" wire:model.live="phase_id" icon="timeline"
                     placeholder="Chọn giai đoạn" :options="$this->phaseSelectOptions" required />
-                <x-ui.field-error field="phase_id" />
             </div>
         </div>
     @endif
 
     {{-- Loại công việc & Trạng thái --}}
     <div>
-        <x-ui.select label="Loại công việc" name="type" wire:model="type" icon="category" :options="$taskTypeLabels" required />
+        <x-ui.select label="Loại công việc" name="type" wire:model="type" icon="category" :options="$taskTypeLabels"
+            required />
     </div>
 
     <div>
         <x-ui.select label="Trạng thái" name="status" wire:model="status" icon="sync" :options="$taskStatusLabels"
-            :disabled="$hasDependencyBlock" required />
-        <x-ui.field-error field="status" />
+            :disabled="$hasDependencyBlock || $mode === 'edit'" required />
         @if ($hasDependencyBlock)
             <div class="mt-1.5 flex items-start gap-1.5 rounded-lg bg-amber-50 px-2.5 py-2 dark:bg-amber-900/20">
                 <span class="material-symbols-outlined shrink-0 text-sm text-amber-500">lock</span>
@@ -37,18 +35,19 @@
                     (chưa hoàn thành).
                 </p>
             </div>
+        @elseif ($mode === 'edit')
+            <p class="mt-1.5 text-[11px] text-slate-400">Dùng các nút thao tác bên dưới để chuyển trạng thái.</p>
         @endif
     </div>
 
     {{-- Hạn chót & PIC --}}
     <div>
-        <x-ui.datepicker label="Hạn chót" name="deadline" wire:model="deadline" />
+        <x-ui.datepicker label="Hạn chót" name="deadline" wire:model="deadline" required="true" />
     </div>
 
     <div>
         <x-ui.user-select model="pic_id" :users="$picOptions" label="Người phụ trách (PIC)"
             placeholder="Chọn hoặc tìm kiếm PIC..." required="true" />
-        <x-ui.field-error field="pic_id" />
     </div>
 
     {{-- Mức độ ưu tiên --}}
@@ -90,9 +89,8 @@
         ]" />
 
     {{-- Tiến độ công việc (Progress) --}}
-    {{-- Tiến độ công việc (Progress) --}}
     <x-ui.range-slider label="Tiến độ công việc" name="progress" wire:model="progress" icon="trending_up"
-        start-label="Bắt đầu (0%)" end-label="Hoàn thành (100%)" />
+        start-label="Bắt đầu (0%)" end-label="Hoàn thành (100%)" :disabled="$status === 'pending' || $this->phase->status === 'pending'" />
 
     {{-- Link sản phẩm --}}
     <div class="col-span-full">

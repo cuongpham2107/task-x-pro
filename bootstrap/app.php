@@ -23,8 +23,8 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        $exceptions->respond(function ($response, $e) {
-            if ($e instanceof \Symfony\Component\HttpKernel\Exception\NotFoundHttpException) {
+        $exceptions->respond(function ($response, $e, $request) {
+            if ($e instanceof \Symfony\Component\HttpKernel\Exception\NotFoundHttpException && ! $request->shouldReturnJson() && ! $request->hasHeader('X-Livewire')) {
                 return redirect()->route('dashboard.index');
             }
 

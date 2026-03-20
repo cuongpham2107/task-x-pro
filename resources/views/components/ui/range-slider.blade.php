@@ -8,10 +8,11 @@
     'unit' => '%',
     'startLabel' => 'Bắt đầu (0%)',
     'endLabel' => 'Hoàn thành (100%)',
+    'disabled' => false,
 ])
 
 <div
-    class="col-span-full space-y-3"
+    class="col-span-full space-y-3 {{ $disabled ? 'pointer-events-none opacity-50' : '' }}"
     x-data="{ value: @entangle($attributes->wire('model')) }"
 >
     @if($label)
@@ -37,6 +38,7 @@
             max="{{ $max }}"
             step="{{ $step }}"
             x-model="value"
+            :disabled="$disabled"
             class="accent-primary h-2 w-full cursor-pointer appearance-none rounded-lg bg-slate-200 focus:outline-none dark:bg-slate-700"
         />
     </div>

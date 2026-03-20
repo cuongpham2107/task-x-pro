@@ -29,7 +29,7 @@ class TaskSlaService
 
         if (! $pic instanceof User) {
             throw ValidationException::withMessages([
-                'pic_id' => 'PIC khong ton tai.',
+                'pic_id' => 'Người phụ trách không tồn tại.',
             ]);
         }
 

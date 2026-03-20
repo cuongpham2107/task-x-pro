@@ -61,10 +61,14 @@
                 {{-- Alpine: display value có format, sync giá trị thuần số về Livewire --}}
                 @if ($wireModel)
                     x-data="{
-                        display: $wire.{{ $wireModel }}
-                            ? Number(String($wire.{{ $wireModel }}).replace(/,/g, '')).toLocaleString('en-US')
-                            : ''
+                        display: '',
+                        updateDisplay() {
+                            this.display = $wire.{{ $wireModel }}
+                                ? Number(String($wire.{{ $wireModel }}).replace(/,/g, '')).toLocaleString('en-US')
+                                : '';
+                        }
                     }"
+                    x-init="updateDisplay(); $watch('$wire.{{ $wireModel }}', () => updateDisplay())"
                     x-model="display"
                     x-mask:dynamic="$money($input, '.', ',', 0)"
                     @input.debounce.300ms="$wire.set('{{ $wireModel }}', $el.value.replace(/,/g, '') || null)"

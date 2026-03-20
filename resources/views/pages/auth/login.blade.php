@@ -21,7 +21,7 @@ new #[Layout('layouts.auth')] #[Title('Đăng nhập')] class extends Component 
     public bool $showPassword = false;
 
     public bool $showPendingPopup = false;
-    
+
     #[Url]
     public bool $pending = false;
 
@@ -82,10 +82,11 @@ new #[Layout('layouts.auth')] #[Title('Đăng nhập')] class extends Component 
             </p>
         </div>
     </x-slot:header>
-    
+
     <!-- Status Messages -->
     @if (session('status'))
-        <div class="mb-4 rounded-lg bg-emerald-50 p-4 text-sm text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400">
+        <div
+            class="mb-4 rounded-lg bg-emerald-50 p-4 text-sm text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400">
             {{ session('status') }}
         </div>
     @endif
@@ -95,7 +96,6 @@ new #[Layout('layouts.auth')] #[Title('Đăng nhập')] class extends Component 
             {{ session('error') }}
         </div>
     @endif
-
     <!-- Form -->
     <form wire:submit="login" class="flex flex-col gap-4">
         {{-- Email --}}

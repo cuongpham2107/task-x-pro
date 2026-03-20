@@ -98,18 +98,15 @@ new class extends Component {
         }
     }
 
-    public function deleteTask(int $taskId): void
+    public function deleteTask(int $taskId)
     {
         try {
-            $taskService = app(TaskService::class);
             $task = Task::findOrFail($taskId);
-            $taskService->delete(auth()->user(), $task);
+            app(TaskService::class)->delete(auth()->user(), $task);
 
             $this->dispatch('task-deleted', taskTitle: $task->name);
-            unset($this->tasks);
-            unset($this->taskStats);
         } catch (\Exception $e) {
-            $this->dispatch('toast', message: 'Lỗi khi xóa: ' . $e->getMessage(), type: 'error');
+            $this->dispatch('toast', message: 'Lỗi khi xóa: '.$e->getMessage(), type: 'error');
         }
     }
 

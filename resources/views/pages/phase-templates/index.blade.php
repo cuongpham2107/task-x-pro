@@ -43,7 +43,7 @@ new #[Title('Mẫu phase')] class extends Component {
 
     public int $orderIndex = 1;
 
-    public string $defaultWeight = '10.00';
+    public int $defaultWeight = 10;
 
     public ?string $defaultDurationDays = null;
 
@@ -101,7 +101,7 @@ new #[Title('Mẫu phase')] class extends Component {
             'phaseName' => ['required', 'string', 'max:255'],
             'phaseDescription' => ['nullable', 'string'],
             'orderIndex' => ['required', 'integer', 'min:1', 'max:999', Rule::unique('phase_templates', 'order_index')->where(fn($query) => $query->where('project_type', $this->projectType))->ignore($this->editingTemplateId)],
-            'defaultWeight' => ['required', 'numeric', 'min:0.01', 'max:100'],
+            'defaultWeight' => ['required', 'integer', 'min:0', 'max:100'],
             'defaultDurationDays' => ['nullable', 'integer', 'min:1', 'max:3650'],
             'isActive' => ['boolean'],
         ];
@@ -121,8 +121,8 @@ new #[Title('Mẫu phase')] class extends Component {
             'orderIndex.integer' => 'Thứ tự phase phải là số nguyên.',
             'orderIndex.unique' => 'Thứ tự phase đã tồn tại trong loại dự án này.',
             'defaultWeight.required' => 'Trọng số mặc định là bắt buộc.',
-            'defaultWeight.numeric' => 'Trọng số mặc định phải là số.',
-            'defaultWeight.min' => 'Trọng số mặc định phải lớn hơn 0.',
+            'defaultWeight.integer' => 'Trọng số mặc định phải là số nguyên.',
+            'defaultWeight.min' => 'Trọng số mặc định phải từ 0 trở lên.',
             'defaultWeight.max' => 'Trọng số mặc định không được vượt quá 100.',
             'defaultDurationDays.integer' => 'Thời gian mặc định phải là số nguyên.',
             'defaultDurationDays.min' => 'Thời gian mặc định tối thiểu 1 ngày.',
@@ -157,7 +157,7 @@ new #[Title('Mẫu phase')] class extends Component {
         $this->phaseName = (string) $template->phase_name;
         $this->phaseDescription = (string) ($template->phase_description ?? '');
         $this->orderIndex = (int) $template->order_index;
-        $this->defaultWeight = (string) $template->default_weight;
+        $this->defaultWeight = (int) $template->default_weight;
         $this->defaultDurationDays = $template->default_duration_days !== null ? (string) $template->default_duration_days : null;
         $this->isActive = (bool) $template->is_active;
         $this->showFormModal = true;
@@ -171,13 +171,9 @@ new #[Title('Mẫu phase')] class extends Component {
 
     public function resetFormModal(): void
     {
-        $this->reset(['phaseName', 'phaseDescription', 'editingTemplateId', 'defaultDurationDays']);
+        $this->reset(['phaseName', 'phaseDescription', 'editingTemplateId', 'defaultDurationDays', 'isActive', 'projectType', 'orderIndex', 'defaultWeight']);
 
         $this->mode = 'create';
-        $this->projectType = ProjectType::Warehouse->value;
-        $this->orderIndex = 1;
-        $this->defaultWeight = '10.00';
-        $this->isActive = true;
         $this->resetValidation();
     }
 
@@ -379,8 +375,7 @@ new #[Title('Mẫu phase')] class extends Component {
                         </p>
                     </x-ui.table.cell>
                     <x-ui.table.cell>
-                        <span
-                            class="text-primary text-sm font-semibold">{{ number_format((float) $template->default_weight, 2) }}%</span>
+                        <span class="text-primary text-sm font-semibold">{{ (int) $template->default_weight }}%</span>
                     </x-ui.table.cell>
                     <x-ui.table.cell>
                         <span class="text-sm text-slate-700 dark:text-slate-300">
@@ -412,7 +407,8 @@ new #[Title('Mẫu phase')] class extends Component {
         </x-ui.table.body>
     </x-ui.table>
 
-    <x-ui.slide-panel wire:model="showFormModal" maxWidth="3xl">
+    <x-ui.slide-panel wire:model="showFormModal"
+        wire:key="phase-template-form-{{ $editingTemplateId ?? 'new' }}-{{ $mode }}" maxWidth="3xl">
         <x-slot name="header">
             <x-ui.form.heading :icon="$mode === 'edit' ? 'edit' : 'add'" :title="$mode === 'edit' ? 'Cập nhật mẫu phase' : 'Tạo mẫu phase mới'" :description="$mode === 'edit' ? 'Cập nhật thông tin phase template.' : 'Nhập thông tin mẫu phase cho loại dự án.'" />
         </x-slot>
@@ -444,7 +440,7 @@ new #[Title('Mẫu phase')] class extends Component {
             </div>
 
             <div class="grid grid-cols-1 gap-5 md:grid-cols-2 lg:md:col-span-2">
-                <x-ui.input type="number" label="Trọng số mặc định (%)" required step="0.01" min="0.01"
+                <x-ui.input type="number" label="Trọng số mặc định (%)" required step="1" min="0"
                     max="100" wire:model="defaultWeight" name="defaultWeight" />
 
                 <x-ui.input type="number" label="Số ngày mặc định" min="1" wire:model="defaultDurationDays"

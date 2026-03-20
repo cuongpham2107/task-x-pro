@@ -31,7 +31,7 @@ class PhaseTemplate extends Model
     {
         return [
             'order_index' => 'integer',
-            'default_weight' => 'decimal:2',
+            'default_weight' => 'integer',
             'default_duration_days' => 'integer',
             'is_active' => 'boolean',
         ];

@@ -42,7 +42,7 @@ class TaskOverloadService
         $deadlineText = $deadline->format('d/m/Y H:i');
         $picName = $task->pic?->name ?? 'PIC';
 
-        $message = "PIC {$picName} dang co {$nearbyTaskCount} task co deadline trong vung +/-1 ngay quanh {$deadlineText}.";
+        $message = "Người phụ trách {$picName} đang có {$nearbyTaskCount} công việc có hạn chót trong khoảng +/- 1 ngày quanh {$deadlineText}.";
         $this->createOverloadNotifications($actor, $task, $message);
 
         try {
@@ -102,7 +102,7 @@ class TaskOverloadService
                 'user_id' => $recipientId,
                 'type' => SystemNotificationType::PicOverloadWarning->value,
                 'channel' => NotificationChannel::Both->value,
-                'title' => 'Canh bao qua tai PIC',
+                'title' => 'Cảnh báo quá tải người phụ trách',
                 'body' => $message,
                 'notifiable_type' => Task::class,
                 'notifiable_id' => $task->id,

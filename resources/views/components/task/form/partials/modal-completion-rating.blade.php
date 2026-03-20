@@ -70,8 +70,8 @@
             <x-ui.button
                 variant="primary"
                 icon="check"
-                wire:click="save"
-                loading="save"
+                wire:click="confirmCompletionRating"
+                loading="confirmCompletionRating"
             >Xác nhận hoàn thành</x-ui.button>
         </x-slot>
     </x-ui.modal>

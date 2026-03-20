@@ -1,16 +1,21 @@
 @php
     $isCompletedLocked = $this->isCompletedLocked;
-
     $canApprove = false;
+
     if ($mode === 'edit' && $original_status === 'waiting_approval') {
-        if (auth()->user()?->hasRole('super_admin')) {
+        $user = auth()->user();
+        if ($user?->hasRole('super_admin')) {
             $canApprove = true;
         } elseif ($workflow_type === 'single') {
-            $canApprove = auth()->user()?->hasRole('leader');
+            $canApprove = $user?->hasRole('leader') && !$this->hasLeaderApproved;
         } elseif ($workflow_type === 'double') {
-            $canApprove = auth()
-                ->user()
-                ?->hasAnyRole(['leader', 'ceo']);
+            if ($user?->hasRole('ceo')) {
+                // CEO chỉ duyệt sau khi Leader đã duyệt và CEO chưa duyệt
+                $canApprove = $this->hasLeaderApproved && !$this->hasCeoApproved;
+            } elseif ($user?->hasRole('leader')) {
+                // Leader chỉ duyệt khi chưa duyệt (trước CEO)
+                $canApprove = !$this->hasLeaderApproved;
+            }
         }
     }
 
@@ -32,8 +37,16 @@
 <div class="flex w-full items-center justify-between">
     <div>
         @if ($mode === 'edit' && $status === 'pending' && !$isCompletedLocked)
-            <x-ui.button variant="primary" icon="play_arrow" wire:click="startTask" loading="startTask">Bắt đầu công
-                việc</x-ui.button>
+            @php
+                $startUser = auth()->user();
+                $canStartTask =
+                    ($startUser && !$startUser->hasRole('leader') && !$startUser->hasRole('ceo')) ||
+                    $startUser?->hasRole('super_admin');
+            @endphp
+            @if ($canStartTask)
+                <x-ui.button variant="primary" icon="play_arrow" wire:click="startTask" loading="startTask">Bắt đầu công
+                    việc</x-ui.button>
+            @endif
         @endif
 
         {{-- Gửi xét duyệt công việc --}}

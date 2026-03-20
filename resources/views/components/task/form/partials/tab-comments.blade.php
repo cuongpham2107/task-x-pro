@@ -99,7 +99,7 @@
             <form wire:submit="addComment" class="space-y-2">
                 <div class="relative">
                     <textarea wire:model="newComment" class="input-field min-h-24 resize-none pr-12 text-sm"
-                        placeholder="Nhap noi dung trao doi voi nhom..." rows="3"></textarea>
+                        placeholder="Nhập nội dung trao đổi với nhóm..." rows="3"></textarea>
 
                     <button type="submit"
                         class="bg-primary absolute bottom-3 right-3 inline-flex size-9 items-center justify-center rounded-full text-white shadow-sm transition hover:opacity-90"
@@ -121,7 +121,7 @@
         @else
             <div
                 class="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700 dark:border-amber-900/50 dark:bg-amber-950/20 dark:text-amber-300">
-                Bạn khong co quyen binh luan trong task nay.
+                Bạn không có quyền bình luận trong task này.
             </div>
         @endif
     </div>

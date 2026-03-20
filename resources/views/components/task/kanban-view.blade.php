@@ -77,11 +77,9 @@ new class extends Component {
     /** Called via Alpine/x-sort when user drops a card into a new column */
     public function moveTask(int $taskId, string $newStatus): void
     {
-        // dd($taskId);
         try {
             $task = Task::findOrFail($taskId);
             $taskService = app(TaskService::class);
-
             if ($this->shouldPromptRejectionReason($task, $newStatus)) {
                 $this->pendingRejectTaskId = $task->id;
                 $this->pendingRejectTaskName = $task->name;
@@ -104,7 +102,10 @@ new class extends Component {
 
                 return;
             }
-
+            if ($task->progress <= 90) {
+                $this->dispatch('toast', message: 'Tiến độ công việc phải đạt ít nhất 90% trước khi gửi duyệt.', type: 'error');
+                return;
+            }
             $taskService->update(auth()->user(), $task, [
                 'status' => $newStatus,
             ]);
@@ -323,8 +324,10 @@ new class extends Component {
             $this->loadTasks();
             $this->dispatch('toast', message: 'Công việc đã bắt đầu!', type: 'success');
             $this->dispatch('task-updated', taskId: $taskId);
-        } catch (\Exception $e) {
+        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
             $this->dispatch('toast', message: 'Lỗi: Chỉ có người được giao hoặc người hỗ trợ mới có thể bắt đầu công việc', type: 'error');
+        } catch (\Exception $e) {
+            $this->dispatch('toast', message: 'Lỗi: ' . $e->getMessage(), type: 'error');
         }
     }
 };
@@ -387,7 +390,7 @@ new class extends Component {
                             }
 
                             $isNearDeadline = $task->deadline && !$isDone && $task->deadline->lte(now()->addDays(3));
-                            $recentApprovalLogs = $task->approvalLogs->take(1);
+                            $recentApprovalLogs = $task->approvalLogs->take(2)->sortBy('created_at');
                         @endphp
 
                         {{-- ===== CARD ===== --}}
@@ -419,7 +422,12 @@ new class extends Component {
                                 @endif
                             </div>
                             <div class="flex items-center gap-1.5">
-                                @if ($status === TaskStatus::Pending && !$hasDependencyBlock)
+                                @if (
+                                    ($status === TaskStatus::Pending &&
+                                        !$hasDependencyBlock &&
+                                        !auth()->user()?->hasRole('leader') &&
+                                        !auth()->user()?->hasRole('ceo')) ||
+                                        auth()->user()?->hasRole('super_admin'))
                                     <button wire:click.stop="startTask({{ $task->id }})"
                                         class="text-primary hover:bg-primary/10 flex size-6 items-center justify-center rounded-full transition-all"
                                         title="Bắt đầu ngay">

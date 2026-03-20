@@ -64,7 +64,7 @@ class PhaseTemplateMutationService
             'phase_name' => trim((string) ($attributes['phase_name'] ?? '')),
             'phase_description' => $this->nullableTrimmedString($attributes['phase_description'] ?? null),
             'order_index' => (int) ($attributes['order_index'] ?? 1),
-            'default_weight' => (float) ($attributes['default_weight'] ?? 0),
+            'default_weight' => (int) ($attributes['default_weight'] ?? 0),
             'default_duration_days' => $durationDays !== null && $durationDays !== ''
                 ? (int) $durationDays
                 : null,

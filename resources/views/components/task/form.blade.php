@@ -52,6 +52,8 @@ new class extends Component {
 
     public string $original_status = 'pending';
 
+    public ?string $ratingSource = null;
+
     #[Validate('required|string|max:255')]
     public string $name = '';
 
@@ -67,7 +69,7 @@ new class extends Component {
     #[Validate('required|string')]
     public string $workflow_type = 'single';
 
-    #[Validate('nullable|date')]
+    #[Validate('required|date')]
     public string $deadline = '';
 
     #[Validate('nullable|string|max:5000')]
@@ -137,10 +139,7 @@ new class extends Component {
     private function loadFormOptions(): void
     {
         $projectId = $this->project_id ?? $this->project?->id;
-        $options = app(TaskService::class)->formOptions(
-            Auth::user(),
-            $projectId !== null ? (int) $projectId : null,
-        );
+        $options = app(TaskService::class)->formOptions(Auth::user(), $projectId !== null ? (int) $projectId : null);
         $this->taskTypeLabels = $options['task_type_labels'];
         $this->taskStatusLabels = $options['task_status_labels'];
         $this->taskPriorityLabels = $options['task_priority_labels'];
@@ -194,9 +193,7 @@ new class extends Component {
     #[Computed]
     public function projectSelectOptions(): array
     {
-        return $this->projectOptions
-            ->mapWithKeys(fn($project): array => [(string) $project->id => $project->name])
-            ->all();
+        return $this->projectOptions->mapWithKeys(fn($project): array => [(string) $project->id => $project->name])->all();
     }
 
     /**
@@ -212,9 +209,7 @@ new class extends Component {
             $phases = $phases->where('project_id', (int) $projectId);
         }
 
-        return $phases
-            ->mapWithKeys(fn($phase): array => [(string) $phase->id => $phase->name])
-            ->all();
+        return $phases->mapWithKeys(fn($phase): array => [(string) $phase->id => $phase->name])->all();
     }
 
     #[On('task-create-requested')]
@@ -304,9 +299,30 @@ new class extends Component {
     {
         return [
             'name.required' => 'Tên công việc là bắt buộc.',
+            'name.max' => 'Tên công việc không được vượt quá 255 ký tự.',
             'phase_id.required' => 'Giai đoạn là bắt buộc.',
             'phase_id.exists' => 'Giai đoạn không hợp lệ.',
             'pic_id.required' => 'Người phụ trách là bắt buộc.',
+            'pic_id.exists' => 'Người phụ trách không hợp lệ.',
+            'deadline.required' => 'Hạn chót là bắt buộc.',
+            'deadline.date' => 'Hạn chót phải là định dạng ngày hợp lệ.',
+            'type.required' => 'Loại công việc là bắt buộc.',
+            'status.required' => 'Trạng thái là bắt buộc.',
+            'priority.required' => 'Mức độ ưu tiên là bắt buộc.',
+            'workflow_type.required' => 'Quy trình phê duyệt là bắt buộc.',
+            'progress.required' => 'Tiến độ công việc là bắt buộc.',
+            'progress.integer' => 'Tiến độ phải là số nguyên.',
+            'progress.min' => 'Tiến độ không được nhỏ hơn 0%.',
+            'progress.max' => 'Tiến độ không được lớn hơn 100%.',
+            'deliverable_url.url' => 'Link sản phẩm phải là một URL hợp lệ.',
+            'deliverable_url.max' => 'Link sản phẩm không được vượt quá 255 ký tự.',
+            'description.max' => 'Mô tả không được vượt quá 5000 ký tự.',
+            'issue_note.max' => 'Ghi chú vấn đề không được vượt quá 5000 ký tự.',
+            'recommendation.max' => 'Kiến nghị không được vượt quá 5000 ký tự.',
+            'dependency_task_id.exists' => 'Công việc phụ thuộc không hợp lệ.',
+            'newComment.required' => 'Nội dung bình luận là bắt buộc.',
+            'newComment.max' => 'Bình luận không được vượt quá 5000 ký tự.',
+            'rejectReason.required' => 'Vui lòng nhập lý do không đạt.',
         ];
     }
 
@@ -361,9 +377,6 @@ new class extends Component {
         if ($this->phase_id === null && $this->phase?->id !== null) {
             $this->phase_id = $this->phase->id;
         }
-        
-        
-
         try {
             $this->validate();
             $taskService = app(TaskService::class);
@@ -391,12 +404,12 @@ new class extends Component {
             if ($this->mode === 'edit' && $this->editing_task_id !== null) {
                 $task = Task::findOrFail($this->editing_task_id);
                 $needsCompletionRating = $this->shouldPromptCompletionRating($task);
-
                 if ($needsCompletionRating) {
                     $this->completionTaskName = trim($this->name) !== '' ? trim($this->name) : (string) $task->name;
                 }
 
                 if ($needsCompletionRating && $this->completionStarRating === null) {
+                    $this->ratingSource = 'save';
                     $this->showFormModal = false;
                     $this->showCompletionRatingModal = true;
                     $this->addError('completionStarRating', 'Vui lòng chọn điểm đánh giá từ 1 đến 5 sao.');
@@ -430,11 +443,9 @@ new class extends Component {
             $this->dispatch('toast', message: $toastMessage, type: 'success');
             $this->dispatch('task-saved', taskTitle: $savedName);
         } catch (ValidationException $e) {
-            $this->dispatch('toast', message: 'Lỗi: ' . $e->getMessage(), type: 'error');
             throw $e;
         } catch (\Exception $e) {
-            $this->dispatch('toast', message: 'Lỗi: ' . $e->getMessage(), type: 'error');
-            throw $e;
+            $this->dispatch('toast', message: 'Lỗi hệ thống: ' . $e->getMessage(), type: 'error');
         }
     }
 
@@ -446,7 +457,19 @@ new class extends Component {
 
         try {
             $task = Task::findOrFail($this->editing_task_id);
-            app(\App\Services\Tasks\TaskApprovalService::class)->approve(auth()->user(), $task);
+            $needsRating = $this->shouldPromptRatingForApproval($task);
+
+            if ($needsRating && $this->completionStarRating === null) {
+                $this->ratingSource = 'approve';
+                $this->completionTaskName = (string) $task->name;
+                $this->showFormModal = false;
+                $this->showCompletionRatingModal = true;
+                $this->addError('completionStarRating', 'Vui lòng chọn điểm đánh giá từ 1 đến 5 sao.');
+
+                return;
+            }
+
+            app(\App\Services\Tasks\TaskApprovalService::class)->approve(auth()->user(), $task, $this->completionStarRating, $this->completionApprovalComment !== '' ? $this->completionApprovalComment : null);
 
             $this->showFormModal = false;
             $this->resetFormModal();
@@ -458,6 +481,21 @@ new class extends Component {
             $this->dispatch('toast', message: (string) ($firstError ?? 'Không thể phê duyệt task.'), type: 'error');
         } catch (\Exception $e) {
             $this->dispatch('toast', message: 'Lỗi: ' . $e->getMessage(), type: 'error');
+        }
+    }
+
+    public function confirmCompletionRating(): void
+    {
+        if ($this->completionStarRating === null) {
+            $this->addError('completionStarRating', 'Vui lòng chọn điểm đánh giá từ 1 đến 5 sao.');
+
+            return;
+        }
+
+        if ($this->ratingSource === 'approve') {
+            $this->approveTask();
+        } else {
+            $this->save();
         }
     }
 
@@ -527,6 +565,23 @@ new class extends Component {
         }
 
         return false;
+    }
+
+    private function shouldPromptRatingForApproval(Task $task): bool
+    {
+        $actor = auth()->user();
+        if (!$actor) {
+            return false;
+        }
+
+        $workflowType = (string) $this->workflow_type;
+
+        // Neu dang o trang thai cho duyet
+        if ($this->original_status !== 'waiting_approval') {
+            return false;
+        }
+
+        return $this->canApproveCompletionByWorkflow($actor, $workflowType);
     }
 
     private function canApproveTask(): bool
@@ -657,6 +712,8 @@ new class extends Component {
 
             $this->dispatch('toast', message: 'Công việc đã bắt đầu!', type: 'success');
             $this->dispatch('task-updated', taskId: $task->id);
+        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+            $this->dispatch('toast', message: 'Lỗi: Chỉ có người được giao hoặc người hỗ trợ mới có thể bắt đầu công việc', type: 'error');
         } catch (\Exception $e) {
             $this->dispatch('toast', message: 'Lỗi: ' . $e->getMessage(), type: 'error');
         }
@@ -664,6 +721,10 @@ new class extends Component {
 
     public function submitForApproval(): void
     {
+        if ($this->progress <= 90) {
+            $this->dispatch('toast', message: 'Tiến độ công việc phải đạt ít nhất 90% trước khi gửi duyệt.', type: 'error');
+            return;
+        }
         if ($this->editing_task_id === null || $this->mode !== 'edit') {
             return;
         }
@@ -678,8 +739,7 @@ new class extends Component {
             $this->dispatch('toast', message: 'Đã gửi duyệt công việc.', type: 'success');
             $this->dispatch('task-updated', taskId: $task->id);
         } catch (ValidationException $e) {
-            $firstError = collect($e->errors())->flatten()->first();
-            $this->dispatch('toast', message: (string) ($firstError ?? 'Không thể gửi duyệt.'), type: 'error');
+            throw $e;
         } catch (\Exception $e) {
             $this->dispatch('toast', message: 'Lỗi: ' . $e->getMessage(), type: 'error');
         }
@@ -753,6 +813,52 @@ new class extends Component {
 
         // dd($approvalLogs->concat($activityLogs)->sortByDesc('created_at'));
         return $approvalLogs->concat($activityLogs)->sortByDesc('created_at');
+    }
+
+    #[Computed]
+    public function hasLeaderApproved(): bool
+    {
+        if (!$this->editing_task_id) {
+            return false;
+        }
+        $task = Task::find($this->editing_task_id);
+        if (!$task) {
+            return false;
+        }
+
+        $lastRejectedLogId = $task->approvalLogs()->where('action', \App\Enums\ApprovalAction::Rejected->value)->max('id');
+
+        return $task
+            ->approvalLogs()
+            ->when($lastRejectedLogId !== null, function ($query) use ($lastRejectedLogId): void {
+                $query->where('id', '>', (int) $lastRejectedLogId);
+            })
+            ->where('approval_level', \App\Enums\ApprovalLevel::Leader->value)
+            ->where('action', \App\Enums\ApprovalAction::Approved->value)
+            ->exists();
+    }
+
+    #[Computed]
+    public function hasCeoApproved(): bool
+    {
+        if (!$this->editing_task_id) {
+            return false;
+        }
+        $task = Task::find($this->editing_task_id);
+        if (!$task) {
+            return false;
+        }
+
+        $lastRejectedLogId = $task->approvalLogs()->where('action', \App\Enums\ApprovalAction::Rejected->value)->max('id');
+
+        return $task
+            ->approvalLogs()
+            ->when($lastRejectedLogId !== null, function ($query) use ($lastRejectedLogId): void {
+                $query->where('id', '>', (int) $lastRejectedLogId);
+            })
+            ->where('approval_level', \App\Enums\ApprovalLevel::Ceo->value)
+            ->where('action', \App\Enums\ApprovalAction::Approved->value)
+            ->exists();
     }
 };
 ?>

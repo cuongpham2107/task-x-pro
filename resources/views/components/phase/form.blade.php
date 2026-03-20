@@ -94,7 +94,6 @@ new class extends Component {
     public function save(): void
     {
         $this->validate();
-
         try {
             $phaseService = app(PhaseService::class);
             $attributes = [
@@ -109,12 +108,12 @@ new class extends Component {
                 $phase = $phaseService->findForEdit(auth()->user(), $this->editingPhaseId);
                 $phaseService->update(auth()->user(), $phase, $attributes);
 
-                session()->flash('success', 'Giai đoạn đã được cập nhật thành công!');
+                // session()->flash('success', 'Giai đoạn đã được cập nhật thành công!');
                 $this->dispatch('toast', message: 'Giai đoạn đã được cập nhật thành công!', type: 'success');
             } else {
                 $phaseService->create(auth()->user(), $this->project, $attributes);
 
-                session()->flash('success', 'Giai đoạn đã được thêm thành công!');
+                // session()->flash('success', 'Giai đoạn đã được thêm thành công!');
                 $this->dispatch('toast', message: 'Giai đoạn đã được thêm thành công!', type: 'success');
             }
 
@@ -124,8 +123,8 @@ new class extends Component {
             $this->dispatch('phase-saved');
         } catch (ValidationException $e) {
             $this->setErrorBag($e->validator->errors());
+            $this->dispatch('toast', message: 'Có lỗi xảy ra: ' . $e->getMessage(), type: 'error');
         } catch (\Exception $e) {
-            session()->flash('error', 'Có lỗi xảy ra: ' . $e->getMessage());
             $this->dispatch('toast', message: 'Có lỗi xảy ra: ' . $e->getMessage(), type: 'error');
         }
     }
@@ -150,6 +149,7 @@ new class extends Component {
                 <div class="col-span-full">
                     <x-ui.input label="Tên giai đoạn" wire:model="name" placeholder="Ví dụ: Khảo sát & Phân tích"
                         required />
+                    <x-ui.field-error field="name" />
                 </div>
 
                 {{-- Trọng số --}}
@@ -158,16 +158,19 @@ new class extends Component {
                         wire:model="weight" placeholder="0 - 100" iconRight="percent" required />
                     <p class="text-2xs mt-1 italic text-slate-500">Tổng trọng số của tất cả các giai đoạn nên đạt 100%.
                     </p>
+                    <x-ui.field-error field="weight" />
                 </div>
 
                 {{-- Ngày bắt đầu --}}
                 <div>
                     <x-ui.datepicker label="Ngày bắt đầu" wire:model="startDate" />
+                    <x-ui.field-error field="startDate" />
                 </div>
 
                 {{-- Ngày kết thúc --}}
                 <div>
                     <x-ui.datepicker label="Ngày kết thúc (Dự kiến)" wire:model="endDate" />
+                    <x-ui.field-error field="endDate" />
                 </div>
 
                 {{-- Mô tả --}}
