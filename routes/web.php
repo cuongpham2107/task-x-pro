@@ -9,6 +9,7 @@ use App\Models\SlaConfig;
 use App\Models\Task;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Spatie\Permission\Models\Role;
 
@@ -26,7 +27,7 @@ Route::middleware('guest')->group(function () {
             $user = $authService->handleSocialCallback($driver);
 
             if ($user->status === \App\Enums\UserStatus::Pending || $user->status === 'pending') {
-                return redirect()->route('login')->with('showPendingPopup', true);
+                return redirect()->route('login', ['pending' => 1])->with('showPendingPopup', true);
             }
 
             Auth::login($user, true);
@@ -34,7 +35,11 @@ Route::middleware('guest')->group(function () {
 
             return redirect()->intended(route('dashboard.index'));
         } catch (\Exception $e) {
-            return redirect()->route('login')->with('error', 'Đăng nhập không thành công.');
+            \Illuminate\Support\Facades\Log::error('Social login failed: ' . $e->getMessage(), [
+                'driver' => $driver,
+                'exception' => $e
+            ]);
+            return redirect()->route('login')->with('error', 'Đăng nhập không thành công: ' . $e->getMessage());
         }
     })->name('social.callback');
 });

@@ -28,16 +28,16 @@ new class extends Component {
     public string $type = '';
 
     #[Validate('nullable|date')]
-    public string $startDate = '';
+    public ?string $startDate = '';
 
     #[Validate('nullable|date|after_or_equal:startDate')]
-    public string $endDate = '';
+    public ?string $endDate = '';
 
     #[Validate('nullable|string|max:5000')]
-    public string $objective = '';
+    public ?string $objective = '';
 
     #[Validate('nullable|numeric|min:0')]
-    public string $budget = '';
+    public ?string $budget = '';
 
     public bool $is_phase = false;
     /** @var array<int, int> */
@@ -165,7 +165,7 @@ new class extends Component {
             // Normalize inputs so validation handles empty strings as null where appropriate
             $this->startDate = $this->startDate === '' ? null : $this->startDate;
             $this->endDate = $this->endDate === '' ? null : $this->endDate;
-            $this->budget = $this->budget === '' ? null : $this->budget;
+            $this->budget = $this->budget === '' || $this->budget === null ? null : (string) $this->budget;
 
             // Parse common date formats from UI (e.g. 31.12.2026 or 31/12/2026) into Y-m-d
             $tryParse = function (?string $value): ?string {
@@ -197,7 +197,7 @@ new class extends Component {
             $this->endDate = $tryParse($this->endDate);
 
             $this->validate();
-            
+
             $projectService = app(ProjectService::class);
             $attributes = [
                 'name' => $this->name,
@@ -218,7 +218,7 @@ new class extends Component {
                     $phasePayloads = $payloads;
                 }
             }
-            
+
             if ($this->mode === 'edit' && $this->editingProjectId !== null) {
                 $project = $projectService->findForEdit(auth()->user(), $this->editingProjectId);
 
@@ -327,7 +327,7 @@ new class extends Component {
 
                             <x-ui.user-multi-select model="leaderIds" :users="$leaderOptions" label="Leader dự án"
                                 placeholder="Tìm tên hoặc email leader..." empty-text="Không tìm thấy leader phù hợp"
-                                dropdown-position="top"
+                                dropdown-position="top" required
                                 wire:key="project-leaders-{{ $mode }}-{{ $editingProjectId ?? 'new' }}" />
                             <x-ui.field-error field="leaderIds" />
                             <x-ui.field-error field="leader_ids" />

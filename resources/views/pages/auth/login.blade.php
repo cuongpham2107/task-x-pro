@@ -5,6 +5,7 @@ use Illuminate\Validation\ValidationException;
 use Laravel\Socialite\Facades\Socialite;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
+use Livewire\Attributes\Url;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 
@@ -20,14 +21,20 @@ new #[Layout('layouts.auth')] #[Title('Đăng nhập')] class extends Component 
     public bool $showPassword = false;
 
     public bool $showPendingPopup = false;
+    
+    #[Url]
+    public bool $pending = false;
 
     protected \App\Services\Auth\AuthService $authService;
 
     public function boot(\App\Services\Auth\AuthService $authService): void
     {
         $this->authService = $authService;
+    }
 
-        if (session()->has('showPendingPopup')) {
+    public function mount(): void
+    {
+        if (session()->has('showPendingPopup') || $this->pending) {
             $this->showPendingPopup = true;
         }
     }
@@ -75,6 +82,19 @@ new #[Layout('layouts.auth')] #[Title('Đăng nhập')] class extends Component 
             </p>
         </div>
     </x-slot:header>
+    
+    <!-- Status Messages -->
+    @if (session('status'))
+        <div class="mb-4 rounded-lg bg-emerald-50 p-4 text-sm text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400">
+            {{ session('status') }}
+        </div>
+    @endif
+
+    @if (session('error'))
+        <div class="mb-4 rounded-lg bg-rose-50 p-4 text-sm text-rose-600 dark:bg-rose-900/30 dark:text-rose-400">
+            {{ session('error') }}
+        </div>
+    @endif
 
     <!-- Form -->
     <form wire:submit="login" class="flex flex-col gap-4">
@@ -122,7 +142,7 @@ new #[Layout('layouts.auth')] #[Title('Đăng nhập')] class extends Component 
         </div>
     </div>
     <!-- Social Logins -->
-    <div class="flex flex-col gap-4">
+    <div class="flex flex-col items-center justify-center gap-4">
         {!! Socialite::driver('telegram')->getButton() !!}
     </div>
 
@@ -130,9 +150,10 @@ new #[Layout('layouts.auth')] #[Title('Đăng nhập')] class extends Component 
     <x-ui.modal wire:model="showPendingPopup" maxWidth="md">
         <div class="flex flex-col items-center gap-4 py-4 text-center">
             <div class="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/30">
-                <span class="material-symbols-outlined text-4xl text-emerald-600 dark:text-emerald-400">check_circle</span>
+                <span
+                    class="material-symbols-outlined text-4xl text-emerald-600 dark:text-emerald-400">check_circle</span>
             </div>
-            
+
             <div class="space-y-2">
                 <h3 class="text-xl font-bold text-slate-900 dark:text-slate-100">Đăng ký thành công</h3>
                 <p class="text-sm text-slate-500 dark:text-slate-400">
