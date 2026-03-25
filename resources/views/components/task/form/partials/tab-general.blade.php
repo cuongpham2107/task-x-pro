@@ -1,3 +1,9 @@
+@php
+    $isRestricted = !auth()
+        ->user()
+        ->hasAnyRole(['leader', 'ceo', 'super_admin']);
+@endphp
+
 <div class="{{ $this->isCompletedLocked ? 'pointer-events-none select-none opacity-70' : '' }} grid grid-cols-2 gap-6">
     {{-- Tên công việc --}}
     <div class="col-span-full">
@@ -7,16 +13,12 @@
         <div class="col-span-full grid grid-cols-1 gap-6 md:grid-cols-2">
             <div>
                 <x-ui.select label="Dự án" name="project_id" wire:model.live="project_id" icon="folder"
-                    placeholder="Chọn dự án" :options="$this->projectSelectOptions" :disabled="!auth()
-                        ->user()
-                        ->hasAnyRole(['leader', 'ceo', 'super_admin'])" />
+                    placeholder="Chọn dự án" :options="$this->projectSelectOptions" :disabled="$isRestricted" />
             </div>
 
             <div>
                 <x-ui.select label="Giai đoạn" name="phase_id" wire:model.live="phase_id" icon="timeline"
-                    placeholder="Chọn giai đoạn" :options="$this->phaseSelectOptions" required :disabled="!auth()
-                        ->user()
-                        ->hasAnyRole(['leader', 'ceo', 'super_admin'])" />
+                    placeholder="Chọn giai đoạn" :options="$this->phaseSelectOptions" required :disabled="$isRestricted" />
             </div>
         </div>
     @endif
@@ -46,23 +48,17 @@
 
     {{-- Hạn chót & PIC --}}
     <div>
-        <x-ui.datepicker label="Hạn chót" name="deadline" wire:model="deadline" required="true" :disabled="!auth()
-            ->user()
-            ->hasAnyRole(['leader', 'ceo', 'super_admin'])" />
+        <x-ui.datepicker label="Hạn chót" name="deadline" wire:model="deadline" required="true" :disabled="$isRestricted" />
     </div>
 
     <div>
         <x-ui.user-select model="pic_id" :users="$picOptions" label="Người phụ trách (PIC)"
-            placeholder="Chọn hoặc tìm kiếm PIC..." required="true" :disabled="!auth()
-                ->user()
-                ->hasAnyRole(['leader', 'ceo', 'super_admin'])" />
+            placeholder="Chọn hoặc tìm kiếm PIC..." required="true" :disabled="$isRestricted" />
     </div>
 
     {{-- Mức độ ưu tiên --}}
     <x-ui.radio-group label="Mức độ ưu tiên" name="priority" wire:model="priority"
-        grid-cols="grid-cols-2 sm:grid-cols-4" :disabled="!auth()
-            ->user()
-            ->hasAnyRole(['leader', 'ceo', 'super_admin'])" :options="[
+        grid-cols="grid-cols-2 sm:grid-cols-4" :disabled="$isRestricted" :options="[
             'low' => [
                 'label' => 'Thấp',
                 'color' => 'text-blue-500 has-checked:bg-blue-500/5 has-checked:border-blue-500',
@@ -83,9 +79,7 @@
 
     {{-- Quy trình duyệt --}}
     <x-ui.radio-group label="Quy trình phê duyệt" icon="info" name="workflow_type" wire:model="workflow_type"
-        grid-cols="grid-cols-1 sm:grid-cols-2" :disabled="!auth()
-            ->user()
-            ->hasAnyRole(['leader', 'ceo', 'super_admin'])" :options="[
+        grid-cols="grid-cols-1 sm:grid-cols-2" :disabled="$isRestricted" :options="[
             'single' => [
                 'label' => '1 cấp duyệt (Leader)',
                 'description' => 'Leader phê duyệt là hoàn thành.',
@@ -111,9 +105,10 @@
     </div>
 
     {{-- Phụ thuộc công việc --}}
-    <div class="col-span-full space-y-2" x-data="{
+    <div class="col-span-full space-y-2 text-slate-900" x-data="{
         search: '',
         showDropdown: false,
+        disabled: {{ $isRestricted ? 'true' : 'false' }},
         selectedId: @entangle('dependency_task_id').live,
         allTasks: {{ Js::from($dependencyTaskOptions->map(fn($t) => ['id' => $t->id, 'name' => $t->name, 'status' => $t->status instanceof \BackedEnum ? $t->status->value : $t->status])->values()) }},
         get selectedTask() {
@@ -126,11 +121,13 @@
             return this.allTasks.filter(t => t.name.toLowerCase().includes(q));
         },
         select(task) {
+            if (this.disabled) return;
             this.selectedId = Number(task.id);
             this.search = '';
             this.showDropdown = false;
         },
         clear() {
+            if (this.disabled) return;
             this.selectedId = null;
             this.search = '';
         },
@@ -158,10 +155,14 @@
         <p class="-mt-1 text-xs text-slate-400">Task này chỉ được bắt đầu khi task phụ thuộc hoàn thành.</p>
 
         <div class="relative mt-1">
-            <div @click="showDropdown = !showDropdown; $nextTick(() => { if (showDropdown) $refs.depSearch.focus() })"
-                class="input-field flex cursor-pointer items-center justify-between gap-2 overflow-hidden bg-white py-2.5 pl-3 pr-2 transition-all hover:border-slate-400 dark:bg-slate-900"
-                :class="showDropdown ? 'border-primary ring-2 ring-primary/20' :
-                    'border-slate-300 dark:border-slate-700'">
+            <div @click="if (!disabled) { showDropdown = !showDropdown; $nextTick(() => { if (showDropdown) $refs.depSearch.focus() }) }"
+                class="input-field flex items-center justify-between gap-2 overflow-hidden bg-white py-2.5 pl-3 pr-2 transition-all dark:bg-slate-900"
+                :class="{
+                    'cursor-not-allowed opacity-60 bg-slate-50 dark:bg-slate-800/50': disabled,
+                    'cursor-pointer hover:border-slate-400': !disabled,
+                    'border-primary ring-2 ring-primary/20': showDropdown,
+                    'border-slate-300 dark:border-slate-700': !showDropdown
+                }">
                 <div class="flex min-w-0 items-center gap-2">
                     <template x-if="selectedTask">
                         <div class="flex items-center gap-2 overflow-hidden">
@@ -243,9 +244,7 @@
     {{-- Co-PIC --}}
     <div class="col-span-full">
         <x-ui.user-multi-select model="co_pic_ids" :users="$picOptions" label="Người hỗ trợ (Co-PIC)"
-            placeholder="Chọn người hỗ trợ..." :disabled="!auth()
-                ->user()
-                ->hasAnyRole(['leader', 'ceo', 'super_admin'])" />
+            placeholder="Chọn người hỗ trợ..." :disabled="$isRestricted" />
     </div>
 
     {{-- Mô tả công việc --}}

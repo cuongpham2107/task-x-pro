@@ -78,6 +78,24 @@ class Task extends Model
             $task->syncPhaseAndProjectProgress();
         });
 
+        static::created(function (Task $task): void {
+            $actor = Auth::user();
+            if (! $actor) {
+                return;
+            }
+
+            \App\Models\ActivityLog::query()->create([
+                'user_id' => $actor->id,
+                'entity_type' => static::class,
+                'entity_id' => $task->id,
+                'action' => 'created',
+                'old_values' => [],
+                'new_values' => $task->getAttributes(),
+                'ip_address' => request()->ip(),
+                'user_agent' => request()->userAgent(),
+            ]);
+        });
+
         static::updated(function (Task $task): void {
             $actor = Auth::user();
             if (! $actor) {
