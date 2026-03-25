@@ -1,4 +1,4 @@
-@props(['name', 'options', 'label' => null, 'icon' => null, 'gridCols' => 'grid-cols-2'])
+@props(['name', 'options', 'label' => null, 'icon' => null, 'gridCols' => 'grid-cols-2', 'hidden' => false])
 
 @php
     // $options structure:
@@ -15,7 +15,7 @@
     $hasError = $errors->has($name);
 @endphp
 
-<div class="col-span-full space-y-2">
+<div class="{{ $hidden ? 'hidden' : '' }} col-span-full space-y-2">
     @if ($label)
         <span class="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200">
             {{ $label }}

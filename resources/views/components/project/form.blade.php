@@ -243,7 +243,7 @@ new class extends Component {
         } catch (ValidationException $e) {
             \Log::error('Validation failed', ['errors' => $e->validator->errors()->toArray()]);
             $this->setErrorBag($e->validator->errors());
-            $this->dispatch('toast', message: 'Vui lòng kiểm tra lại thông tin!', type: 'error');
+            $this->dispatch('toast', message: 'Vui lòng kiểm tra lại thông tin! ' . $e->getMessage(), type: 'error');
         } catch (\Exception $e) {
             \Log::error('Project save failed', ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
             session()->flash('error', 'Có lỗi xảy ra: ' . $e->getMessage());
@@ -319,7 +319,7 @@ new class extends Component {
                         ];
                     @endphp
                     <x-ui.radio-group name="is_phase" wire:model.live="is_phase" label="Sử dụng mẫu phase"
-                        :options="$isPhaseOptions" />
+                        :options="$isPhaseOptions" :hidden="!empty($editingProjectId)" />
 
                     {{-- Leader --}}
                     @if ($leaderOptions->isNotEmpty())

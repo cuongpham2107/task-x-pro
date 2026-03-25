@@ -85,14 +85,14 @@ class ProjectPhaseService
             $name = trim((string) ($phasePayload['name'] ?? ''));
             if ($name === '') {
                 throw ValidationException::withMessages([
-                    "phases.{$index}.name" => 'Ten phase khong duoc de trong.',
+                    "phases.{$index}.name" => 'Tên phase không được để trống.',
                 ]);
             }
 
             $weight = round((float) ($phasePayload['weight'] ?? 0), 2);
             if ($weight <= 0) {
                 throw ValidationException::withMessages([
-                    "phases.{$index}.weight" => 'Trong so phase phai lon hon 0.',
+                    "phases.{$index}.weight" => 'Trọng số phase phải lớn hơn 0.',
                 ]);
             }
 
@@ -123,7 +123,7 @@ class ProjectPhaseService
             $phase = $existingPhases->get($phaseId);
             if (! $phase instanceof Phase) {
                 throw ValidationException::withMessages([
-                    "phases.{$index}.id" => 'Phase khong ton tai trong project hien tai.',
+                    "phases.{$index}.id" => 'Phase không tồn tại trong project hiện tại.',
                 ]);
             }
 
@@ -145,7 +145,7 @@ class ProjectPhaseService
 
             if ($phase->tasks_count > 0) {
                 throw ValidationException::withMessages([
-                    'phases' => "Khong the xoa phase [{$phase->name}] vi da co task.",
+                    'phases' => "Không thể xóa phase [{$phase->name}] vì đã có task.",
                 ]);
             }
 
@@ -154,10 +154,11 @@ class ProjectPhaseService
     }
 
     /**
-     * Kiem tra tong trong so phase phai bang 100 theo BR-008.
+     * Kiểm tra tổng trọng số phase phải bằng 100 theo BR-008.
      */
     private function assertValidPhaseWeightTotal(array $phasePayloads): void
     {
+       
         $weightTotal = collect($phasePayloads)
             ->sum(function (array $phasePayload): float {
                 return round((float) ($phasePayload['weight'] ?? 0), 2);
@@ -165,7 +166,7 @@ class ProjectPhaseService
 
         if (abs(round($weightTotal, 2) - 100.0) > 0.01) {
             throw ValidationException::withMessages([
-                'phases' => 'Tong trong so cua tat ca phase phai bang 100.',
+                'phases' => 'Tổng trọng số của tất cả phase phải bằng 100.',
             ]);
         }
     }
