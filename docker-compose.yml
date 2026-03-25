@@ -11,9 +11,9 @@ services:
       SERVICE_TAGS: dev
     volumes:
       - ./:/var/www
-      - vendor:/var/www/vendor
-      - node_modules:/var/www/node_modules
-      - public_build:/var/www/public/build
+      #- vendor:/var/www/vendor
+      #- node_modules:/var/www/node_modules
+      #- public_build:/var/www/public/build
       - storage:/var/www/storage
       - bootstrap_cache:/var/www/bootstrap/cache
     networks:
@@ -28,7 +28,7 @@ services:
       - "8020:80"
     volumes:
       - ./:/var/www
-      - public_build:/var/www/public/build:ro
+      #- public_build:/var/www/public/build:ro
       - storage:/var/www/storage:ro
       - ./nginx/conf.d/:/etc/nginx/conf.d/
     networks:
@@ -41,8 +41,8 @@ networks:
     driver: bridge
 
 volumes:
-  vendor:
-  node_modules:
-  public_build:
+  # vendor:
+  # node_modules:
+  # public_build:
   storage:
   bootstrap_cache:

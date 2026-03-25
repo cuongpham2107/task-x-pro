@@ -19,25 +19,61 @@
     value: @entangle($attributes->wire('model')),
     instance: null,
 
-    // Convert dd/mm/yyyy → yyyy-mm-dd
+    // Chuyển đổi linh hoạt các định dạng sang yyyy-mm-dd
     toISO(str) {
         if (!str) return '';
-        const [d, m, y] = str.split('/');
-        return y && m && d ? `${y}-${m}-${d}` : '';
+
+        // Nếu đã là định dạng yyyy-mm-dd
+        if (str.includes('-')) {
+            let parts = str.split(' ')[0].split('-');
+            if (parts.length === 3) {
+                let [y, m, d] = parts;
+                if (y.length === 4 && y.startsWith('00')) y = '20' + y.substring(2);
+                return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+            }
+        }
+
+        // Nếu là định dạng dd/mm/yyyy
+        if (str.includes('/')) {
+            let parts = str.split('/');
+            if (parts.length === 3) {
+                let [d, m, y] = parts;
+                if (y.length === 2) {
+                    y = parseInt(y) > 50 ? '19' + y : '20' + y;
+                }
+                return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+            }
+        }
+
+        return str;
     },
 
-    // Convert yyyy-mm-dd → dd/mm/yyyy để hiển thị
+    // Chuyển đổi yyyy-mm-dd → dd/mm/yyyy để hiển thị
     toDisplay(str) {
         if (!str) return '';
-        const [y, m, d] = str.split('-');
-        return y && m && d ? `${d}/${m}/${y}` : '';
+
+        // Nếu đã là định dạng dd/mm/yyyy thì trả về luôn
+        if (str.includes('/') && str.split('/').length === 3) {
+            return str;
+        }
+
+        let iso = this.toISO(str);
+        if (!iso || !iso.includes('-')) return str;
+
+        let [y, m, d] = iso.split('-');
+        return `${d}/${m}/${y}`;
     },
 
     init() {
         this.$nextTick(() => {
             if (!this.$refs.input) return;
 
+            // Tự động chuẩn hóa giá trị nếu lỡ mang định dạng lạ hoặc năm 0030
+            this.value = this.toISO(this.value);
             this.displayValue = this.toDisplay(this.value);
+
+            // Phải set value cho input trước khi init Datepicker
+            this.$refs.input.value = this.displayValue;
 
             this.instance = new window.Datepicker(this.$refs.input, {
                 language: 'vi',
@@ -48,6 +84,11 @@
                 todayBtn: true,
                 todayBtnMode: 1,
             });
+
+            // Đồng bộ lại datepicker nếu đã có giá trị
+            if (this.displayValue) {
+                this.instance.setDate(this.displayValue);
+            }
 
             this.$refs.input.addEventListener('changeDate', (e) => {
                 if (!this.$refs.input) return;
