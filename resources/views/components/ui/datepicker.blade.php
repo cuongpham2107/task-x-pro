@@ -34,28 +34,34 @@
     },
 
     init() {
-        this.displayValue = this.toDisplay(this.value);
+        this.$nextTick(() => {
+            if (!this.$refs.input) return;
 
-        this.instance = new window.Datepicker(this.$refs.input, {
-            language: 'vi',
-            format: '{{ $format }}',
-            orientation: '{{ $orientation }}',
-            autohide: true,
-            clearBtn: true,
-            todayBtn: true,
-            todayBtnMode: 1,
-        });
+            this.displayValue = this.toDisplay(this.value);
 
-        this.$refs.input.addEventListener('changeDate', (e) => {
-            this.displayValue = this.$refs.input.value;
-            this.value = this.toISO(this.$refs.input.value); // → Livewire nhận Y-m-d
-        });
+            this.instance = new window.Datepicker(this.$refs.input, {
+                language: 'vi',
+                format: '{{ $format }}',
+                orientation: '{{ $orientation }}',
+                autohide: true,
+                clearBtn: true,
+                todayBtn: true,
+                todayBtnMode: 1,
+            });
 
-        this.$watch('value', (newVal) => {
-            const display = this.toDisplay(newVal);
-            if (display !== this.$refs.input.value) {
-                this.instance.setDate(display);
-            }
+            this.$refs.input.addEventListener('changeDate', (e) => {
+                if (!this.$refs.input) return;
+                this.displayValue = this.$refs.input.value;
+                this.value = this.toISO(this.$refs.input.value);
+            });
+
+            this.$watch('value', (newVal) => {
+                if (!this.$refs.input || !this.instance) return;
+                const display = this.toDisplay(newVal);
+                if (display !== this.$refs.input.value) {
+                    this.instance.setDate(display);
+                }
+            });
         });
     }
 }" wire:ignore>
