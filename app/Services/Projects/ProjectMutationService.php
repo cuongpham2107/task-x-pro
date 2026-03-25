@@ -33,8 +33,10 @@ class ProjectMutationService
 
             $this->payloadService->syncLeaders($project, $leaderIds ?? [], $actor->id);
 
-            if (is_array($phasePayloads) && $phasePayloads !== []) {
-                $this->phaseService->upsertPhases($project, $phasePayloads);
+            if (is_array($phasePayloads)) {
+                if ($phasePayloads !== []) {
+                    $this->phaseService->upsertPhases($project, $phasePayloads);
+                }
             } else {
                 $this->phaseService->createPhasesFromTemplate($project);
             }

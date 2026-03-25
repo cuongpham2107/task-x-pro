@@ -7,12 +7,16 @@
         <div class="col-span-full grid grid-cols-1 gap-6 md:grid-cols-2">
             <div>
                 <x-ui.select label="Dự án" name="project_id" wire:model.live="project_id" icon="folder"
-                    placeholder="Chọn dự án" :options="$this->projectSelectOptions" />
+                    placeholder="Chọn dự án" :options="$this->projectSelectOptions" :disabled="!auth()
+                        ->user()
+                        ->hasAnyRole(['leader', 'ceo', 'super_admin'])" />
             </div>
 
             <div>
                 <x-ui.select label="Giai đoạn" name="phase_id" wire:model.live="phase_id" icon="timeline"
-                    placeholder="Chọn giai đoạn" :options="$this->phaseSelectOptions" required />
+                    placeholder="Chọn giai đoạn" :options="$this->phaseSelectOptions" required :disabled="!auth()
+                        ->user()
+                        ->hasAnyRole(['leader', 'ceo', 'super_admin'])" />
             </div>
         </div>
     @endif
@@ -25,7 +29,7 @@
 
     <div>
         <x-ui.select label="Trạng thái" name="status" wire:model="status" icon="sync" :options="$taskStatusLabels"
-            :disabled="$hasDependencyBlock || $mode === 'edit'" required />
+            :disabled="$hasDependencyBlock || $mode === 'edit' || $mode === 'create'" required />
         @if ($hasDependencyBlock)
             <div class="mt-1.5 flex items-start gap-1.5 rounded-lg bg-amber-50 px-2.5 py-2 dark:bg-amber-900/20">
                 <span class="material-symbols-outlined shrink-0 text-sm text-amber-500">lock</span>
@@ -42,17 +46,23 @@
 
     {{-- Hạn chót & PIC --}}
     <div>
-        <x-ui.datepicker label="Hạn chót" name="deadline" wire:model="deadline" required="true" />
+        <x-ui.datepicker label="Hạn chót" name="deadline" wire:model="deadline" required="true" :disabled="!auth()
+            ->user()
+            ->hasAnyRole(['leader', 'ceo', 'super_admin'])" />
     </div>
 
     <div>
         <x-ui.user-select model="pic_id" :users="$picOptions" label="Người phụ trách (PIC)"
-            placeholder="Chọn hoặc tìm kiếm PIC..." required="true" />
+            placeholder="Chọn hoặc tìm kiếm PIC..." required="true" :disabled="!auth()
+                ->user()
+                ->hasAnyRole(['leader', 'ceo', 'super_admin'])" />
     </div>
 
     {{-- Mức độ ưu tiên --}}
     <x-ui.radio-group label="Mức độ ưu tiên" name="priority" wire:model="priority"
-        grid-cols="grid-cols-2 sm:grid-cols-4" :options="[
+        grid-cols="grid-cols-2 sm:grid-cols-4" :disabled="!auth()
+            ->user()
+            ->hasAnyRole(['leader', 'ceo', 'super_admin'])" :options="[
             'low' => [
                 'label' => 'Thấp',
                 'color' => 'text-blue-500 has-checked:bg-blue-500/5 has-checked:border-blue-500',
@@ -73,7 +83,9 @@
 
     {{-- Quy trình duyệt --}}
     <x-ui.radio-group label="Quy trình phê duyệt" icon="info" name="workflow_type" wire:model="workflow_type"
-        grid-cols="grid-cols-1 sm:grid-cols-2" :options="[
+        grid-cols="grid-cols-1 sm:grid-cols-2" :disabled="!auth()
+            ->user()
+            ->hasAnyRole(['leader', 'ceo', 'super_admin'])" :options="[
             'single' => [
                 'label' => '1 cấp duyệt (Leader)',
                 'description' => 'Leader phê duyệt là hoàn thành.',
@@ -231,7 +243,9 @@
     {{-- Co-PIC --}}
     <div class="col-span-full">
         <x-ui.user-multi-select model="co_pic_ids" :users="$picOptions" label="Người hỗ trợ (Co-PIC)"
-            placeholder="Chọn người hỗ trợ..." />
+            placeholder="Chọn người hỗ trợ..." :disabled="!auth()
+                ->user()
+                ->hasAnyRole(['leader', 'ceo', 'super_admin'])" />
     </div>
 
     {{-- Mô tả công việc --}}

@@ -7,6 +7,7 @@ use App\Services\Tasks\TaskCommentService;
 use App\Services\Tasks\TaskService;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Computed;
@@ -14,9 +15,9 @@ use Livewire\Attributes\On;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 use Livewire\WithFileUploads;
-use Illuminate\Support\Facades\Auth;
 
-new class extends Component {
+new class extends Component
+{
     use WithFileUploads;
 
     public ?Project $project = null;
@@ -162,7 +163,7 @@ new class extends Component {
 
         $this->dependencyTaskOptions = Task::query()
             ->where('phase_id', $phaseId)
-            ->when($this->editing_task_id, fn($q) => $q->where('id', '!=', $this->editing_task_id))
+            ->when($this->editing_task_id, fn ($q) => $q->where('id', '!=', $this->editing_task_id))
             ->select(['id', 'name', 'status'])
             ->orderBy('name')
             ->get();
@@ -193,7 +194,7 @@ new class extends Component {
     #[Computed]
     public function projectSelectOptions(): array
     {
-        return $this->projectOptions->mapWithKeys(fn($project): array => [(string) $project->id => $project->name])->all();
+        return $this->projectOptions->mapWithKeys(fn ($project): array => [(string) $project->id => $project->name])->all();
     }
 
     /**
@@ -209,7 +210,7 @@ new class extends Component {
             $phases = $phases->where('project_id', (int) $projectId);
         }
 
-        return $phases->mapWithKeys(fn($phase): array => [(string) $phase->id => $phase->name])->all();
+        return $phases->mapWithKeys(fn ($phase): array => [(string) $phase->id => $phase->name])->all();
     }
 
     #[On('task-create-requested')]
@@ -346,7 +347,7 @@ new class extends Component {
 
     public function openRejectReasonModal(): void
     {
-        if (!$this->canApproveTask()) {
+        if (! $this->canApproveTask()) {
             return;
         }
 
@@ -437,21 +438,27 @@ new class extends Component {
                 $this->dispatch('show-overload-warning', message: $overloadWarning);
             }
 
-            $this->showFormModal = false;
-            $this->resetFormModal();
+            if ($this->mode === 'create') {
+                $this->showFormModal = false;
+                $this->resetFormModal();
+            } else {
+                // Keep modal open for edits, but refresh essential data
+                $this->loadTaskComments();
+                $this->loadFormOptions();
+            }
 
             $this->dispatch('toast', message: $toastMessage, type: 'success');
             $this->dispatch('task-saved', taskTitle: $savedName);
         } catch (ValidationException $e) {
             throw $e;
         } catch (\Exception $e) {
-            $this->dispatch('toast', message: 'Lỗi hệ thống: ' . $e->getMessage(), type: 'error');
+            $this->dispatch('toast', message: 'Lỗi hệ thống: '.$e->getMessage(), type: 'error');
         }
     }
 
     public function approveTask(): void
     {
-        if (!$this->canApproveTask()) {
+        if (! $this->canApproveTask()) {
             return;
         }
 
@@ -480,7 +487,7 @@ new class extends Component {
             $firstError = collect($e->errors())->flatten()->first();
             $this->dispatch('toast', message: (string) ($firstError ?? 'Không thể phê duyệt task.'), type: 'error');
         } catch (\Exception $e) {
-            $this->dispatch('toast', message: 'Lỗi: ' . $e->getMessage(), type: 'error');
+            $this->dispatch('toast', message: 'Lỗi: '.$e->getMessage(), type: 'error');
         }
     }
 
@@ -501,7 +508,7 @@ new class extends Component {
 
     public function rejectTask(): void
     {
-        if (!$this->canApproveTask() || $this->editing_task_id === null) {
+        if (! $this->canApproveTask() || $this->editing_task_id === null) {
             return;
         }
 
@@ -528,7 +535,7 @@ new class extends Component {
             $firstError = collect($e->errors())->flatten()->first();
             $this->addError('rejectReason', (string) ($firstError ?? 'Không thể từ chối duyệt task.'));
         } catch (\Exception $e) {
-            $this->addError('rejectReason', 'Lỗi: ' . $e->getMessage());
+            $this->addError('rejectReason', 'Lỗi: '.$e->getMessage());
         }
     }
 
@@ -570,7 +577,7 @@ new class extends Component {
     private function shouldPromptRatingForApproval(Task $task): bool
     {
         $actor = auth()->user();
-        if (!$actor) {
+        if (! $actor) {
             return false;
         }
 
@@ -591,7 +598,7 @@ new class extends Component {
         }
 
         $actor = auth()->user();
-        if (!$actor) {
+        if (! $actor) {
             return false;
         }
 
@@ -616,7 +623,7 @@ new class extends Component {
             return true;
         }
 
-        return in_array((int) $actor->id, collect($this->co_pic_ids)->map(fn($id): int => (int) $id)->all(), true);
+        return in_array((int) $actor->id, collect($this->co_pic_ids)->map(fn ($id): int => (int) $id)->all(), true);
     }
 
     /**
@@ -657,7 +664,7 @@ new class extends Component {
         } catch (ValidationException $e) {
             $this->setErrorBag($e->validator->errors());
         } catch (\Exception $e) {
-            $this->addError('newComment', 'Khong the gui binh luan: ' . $e->getMessage());
+            $this->addError('newComment', 'Khong the gui binh luan: '.$e->getMessage());
         }
     }
 
@@ -690,10 +697,10 @@ new class extends Component {
             $attachment = \App\Models\TaskAttachment::findOrFail($attachmentId);
             app(TaskService::class)->deleteAttachment(auth()->user(), $attachment);
 
-            $this->existing_attachments = $this->existing_attachments->reject(fn($a) => $a->id === $attachmentId);
+            $this->existing_attachments = $this->existing_attachments->reject(fn ($a) => $a->id === $attachmentId);
             $this->dispatch('toast', message: 'Đã xóa tệp đính kèm.', type: 'info');
         } catch (\Exception $e) {
-            $this->dispatch('toast', message: 'Lỗi khi xóa tệp: ' . $e->getMessage(), type: 'error');
+            $this->dispatch('toast', message: 'Lỗi khi xóa tệp: '.$e->getMessage(), type: 'error');
         }
     }
 
@@ -715,7 +722,7 @@ new class extends Component {
         } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
             $this->dispatch('toast', message: 'Lỗi: Chỉ có người được giao hoặc người hỗ trợ mới có thể bắt đầu công việc', type: 'error');
         } catch (\Exception $e) {
-            $this->dispatch('toast', message: 'Lỗi: ' . $e->getMessage(), type: 'error');
+            $this->dispatch('toast', message: 'Lỗi: '.$e->getMessage(), type: 'error');
         }
     }
 
@@ -723,6 +730,7 @@ new class extends Component {
     {
         if ($this->progress <= 90) {
             $this->dispatch('toast', message: 'Tiến độ công việc phải đạt ít nhất 90% trước khi gửi duyệt.', type: 'error');
+
             return;
         }
         if ($this->editing_task_id === null || $this->mode !== 'edit') {
@@ -741,20 +749,20 @@ new class extends Component {
         } catch (ValidationException $e) {
             throw $e;
         } catch (\Exception $e) {
-            $this->dispatch('toast', message: 'Lỗi: ' . $e->getMessage(), type: 'error');
+            $this->dispatch('toast', message: 'Lỗi: '.$e->getMessage(), type: 'error');
         }
     }
 
     #[Computed]
     public function logs(): Collection
     {
-        if (!$this->editing_task_id) {
+        if (! $this->editing_task_id) {
             return collect();
         }
 
         $task = Task::with(['approvalLogs.reviewer:id,name', 'activityLogs.user:id,name'])->find($this->editing_task_id);
 
-        if (!$task) {
+        if (! $task) {
             return collect();
         }
 
@@ -762,7 +770,7 @@ new class extends Component {
             $action = \App\Enums\ApprovalAction::tryFrom($log->action);
 
             return (object) [
-                'id' => 'approval-' . $log->id,
+                'id' => 'approval-'.$log->id,
                 'type' => 'approval',
                 'action' => $log->action,
                 'action_label' => $action ? $action->label() : $log->action,
@@ -786,9 +794,9 @@ new class extends Component {
             ];
         });
 
-        $activityLogs = $task->activityLogs->reject(fn($log) => $log->action === 'approval_rejected')->map(function ($log) {
+        $activityLogs = $task->activityLogs->reject(fn ($log) => $log->action === 'approval_rejected')->map(function ($log) {
             return (object) [
-                'id' => 'activity-' . $log->id,
+                'id' => 'activity-'.$log->id,
                 'type' => 'activity',
                 'action' => $log->action,
                 'action_label' => match ($log->action) {
@@ -818,11 +826,11 @@ new class extends Component {
     #[Computed]
     public function hasLeaderApproved(): bool
     {
-        if (!$this->editing_task_id) {
+        if (! $this->editing_task_id) {
             return false;
         }
         $task = Task::find($this->editing_task_id);
-        if (!$task) {
+        if (! $task) {
             return false;
         }
 
@@ -841,11 +849,11 @@ new class extends Component {
     #[Computed]
     public function hasCeoApproved(): bool
     {
-        if (!$this->editing_task_id) {
+        if (! $this->editing_task_id) {
             return false;
         }
         $task = Task::find($this->editing_task_id);
-        if (!$task) {
+        if (! $task) {
             return false;
         }
 

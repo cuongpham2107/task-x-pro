@@ -9,6 +9,7 @@ enum SystemNotificationType: string
     use HasEnumOptions;
 
     case TaskRejected = 'task_rejected';
+    case TaskAssigned = 'task_assigned';
     case ApprovalRequestCeo = 'approval_request_ceo';
     case ApprovalRequestLeader = 'approval_request_leader';
     case PicOverloadWarning = 'pic_overload_warning';
@@ -17,6 +18,7 @@ enum SystemNotificationType: string
     {
         return match ($this) {
             self::TaskRejected => 'Task bị từ chối',
+            self::TaskAssigned => 'Công việc được giao',
             self::ApprovalRequestCeo => 'Yêu cầu phê duyệt (CEO)',
             self::ApprovalRequestLeader => 'Yêu cầu phê duyệt (Leader)',
             self::PicOverloadWarning => 'Cảnh báo quá tải PIC',

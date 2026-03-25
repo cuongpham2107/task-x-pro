@@ -62,13 +62,9 @@ class ProjectPhaseService
      */
     public function upsertPhases(Project $project, array $phasePayloads): void
     {
-        if ($phasePayloads === []) {
-            throw ValidationException::withMessages([
-                'phases' => 'Project phai co it nhat 1 phase.',
-            ]);
+        if ($phasePayloads !== []) {
+            $this->assertValidPhaseWeightTotal($phasePayloads);
         }
-
-        $this->assertValidPhaseWeightTotal($phasePayloads);
 
         $existingPhases = $project->phases()
             ->withCount('tasks')
@@ -158,7 +154,7 @@ class ProjectPhaseService
      */
     private function assertValidPhaseWeightTotal(array $phasePayloads): void
     {
-       
+
         $weightTotal = collect($phasePayloads)
             ->sum(function (array $phasePayload): float {
                 return round((float) ($phasePayload['weight'] ?? 0), 2);
@@ -166,7 +162,7 @@ class ProjectPhaseService
 
         if (abs(round($weightTotal, 2) - 100.0) > 0.01) {
             throw ValidationException::withMessages([
-                'phases' => 'Tổng trọng số của tất cả phase phải bằng 100.',
+                'phases' => 'Tổng trọng số của tất cả phase template phải bằng 100%.',
             ]);
         }
     }

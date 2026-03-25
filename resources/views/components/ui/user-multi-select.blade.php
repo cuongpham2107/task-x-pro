@@ -9,6 +9,7 @@
     'emptyIcon' => 'person_search',
     'dropdownPosition' => 'bottom',
     'required' => false,
+    'disabled' => false,
 ])
 
 @php
@@ -90,8 +91,8 @@
 
                 <span x-text="user.name"></span>
 
-                <button type="button" @click="remove(user.id)"
-                    class="text-primary/60 hover:text-primary ml-0.5 transition-colors">
+                <button type="button" @if (!$disabled) @click="remove(user.id)" @endif
+                    class="{{ $disabled ? 'cursor-not-allowed' : 'hover:text-red-500' }} ml-0.5 transition-colors">
                     <span class="material-symbols-outlined text-xs leading-none">close</span>
                 </button>
             </div>
@@ -99,8 +100,8 @@
 
         <div class="relative">
             <button type="button"
-                @click="showDropdown = !showDropdown; $nextTick(() => { if (showDropdown) $refs.searchInput.focus() })"
-                class="hover:border-primary hover:text-primary flex h-8 w-8 items-center justify-center rounded-full border-2 border-dashed border-slate-300 text-slate-400 transition-all dark:border-slate-700">
+                @if (!$disabled) @click="showDropdown = !showDropdown; $nextTick(() => { if (showDropdown) $refs.searchInput.focus() })" @endif
+                class="{{ $disabled ? 'cursor-not-allowed opacity-50' : 'hover:border-primary hover:text-primary' }} flex h-8 w-8 items-center justify-center rounded-full border-2 border-dashed border-slate-300 text-slate-400 transition-all dark:border-slate-700">
                 <span class="material-symbols-outlined text-base">{{ $addIcon }}</span>
             </button>
 

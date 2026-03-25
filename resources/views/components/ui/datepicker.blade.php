@@ -87,6 +87,8 @@
             {{ $attributes->class([
                 'input-field pl-10',
                 'border-red-500 focus:border-red-500 focus:ring-red-500/20' => $hasError,
+                'cursor-not-allowed opacity-60 bg-slate-50' => $disabled,
+                'hover:text-red-500' => !$disabled,
             ]) }} />
     </div>
 

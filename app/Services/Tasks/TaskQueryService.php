@@ -273,5 +273,29 @@ class TaskQueryService
         if (is_string($deadlineTo) && $deadlineTo !== '') {
             $query->whereDate('deadline', '<=', $deadlineTo);
         }
+
+        $myTasks = $filters['my_tasks'] ?? false;
+        if ($myTasks) {
+            $user = auth()->user();
+            $query->where(function (Builder $builder) use ($user): void {
+                // PIC or Co-PIC: directly assigned tasks
+                $builder->where('pic_id', $user->id)
+                    ->orWhereHas('coPics', function (Builder $q) use ($user): void {
+                        $q->where('users.id', $user->id);
+                    });
+
+                // CEO: also sees tasks with 2-level approval workflow (they are level-2 approver)
+                if ($user->hasRole('ceo')) {
+                    $builder->orWhere('workflow_type', TaskWorkflowType::Double->value);
+                }
+
+                // Leader: also sees tasks in projects they manage
+                if ($user->hasRole('leader')) {
+                    $builder->orWhereHas('phase.project.leaders', function (Builder $q) use ($user): void {
+                        $q->where('users.id', $user->id);
+                    });
+                }
+            });
+        }
     }
 }

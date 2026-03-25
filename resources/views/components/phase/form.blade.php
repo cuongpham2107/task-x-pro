@@ -10,7 +10,8 @@ use Livewire\Attributes\On;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 
-new class extends Component {
+new class extends Component
+{
     public ?Project $project = null;
 
     public bool $showFormModal = false;
@@ -123,9 +124,9 @@ new class extends Component {
             $this->dispatch('phase-saved');
         } catch (ValidationException $e) {
             $this->setErrorBag($e->validator->errors());
-            $this->dispatch('toast', message: 'Có lỗi xảy ra: ' . $e->getMessage(), type: 'error');
+            $this->dispatch('toast', message: 'Có lỗi xảy ra: '.$e->getMessage(), type: 'error');
         } catch (\Exception $e) {
-            $this->dispatch('toast', message: 'Có lỗi xảy ra: ' . $e->getMessage(), type: 'error');
+            $this->dispatch('toast', message: 'Có lỗi xảy ra: '.$e->getMessage(), type: 'error');
         }
     }
 };

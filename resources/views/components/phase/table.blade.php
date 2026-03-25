@@ -86,7 +86,7 @@
                                     <x-ui.icon-button icon="play_circle" size="sm" color="blue" tooltip="Bắt đầu"
                                         wire:click="confirmStartStatus({{ $phase->id }})" />
                                 @elseif($phase->status === 'active')
-                                    <x-ui.icon-button icon="stop" size="sm" tooltip="Hoàn thành"
+                                    <x-ui.icon-button icon="stop" size="sm" tooltip="Hoàn thành" :hidden="$phase->progress !== 100"
                                         wire:click="confirmCompleteStatus({{ $phase->id }})" />
                                 @endif
                             @endcan

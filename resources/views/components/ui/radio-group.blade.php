@@ -1,4 +1,12 @@
-@props(['name', 'options', 'label' => null, 'icon' => null, 'gridCols' => 'grid-cols-2', 'hidden' => false])
+@props([
+    'name',
+    'options',
+    'label' => null,
+    'icon' => null,
+    'gridCols' => 'grid-cols-2',
+    'hidden' => false,
+    'disabled' => false,
+])
 
 @php
     // $options structure:
@@ -39,10 +47,11 @@
             @endphp
 
             <label
-                class="has-checked:border-current has-checked:bg-opacity-100 {{ $colorClass }} {{ $hasError ? 'border-red-300' : 'border-slate-200' }} {{ isset($opt['description']) ? 'items-start gap-4 p-4' : 'justify-center gap-2 p-3' }} relative flex cursor-pointer items-center rounded-xl border transition-all hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800">
+                class="has-checked:border-current has-checked:bg-opacity-100 {{ $colorClass }} {{ $hasError ? 'border-red-300' : 'border-slate-200' }} {{ isset($opt['description']) ? 'items-start gap-4 p-4' : 'justify-center gap-2 p-3' }} {{ $disabled ? 'pointer-events-none opacity-50 grayscale select-none' : 'cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800' }} relative flex items-center rounded-xl border transition-all dark:border-slate-800">
                 <div class="{{ isset($opt['description']) ? 'mt-1' : '' }}">
                     <input class="border-slate-300 focus:ring-current" name="{{ $name }}" type="radio"
-                        value="{{ $value }}" {{ $attributes->whereStartsWith('wire:model') }} />
+                        value="{{ $value }}" {{ $disabled ? 'disabled' : '' }}
+                        {{ $attributes->whereStartsWith('wire:model') }} />
                 </div>
 
                 @if (isset($opt['description']))

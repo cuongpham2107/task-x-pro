@@ -8,6 +8,7 @@
     'navigate' => false, // wire:navigate
     'full' => false, // w-full
     'loading' => null, // wire target for loading state, e.g. "save"
+    'hidden' => false,
 ])
 
 @php
@@ -52,38 +53,40 @@
         'inline-flex items-center justify-center transition-all disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer ';
 @endphp
 
-@if ($isLink)
-    <a href="{{ $href }}" @if ($navigate) wire:navigate @endif
-        {{ $attributes->class([$baseClasses, $sizeClasses, $variantClasses, 'w-full' => $full]) }}>
-        @if ($icon)
-            <span class="material-symbols-outlined {{ $iconSize }}">{{ $icon }}</span>
-        @endif
-        {{ $slot }}
-        @if ($iconRight)
-            <span class="material-symbols-outlined {{ $iconSize }}">{{ $iconRight }}</span>
-        @endif
-    </a>
-@else
-    <button {{ $attributes->class([$baseClasses, $sizeClasses, $variantClasses, 'w-full' => $full]) }}
-        @if (!$attributes->has('type')) type="button" @endif
-        @if ($loading) wire:loading.attr="disabled" wire:loading.class="opacity-70 cursor-not-allowed" @endif>
-        @if ($loading)
-            <span class="material-symbols-outlined {{ $iconSize }} animate-spin" wire:loading
-                wire:target="{{ $loading }}">progress_activity</span>
-        @endif
-        @if ($icon)
-            <span class="material-symbols-outlined {{ $iconSize }}"
-                @if ($loading) wire:loading.remove wire:target="{{ $loading }}" @endif>{{ $icon }}</span>
-        @endif
-        @if ($loading)
-            <span wire:loading.remove wire:target="{{ $loading }}">{{ $slot }}</span>
-            <span wire:loading wire:target="{{ $loading }}">Đang xử lý...</span>
-        @else
+@if (!$hidden)
+    @if ($isLink)
+        <a href="{{ $href }}" @if ($navigate) wire:navigate @endif
+            {{ $attributes->class([$baseClasses, $sizeClasses, $variantClasses, 'w-full' => $full]) }}>
+            @if ($icon)
+                <span class="material-symbols-outlined {{ $iconSize }}">{{ $icon }}</span>
+            @endif
             {{ $slot }}
-        @endif
-        @if ($iconRight)
-            <span class="material-symbols-outlined {{ $iconSize }}"
-                @if ($loading) wire:loading.remove wire:target="{{ $loading }}" @endif>{{ $iconRight }}</span>
-        @endif
-    </button>
+            @if ($iconRight)
+                <span class="material-symbols-outlined {{ $iconSize }}">{{ $iconRight }}</span>
+            @endif
+        </a>
+    @else
+        <button {{ $attributes->class([$baseClasses, $sizeClasses, $variantClasses, 'w-full' => $full]) }}
+            @if (!$attributes->has('type')) type="button" @endif
+            @if ($loading) wire:loading.attr="disabled" wire:loading.class="opacity-70 cursor-not-allowed" @endif>
+            @if ($loading)
+                <span class="material-symbols-outlined {{ $iconSize }} animate-spin" wire:loading
+                    wire:target="{{ $loading }}">progress_activity</span>
+            @endif
+            @if ($icon)
+                <span class="material-symbols-outlined {{ $iconSize }}"
+                    @if ($loading) wire:loading.remove wire:target="{{ $loading }}" @endif>{{ $icon }}</span>
+            @endif
+            @if ($loading)
+                <span wire:loading.remove wire:target="{{ $loading }}">{{ $slot }}</span>
+                <span wire:loading wire:target="{{ $loading }}">Đang xử lý...</span>
+            @else
+                {{ $slot }}
+            @endif
+            @if ($iconRight)
+                <span class="material-symbols-outlined {{ $iconSize }}"
+                    @if ($loading) wire:loading.remove wire:target="{{ $loading }}" @endif>{{ $iconRight }}</span>
+            @endif
+        </button>
+    @endif
 @endif

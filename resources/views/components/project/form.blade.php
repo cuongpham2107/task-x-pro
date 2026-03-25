@@ -2,7 +2,6 @@
 
 use App\Models\Project;
 use App\Services\Projects\ProjectService;
-use App\Models\PhaseTemplate;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
@@ -40,6 +39,7 @@ new class extends Component {
     public ?string $budget = '';
 
     public bool $is_phase = false;
+
     /** @var array<int, int> */
     #[
         Validate([
@@ -178,6 +178,7 @@ new class extends Component {
                 foreach ($formats as $fmt) {
                     try {
                         $dt = Carbon::createFromFormat($fmt, $value);
+
                         return $dt->toDateString();
                     } catch (\Exception $e) {
                         // ignore and try next
@@ -187,6 +188,7 @@ new class extends Component {
                 // Fallback to parse - may throw if invalid
                 try {
                     $dt = Carbon::parse($value);
+
                     return $dt->toDateString();
                 } catch (\Exception $e) {
                     return $value; // keep original so validator will report proper error
@@ -209,7 +211,7 @@ new class extends Component {
             ];
 
             // Build phase payloads from Phases service when user opted to use templates
-            $phasePayloads = null;
+            $phasePayloads = $this->is_phase ? null : [];
             if ($this->is_phase) {
                 $phaseQueryService = app(\App\Services\Phases\PhaseQueryService::class);
                 $payloads = $phaseQueryService->payloadsFromTemplates($this->type);
@@ -354,21 +356,21 @@ new class extends Component {
                 @if ($editingProjectId && $this->project)
                     @can('update', $this->project)
                         @if ($this->project->status->value !== 'completed')
-                            <x-ui.button variant="success" size="sm" icon="check_circle"
+                            <x-ui.button variant="success" size="sm" icon="check_circle" :hidden="$this->project->progress !== 100"
                                 wire:click="updateStatus('completed')" loading="updateStatus('completed')">
                                 Hoàn thành
                             </x-ui.button>
                         @endif
 
                         @if ($this->project->status->value !== 'paused')
-                            <x-ui.button variant="warning" size="sm" icon="pause_circle"
+                            <x-ui.button variant="warning" size="sm" icon="pause_circle" :hidden="$this->project->status->value === 'completed'"
                                 wire:click="updateStatus('paused')" loading="updateStatus('paused')">
                                 Tạm dừng
                             </x-ui.button>
                         @endif
 
                         @if ($this->project->status->value !== 'cancelled')
-                            <x-ui.button variant="danger" size="sm" icon="cancel"
+                            <x-ui.button variant="danger" size="sm" icon="cancel" :hidden="$this->project->status->value === 'completed'"
                                 wire:click="updateStatus('cancelled')" loading="updateStatus('cancelled')">
                                 Hủy dự án
                             </x-ui.button>

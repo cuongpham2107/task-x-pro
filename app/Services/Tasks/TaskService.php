@@ -412,17 +412,47 @@ class TaskService
 
     private function sendAssignmentNotification(User $actor, Task $task): void
     {
-        $task->loadMissing(['pic:id,name,telegram_id', 'phase.project:id,name']);
-        $pic = $task->pic;
+        $task->loadMissing([
+            'pic:id,name,email,telegram_id',
+            'coPics:id,name,email,telegram_id',
+            'phase.project:id,name',
+        ]);
 
-        if ($pic === null || trim((string) $pic->telegram_id) === '') {
-            return;
+        $taskName = trim((string) $task->name) !== '' ? $task->name : "Công việc #{$task->id}";
+        $body = "Bạn được giao công việc \"{$taskName}\" bởi {$actor->name}.";
+
+        $recipients = collect();
+
+        // PIC
+        if ($task->pic !== null) {
+            $recipients->push(['user' => $task->pic, 'isCoAssignee' => false]);
         }
 
-        try {
-            Notification::send($pic, new TaskAssignedNotification($task, $actor));
-        } catch (\Throwable $exception) {
-            report($exception);
+        // Co-PICs
+        foreach ($task->coPics as $coPic) {
+            $recipients->push(['user' => $coPic, 'isCoAssignee' => true]);
+        }
+
+        foreach ($recipients as ['user' => $recipient, 'isCoAssignee' => $isCoAssignee]) {
+            // Create system notification record
+            SystemNotification::query()->create([
+                'user_id' => $recipient->id,
+                'type' => SystemNotificationType::TaskAssigned->value,
+                'channel' => NotificationChannel::Both->value,
+                'title' => 'Công việc được giao',
+                'body' => $body,
+                'notifiable_type' => Task::class,
+                'notifiable_id' => $task->id,
+                'status' => NotificationStatus::Pending->value,
+                'created_at' => now(),
+            ]);
+
+            // Send Telegram + mail notification
+            try {
+                Notification::send($recipient, new TaskAssignedNotification($task, $actor, $isCoAssignee));
+            } catch (\Throwable $exception) {
+                report($exception);
+            }
         }
     }
 

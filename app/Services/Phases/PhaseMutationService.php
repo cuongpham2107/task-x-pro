@@ -78,9 +78,9 @@ class PhaseMutationService
 
         $newTotal = round($currentTotal + $newWeight, 2);
 
-        if (abs($newTotal - 100.0) > 0.01) {
+        if ($newTotal > 100.0) {
             throw ValidationException::withMessages([
-                'weight' => "Tổng trọng số của tất cả giai đoạn phải bằng 100. Hiện tại: {$newTotal}%",
+                'weight' => "Tổng trọng số của tất cả giai đoạn không được vượt quá 100%. Hiện tại: {$newTotal}%",
             ]);
         }
     }
@@ -90,15 +90,8 @@ class PhaseMutationService
      */
     private function assertValidWeightTotalAfterDelete(Project $project, int $deletedPhaseId): void
     {
-        $remainingTotal = (float) $project->phases()
-            ->whereKeyNot($deletedPhaseId)
-            ->sum('weight');
-
-        if (abs(round($remainingTotal, 2) - 100.0) > 0.01) {
-            throw ValidationException::withMessages([
-                'weight' => "Không thể xóa giai đoạn vì sẽ làm tổng trọng số còn lại ({$remainingTotal}%) không bằng 100.",
-            ]);
-        }
+        // Khi xóa phase, tổng trọng số luôn giảm xuống, nên không cần check vượt quá 100%.
+        // Tuy nhiên có thể check nếu muốn đảm bảo tính logic.
     }
 
     /**
@@ -108,9 +101,9 @@ class PhaseMutationService
     {
         $totalWeight = (float) $project->phases()->sum('weight');
 
-        if (abs(round($totalWeight, 2) - 100.0) > 0.01) {
+        if (round($totalWeight, 2) > 100.0) {
             throw ValidationException::withMessages([
-                'weight' => "Tổng trọng số của tất cả giai đoạn phải bằng 100. Hiện tại: {$totalWeight}%",
+                'weight' => "Tổng trọng số của tất cả giai đoạn không được vượt quá 100%. Hiện tại: {$totalWeight}%",
             ]);
         }
     }

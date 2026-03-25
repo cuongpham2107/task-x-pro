@@ -3,14 +3,15 @@
 use App\Models\Phase;
 use App\Models\Project;
 use App\Services\Phases\PhaseService;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
-new #[Title('Quản lý giai đoạn')] class extends Component {
+new #[Title('Quản lý giai đoạn')] class extends Component
+{
     public Project $project;
 
     public bool $showDeleteModal = false;
@@ -46,16 +47,16 @@ new #[Title('Quản lý giai đoạn')] class extends Component {
         $phase = Phase::query()->findOrFail($phaseId);
         Gate::forUser(auth()->user())->authorize('delete', $phase);
 
-        $this->pendingDeletePhaseId   = $phase->id;
+        $this->pendingDeletePhaseId = $phase->id;
         $this->pendingDeletePhaseName = $phase->name;
-        $this->pendingPhaseAction     = 'delete';
-        $this->showDeleteModal        = true;
+        $this->pendingPhaseAction = 'delete';
+        $this->showDeleteModal = true;
     }
 
     public function closeDeleteModal(): void
     {
-        $this->showDeleteModal        = false;
-        $this->pendingDeletePhaseId   = null;
+        $this->showDeleteModal = false;
+        $this->pendingDeletePhaseId = null;
         $this->pendingDeletePhaseName = '';
     }
 
@@ -73,7 +74,7 @@ new #[Title('Quản lý giai đoạn')] class extends Component {
             unset($this->phases);
             $this->dispatch('toast', message: 'Giai đoạn đã được xóa thành công!', type: 'success');
         } catch (\Exception $e) {
-            $this->dispatch('toast', message: 'Không thể xóa giai đoạn: ' . $e->getMessage(), type: 'error');
+            $this->dispatch('toast', message: 'Không thể xóa giai đoạn: '.$e->getMessage(), type: 'error');
         }
     }
 
@@ -82,10 +83,10 @@ new #[Title('Quản lý giai đoạn')] class extends Component {
         $phase = Phase::query()->findOrFail($phaseId);
         Gate::forUser(auth()->user())->authorize('update', $phase);
 
-        $this->pendingDeletePhaseId   = $phase->id;
+        $this->pendingDeletePhaseId = $phase->id;
         $this->pendingDeletePhaseName = $phase->name;
-        $this->pendingPhaseAction     = 'start';
-        $this->showDeleteModal        = true;
+        $this->pendingPhaseAction = 'start';
+        $this->showDeleteModal = true;
     }
 
     public function confirmCompleteStatus(int $phaseId): void
@@ -93,10 +94,10 @@ new #[Title('Quản lý giai đoạn')] class extends Component {
         $phase = Phase::query()->findOrFail($phaseId);
         Gate::forUser(auth()->user())->authorize('update', $phase);
 
-        $this->pendingDeletePhaseId   = $phase->id;
+        $this->pendingDeletePhaseId = $phase->id;
         $this->pendingDeletePhaseName = $phase->name;
-        $this->pendingPhaseAction     = 'complete';
-        $this->showDeleteModal        = true;
+        $this->pendingPhaseAction = 'complete';
+        $this->showDeleteModal = true;
     }
 
     public function performPendingPhaseAction(): void
@@ -106,7 +107,7 @@ new #[Title('Quản lý giai đoạn')] class extends Component {
         }
 
         try {
-            $phase  = Phase::query()->findOrFail($this->pendingDeletePhaseId);
+            $phase = Phase::query()->findOrFail($this->pendingDeletePhaseId);
             $action = $this->pendingPhaseAction;
 
             if ($action === 'delete') {
@@ -115,6 +116,7 @@ new #[Title('Quản lý giai đoạn')] class extends Component {
             } elseif ($action === 'start') {
                 if ($phase->start_date === null || $phase->end_date === null) {
                     $this->dispatch('toast', message: 'Không thể bắt đầu: Giai đoạn chưa có ngày bắt đầu hoặc ngày kết thúc.', type: 'error');
+
                     return;
                 }
                 app(PhaseService::class)->updateStatus(auth()->user(), $phase, 'active');
@@ -130,7 +132,7 @@ new #[Title('Quản lý giai đoạn')] class extends Component {
             unset($this->phases);
             $this->dispatch('toast', message: $message, type: 'success');
         } catch (\Exception $e) {
-            $this->dispatch('toast', message: 'Không thể thực hiện hành động: ' . $e->getMessage(), type: 'error');
+            $this->dispatch('toast', message: 'Không thể thực hiện hành động: '.$e->getMessage(), type: 'error');
         }
     }
 
@@ -141,7 +143,7 @@ new #[Title('Quản lý giai đoạn')] class extends Component {
             unset($this->phases);
             $this->dispatch('toast', message: 'Thứ tự giai đoạn đã được cập nhật!', type: 'success');
         } catch (\Exception $e) {
-            $this->dispatch('toast', message: 'Không thể cập nhật thứ tự: ' . $e->getMessage(), type: 'error');
+            $this->dispatch('toast', message: 'Không thể cập nhật thứ tự: '.$e->getMessage(), type: 'error');
         }
     }
 
@@ -161,7 +163,7 @@ new #[Title('Quản lý giai đoạn')] class extends Component {
     #[Computed]
     public function totalWeight(): float
     {
-        return (float) $this->phases->sum('weight');
+        return (float) $this->project->phases()->sum('weight');
     }
 
     /**
@@ -200,8 +202,8 @@ new #[Title('Quản lý giai đoạn')] class extends Component {
         }
 
         $projectStart = $starts->min();
-        $projectEnd   = $ends->max();
-        $totalDays    = max(1, $projectStart->diffInDays($projectEnd) + 1);
+        $projectEnd = $ends->max();
+        $totalDays = max(1, $projectStart->diffInDays($projectEnd) + 1);
 
         // ── Month columns ──────────────────────────────────────────────────────
         $months = [];
@@ -209,17 +211,17 @@ new #[Title('Quản lý giai đoạn')] class extends Component {
 
         while ($cursor->lte($projectEnd)) {
             $monthStart = $cursor->copy()->startOfMonth();
-            $monthEnd   = $cursor->copy()->endOfMonth();
+            $monthEnd = $cursor->copy()->endOfMonth();
 
-            $from       = $monthStart->lt($projectStart) ? $projectStart->copy() : $monthStart;
-            $to         = $monthEnd->gt($projectEnd)      ? $projectEnd->copy()   : $monthEnd;
-            $days       = max(1, $from->diffInDays($to) + 1);
+            $from = $monthStart->lt($projectStart) ? $projectStart->copy() : $monthStart;
+            $to = $monthEnd->gt($projectEnd) ? $projectEnd->copy() : $monthEnd;
+            $days = max(1, $from->diffInDays($to) + 1);
             $offsetDays = $projectStart->diffInDays($from);
 
             $months[] = [
                 'label' => $cursor->locale(app()->getLocale())->isoFormat('MMM'),
-                'year'  => $cursor->format('Y'),
-                'left'  => round(($offsetDays / $totalDays) * 100, 4),
+                'year' => $cursor->format('Y'),
+                'left' => round(($offsetDays / $totalDays) * 100, 4),
                 'width' => round(($days / $totalDays) * 100, 4),
             ];
 
@@ -229,25 +231,25 @@ new #[Title('Quản lý giai đoạn')] class extends Component {
         // ── Day markers ──────────────────────────────────────────────────────────────────────────
         // Adaptive step: avoid rendering too many labels on wide ranges.
         $step = match (true) {
-            $totalDays <= 31  => 1,
-            $totalDays <= 62  => 2,
-            $totalDays <= 93  => 3,
+            $totalDays <= 31 => 1,
+            $totalDays <= 62 => 2,
+            $totalDays <= 93 => 3,
             $totalDays <= 186 => 7,
-            default           => 14,
+            default => 14,
         };
 
         // Build lookup: 'Y-m' => exact left% from $months array.
         // Month-start day markers reuse this value so "01" tick aligns
         // pixel-perfectly with the month column border — no rounding drift.
         $monthLeftMap = [];
-        $mapCursor    = $projectStart->copy()->startOfMonth();
+        $mapCursor = $projectStart->copy()->startOfMonth();
         foreach ($months as $m) {
             $monthLeftMap[$mapCursor->format('Y-m')] = $m['left'];
             $mapCursor->addMonth();
         }
 
         $dayMarkers = [];
-        $dayCursor  = $projectStart->copy();
+        $dayCursor = $projectStart->copy();
 
         for ($i = 0; $i < $totalDays; $i++) {
             $isMonthStart = ($dayCursor->day === 1);
@@ -260,15 +262,14 @@ new #[Title('Quản lý giai đoạn')] class extends Component {
                     : round(($i / $totalDays) * 100, 4);
 
                 $dayMarkers[] = [
-                    'left'         => $left,
-                    'label'        => $dayCursor->format('d'),
+                    'left' => $left,
+                    'label' => $dayCursor->format('d'),
                     'isMonthStart' => $isMonthStart,
                 ];
             }
 
             $dayCursor->addDay();
         }
-
 
         // ── Week grid lines ────────────────────────────────────────────────────
         $weekLines = [];
@@ -281,50 +282,51 @@ new #[Title('Quản lý giai đoạn')] class extends Component {
         foreach ($phases as $phase) {
             if (! $phase->start_date || ! $phase->end_date) {
                 $items[] = [
-                    'id'       => $phase->id,
-                    'name'     => $phase->name,
-                    'status'   => $phase->status,
+                    'id' => $phase->id,
+                    'name' => $phase->name,
+                    'status' => $phase->status,
                     'progress' => (int) ($phase->progress ?? 0),
-                    'weight'   => (float) $phase->weight,
-                    'hasDate'  => false,
-                    'start'    => null,
-                    'end'      => null,
-                    'left'     => 0.0,
-                    'width'    => 0.0,
-                    'color'    => 'pending',
+                    'weight' => (float) $phase->weight,
+                    'hasDate' => false,
+                    'start' => null,
+                    'end' => null,
+                    'left' => 0.0,
+                    'width' => 0.0,
+                    'color' => 'pending',
                 ];
+
                 continue;
             }
 
-            $s        = Carbon::parse($phase->start_date);
-            $e        = Carbon::parse($phase->end_date);
-            $offset   = $projectStart->diffInDays($s);
+            $s = Carbon::parse($phase->start_date);
+            $e = Carbon::parse($phase->end_date);
+            $offset = $projectStart->diffInDays($s);
             $duration = max(1, $s->diffInDays($e) + 1);
 
             $items[] = [
-                'id'       => $phase->id,
-                'name'     => $phase->name,
-                'status'   => $phase->status,
+                'id' => $phase->id,
+                'name' => $phase->name,
+                'status' => $phase->status,
                 'progress' => (int) ($phase->progress ?? 0),
-                'weight'   => (float) $phase->weight,
-                'hasDate'  => true,
-                'start'    => $s->format('d/m/Y'),
-                'end'      => $e->format('d/m/Y'),
-                'left'     => round(($offset / $totalDays) * 100, 4),
-                'width'    => round(($duration / $totalDays) * 100, 4),
-                'color'    => $phase->status,   // 'completed' | 'active' | 'pending'
+                'weight' => (float) $phase->weight,
+                'hasDate' => true,
+                'start' => $s->format('d/m/Y'),
+                'end' => $e->format('d/m/Y'),
+                'left' => round(($offset / $totalDays) * 100, 4),
+                'width' => round(($duration / $totalDays) * 100, 4),
+                'color' => $phase->status,   // 'completed' | 'active' | 'pending'
             ];
         }
 
         return [
-            'hasTimeline'  => true,
+            'hasTimeline' => true,
             'projectStart' => $projectStart->format('d/m/Y'),
-            'projectEnd'   => $projectEnd->format('d/m/Y'),
-            'totalDays'    => $totalDays,
-            'months'       => $months,
-            'dayMarkers'   => $dayMarkers,
-            'weekLines'    => $weekLines,
-            'items'        => $items,
+            'projectEnd' => $projectEnd->format('d/m/Y'),
+            'totalDays' => $totalDays,
+            'months' => $months,
+            'dayMarkers' => $dayMarkers,
+            'weekLines' => $weekLines,
+            'items' => $items,
         ];
     }
 };
@@ -428,7 +430,7 @@ new #[Title('Quản lý giai đoạn')] class extends Component {
         ])
     @endif
 
-    
+
 
     <livewire-phase.form :project="$project" />
 
