@@ -150,7 +150,7 @@ new #[Title('Mẫu phase')] class extends Component {
 
         $template = $this->phaseTemplateService->findForEdit($actor, $templateId);
         Gate::forUser($actor)->authorize('update', $template);
-
+        
         $this->mode = 'edit';
         $this->editingTemplateId = $template->id;
         $this->projectType = (string) $template->project_type;

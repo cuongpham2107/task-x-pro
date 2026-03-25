@@ -26,7 +26,7 @@ class PhaseTemplateMutationService
     public function update(User $actor, PhaseTemplate $phaseTemplate, array $attributes): PhaseTemplate
     {
         Gate::forUser($actor)->authorize('update', $phaseTemplate);
-
+        
         $phaseTemplate->fill($this->normalizedAttributes($attributes));
         $phaseTemplate->save();
 
