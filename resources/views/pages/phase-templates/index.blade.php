@@ -12,7 +12,8 @@ use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
 
-new #[Title('Mẫu phase')] class extends Component {
+new #[Title('Mẫu phase')] class extends Component
+{
     use WithPagination;
 
     protected PhaseTemplateService $phaseTemplateService;
@@ -100,7 +101,7 @@ new #[Title('Mẫu phase')] class extends Component {
             'projectType' => ['required', Rule::in(ProjectType::values())],
             'phaseName' => ['required', 'string', 'max:255'],
             'phaseDescription' => ['nullable', 'string'],
-            'orderIndex' => ['required', 'integer', 'min:1', 'max:999', Rule::unique('phase_templates', 'order_index')->where(fn($query) => $query->where('project_type', $this->projectType))->ignore($this->editingTemplateId)],
+            'orderIndex' => ['required', 'integer', 'min:1', 'max:999', Rule::unique('phase_templates', 'order_index')->where(fn ($query) => $query->where('project_type', $this->projectType))->ignore($this->editingTemplateId)],
             'defaultWeight' => ['required', 'integer', 'min:0', 'max:100'],
             'defaultDurationDays' => ['nullable', 'integer', 'min:1', 'max:3650'],
             'isActive' => ['boolean'],
@@ -150,7 +151,7 @@ new #[Title('Mẫu phase')] class extends Component {
 
         $template = $this->phaseTemplateService->findForEdit($actor, $templateId);
         Gate::forUser($actor)->authorize('update', $template);
-        
+
         $this->mode = 'edit';
         $this->editingTemplateId = $template->id;
         $this->projectType = (string) $template->project_type;
@@ -214,7 +215,7 @@ new #[Title('Mẫu phase')] class extends Component {
         } catch (ValidationException $e) {
             $this->setErrorBag($e->validator->errors());
         } catch (\Exception $e) {
-            $message = 'Không thể lưu mẫu phase: ' . $e->getMessage();
+            $message = 'Không thể lưu mẫu phase: '.$e->getMessage();
             session()->flash('error', $message);
             $this->dispatch('toast', message: $message, type: 'error');
         }
@@ -261,7 +262,7 @@ new #[Title('Mẫu phase')] class extends Component {
             session()->flash('success', $message);
             $this->dispatch('toast', message: $message, type: 'success');
         } catch (\Exception $e) {
-            $message = 'Không thể xóa mẫu phase: ' . $e->getMessage();
+            $message = 'Không thể xóa mẫu phase: '.$e->getMessage();
             session()->flash('error', $message);
             $this->dispatch('toast', message: $message, type: 'error');
         }

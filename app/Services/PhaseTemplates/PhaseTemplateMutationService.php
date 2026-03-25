@@ -15,9 +15,10 @@ class PhaseTemplateMutationService
     {
         Gate::forUser($actor)->authorize('create', PhaseTemplate::class);
 
-        return PhaseTemplate::query()->create(
-            $this->normalizedAttributes($attributes)
-        );
+        $normalized = $this->normalizedAttributes($attributes);
+        $this->ensureTotalWeightIsValid($normalized['project_type'], $normalized['default_weight']);
+
+        return PhaseTemplate::query()->create($normalized);
     }
 
     /**
@@ -26,8 +27,11 @@ class PhaseTemplateMutationService
     public function update(User $actor, PhaseTemplate $phaseTemplate, array $attributes): PhaseTemplate
     {
         Gate::forUser($actor)->authorize('update', $phaseTemplate);
-        
-        $phaseTemplate->fill($this->normalizedAttributes($attributes));
+
+        $normalized = $this->normalizedAttributes($attributes);
+        $this->ensureTotalWeightIsValid($normalized['project_type'], $normalized['default_weight'], $phaseTemplate->id);
+
+        $phaseTemplate->fill($normalized);
         $phaseTemplate->save();
 
         return $phaseTemplate->refresh();
@@ -81,5 +85,26 @@ class PhaseTemplateMutationService
         $string = trim((string) $value);
 
         return $string !== '' ? $string : null;
+    }
+
+    /**
+     * @throws \Exception
+     */
+    private function ensureTotalWeightIsValid(string $projectType, float $newWeight, ?int $ignoreId = null): void
+    {
+        $currentTotal = PhaseTemplate::query()
+            ->where('project_type', $projectType)
+            ->when($ignoreId, fn ($query) => $query->where('id', '!=', $ignoreId))
+            ->where('is_active', true)
+            ->sum('default_weight');
+
+        if (($currentTotal + $newWeight) > 100) {
+            throw new \Exception(sprintf(
+                'Tổng trọng số mặc định cho loại dự án này đã vượt quá 100%% (Hiện tại: %s%%, Thêm: %s%%, Tổng cộng: %s%%)',
+                (int) $currentTotal,
+                (int) $newWeight,
+                (int) ($currentTotal + $newWeight)
+            ));
+        }
     }
 }
