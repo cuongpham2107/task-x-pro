@@ -351,6 +351,13 @@ new class extends Component
         }
     </style>
 
+    @php
+        $kanbanProject = \App\Models\Project::find($projectId);
+        $canCreateTask = $kanbanProject !== null
+            && auth()->user()?->can('create', App\Models\Task::class)
+            && auth()->user()?->can('update', $kanbanProject);
+    @endphp
+
     <div class="flex w-full items-start gap-4 overflow-x-auto pb-6">
         @foreach (TaskStatus::cases() as $status)
             @php
@@ -426,15 +433,11 @@ new class extends Component
                             <div class="flex items-center gap-1.5">
                                 @php
                                     $actor = auth()->user();
-                                    $isAssignee =
-                                        $actor &&
-                                        ($actor->id === $task->pic_id ||
-                                            $task->coPics->pluck('id')->contains($actor->id));
+                                    $isAssignee = $actor && $actor->id === $task->pic_id;
                                     $canStart =
                                         $status === TaskStatus::Pending &&
                                         !$hasDependencyBlock &&
-                                        ($actor?->hasRole('super_admin') ||
-                                            ($isAssignee && !$actor?->hasRole('leader') && !$actor?->hasRole('ceo')));
+                                        ($actor?->hasRole('super_admin') || $isAssignee);
                                 @endphp
 
                                 @if ($canStart)
@@ -577,7 +580,7 @@ new class extends Component
     </div>
 
     {{-- Add task button --}}
-    @can('create', App\Models\Task::class)
+    @if ($canCreateTask)
         @if ($status === TaskStatus::Pending)
             <button @click="$dispatch('task-create-requested')"
                 class="hover:text-primary hover:border-primary mt-1 flex items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-200 py-2 text-sm font-medium text-slate-400 transition-all dark:border-slate-800">
@@ -585,7 +588,7 @@ new class extends Component
                 <span>Thêm công việc</span>
             </button>
         @endif
-    @endcan
+    @endif
 </div>
 @endforeach
 </div>

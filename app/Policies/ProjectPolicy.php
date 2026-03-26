@@ -47,6 +47,10 @@ class ProjectPolicy
 
     public function create(User $user): bool
     {
+        if ($user->hasRole('ceo')) {
+            return false;
+        }
+
         return $user->can('project.create');
     }
 
@@ -56,8 +60,12 @@ class ProjectPolicy
             return false;
         }
 
-        if ($user->hasRole('ceo') || $project->created_by === $user->id) {
+        if ($user->hasRole('super_admin')) {
             return true;
+        }
+
+        if (! $user->hasRole('leader')) {
+            return false;
         }
 
         return $project->projectLeaders()->where('user_id', $user->id)->exists();
@@ -69,7 +77,15 @@ class ProjectPolicy
             return false;
         }
 
-        return $user->hasRole('ceo') || $project->created_by === $user->id;
+        if ($user->hasRole('super_admin')) {
+            return true;
+        }
+
+        if (! $user->hasRole('leader')) {
+            return false;
+        }
+
+        return $project->projectLeaders()->where('user_id', $user->id)->exists();
     }
 
     public function restore(User $user, Project $project): bool

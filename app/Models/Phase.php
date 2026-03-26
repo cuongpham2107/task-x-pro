@@ -73,11 +73,22 @@ class Phase extends Model
      */
     public function refreshProgressFromTasks(): void
     {
-        $averageTaskProgress = (float) ($this->tasks()->avg('progress') ?? 0);
+        $tasksQuery = $this->tasks();
+        $averageTaskProgress = (float) ($tasksQuery->avg('progress') ?? 0);
         $progress = (int) round(max(0, min(100, $averageTaskProgress)));
 
+        $taskCount = (int) $tasksQuery->count();
+        $hasIncompleteTask = $tasksQuery
+            ->where(function ($query): void {
+                $query
+                    ->where('status', '!=', \App\Enums\TaskStatus::Completed->value)
+                    ->orWhere('progress', '<', 100);
+            })
+            ->exists();
+
+        $canMarkCompleted = $taskCount > 0 && ! $hasIncompleteTask;
         $status = match (true) {
-            $progress >= 100 => 'completed',
+            $canMarkCompleted => 'completed',
             $progress > 0 => 'active',
             default => 'pending',
         };

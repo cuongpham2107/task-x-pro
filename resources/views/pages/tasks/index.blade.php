@@ -106,7 +106,7 @@ new class extends Component {
 
             $this->dispatch('task-deleted', taskTitle: $task->name);
         } catch (\Exception $e) {
-            $this->dispatch('toast', message: 'Lỗi khi xóa: '.$e->getMessage(), type: 'error');
+            $this->dispatch('toast', message: 'Lỗi khi xóa: ' . $e->getMessage(), type: 'error');
         }
     }
 
@@ -181,11 +181,11 @@ new class extends Component {
             <div class="mr-4">
                 <x-ui.avatar-stack :users="$this->members" :max="5" :size="10" placement="bottom" />
             </div>
-            @can('create', App\Models\Task::class)
+            @if (auth()->user()?->can('create', App\Models\Task::class) && auth()->user()?->can('update', $project))
                 <x-ui.button icon="add" size="sm" @click="$dispatch('task-create-requested')">
                     Thêm công việc
                 </x-ui.button>
-            @endcan
+            @endif
         </div>
     </div>
 
@@ -219,5 +219,5 @@ new class extends Component {
     </div>
 
     {{-- Form Modal --}}
-    <livewire:task.form :project="$project" :phase="$phase" />
+    <livewire:task.form :project="$project" :phase="$phase" wire:key="global-task-form-{{ $phase->id }}" />
 </div>

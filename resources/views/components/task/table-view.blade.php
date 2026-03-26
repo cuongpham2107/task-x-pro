@@ -151,8 +151,14 @@
                     <x-ui.table.cell align="right">
                         <div class="flex items-center justify-end gap-1">
                             @if ($status === App\Enums\TaskStatus::Pending && !$hasDependencyBlock)
-                                <x-ui.icon-button icon="play_circle" size="sm" color="primary"
-                                    tooltip="Bắt đầu ngay" wire:click="startTask({{ $task->id }})" />
+                                @php
+                                    $actor = auth()->user();
+                                    $canStartTask = $actor && ($actor->hasRole('super_admin') || (int) $task->pic_id === (int) $actor->id);
+                                @endphp
+                                @if ($canStartTask)
+                                    <x-ui.icon-button icon="play_circle" size="sm" color="primary"
+                                        tooltip="Bắt đầu ngay" wire:click="startTask({{ $task->id }})" />
+                                @endif
                             @endif
 
                             @can('view', $task)
@@ -175,7 +181,7 @@
 
     {{-- Footer --}}
     <div class="flex items-center justify-between px-1">
-        @can('create', App\Models\Task::class)
+        @if (auth()->user()?->can('create', App\Models\Task::class) && auth()->user()?->can('update', $project))
             <button @click="$dispatch('task-create-requested')"
                 class="text-primary flex items-center gap-1.5 text-sm font-bold hover:underline">
                 <span class="material-symbols-outlined text-sm">add</span>
@@ -183,7 +189,7 @@
             </button>
         @else
             <div></div>
-        @endcan
+        @endif
         <div class="flex items-center gap-4 text-xs font-medium text-slate-400">
             <span>{{ $taskStats['done'] }}/{{ $taskStats['total'] }} hoàn thành</span>
             @if ($taskStats['in_progress'] > 0)

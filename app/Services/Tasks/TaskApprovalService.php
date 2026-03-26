@@ -35,7 +35,7 @@ class TaskApprovalService
             ]);
         }
 
-        if (! $this->canApproveByWorkflow($actor, $workflowType)) {
+        if (! $this->canApproveByWorkflow($actor, $task, $workflowType)) {
             throw ValidationException::withMessages([
                 'status' => $workflowType === TaskWorkflowType::Single->value
                     ? 'Workflow 1 cấp chỉ Leader được phê duyệt hoàn thành.'
@@ -81,6 +81,12 @@ class TaskApprovalService
             $workflowType === TaskWorkflowType::Single->value
             || $approvalLevel === ApprovalLevel::Ceo->value
         ) {
+            if ((int) $task->progress < 100) {
+                throw ValidationException::withMessages([
+                    'progress' => 'Task chỉ được hoàn thành khi tiến độ đạt 100%.',
+                ]);
+            }
+
             $task->forceFill([
                 'status' => TaskStatus::Completed->value,
                 'completed_at' => $task->completed_at ?? now(),
@@ -113,7 +119,7 @@ class TaskApprovalService
             ]);
         }
 
-        if (! $this->canApproveByWorkflow($actor, $workflowType)) {
+        if (! $this->canApproveByWorkflow($actor, $task, $workflowType)) {
             throw ValidationException::withMessages([
                 'status' => $workflowType === TaskWorkflowType::Single->value
                     ? 'Workflow 1 cấp chỉ Leader được từ chối duyệt.'
@@ -198,21 +204,38 @@ class TaskApprovalService
     /**
      * Kiem tra actor co duoc phe duyet theo workflow hay khong.
      */
-    private function canApproveByWorkflow(User $actor, string $workflowType): bool
+    private function canApproveByWorkflow(User $actor, Task $task, string $workflowType): bool
     {
         if ($actor->hasRole('super_admin')) {
             return true;
         }
 
         if ($workflowType === TaskWorkflowType::Single->value) {
-            return $actor->hasRole('leader');
+            return $this->canLeaderApproveTask($actor, $task);
         }
 
         if ($workflowType === TaskWorkflowType::Double->value) {
-            return $actor->hasAnyRole(['leader', 'ceo']);
+            if ($actor->hasRole('ceo')) {
+                return true;
+            }
+
+            return $this->canLeaderApproveTask($actor, $task);
         }
 
         return false;
+    }
+
+    private function canLeaderApproveTask(User $actor, Task $task): bool
+    {
+        if (! $actor->hasRole('leader')) {
+            return false;
+        }
+
+        if ((int) $task->pic_id === (int) $actor->id) {
+            return true;
+        }
+
+        return $task->phase->project->projectLeaders()->where('user_id', $actor->id)->exists();
     }
 
     /**

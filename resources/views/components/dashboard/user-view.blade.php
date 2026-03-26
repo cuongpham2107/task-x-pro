@@ -1,15 +1,17 @@
 <?php
-use Livewire\Component;
 use App\Enums\TaskPriority;
-use App\Models\Task;
 use App\Enums\TaskStatus;
-use App\Enums\TaskType;
+use App\Models\Task;
 use Carbon\Carbon;
+use Livewire\Component;
 
 new class extends Component {
     public array $data = [];
+
     public string $filter = 'all';
+
     public $currentMonth;
+
     public $selectedDate;
 
     public function mount(array $data)
@@ -81,11 +83,14 @@ new class extends Component {
 
     public function getFilteredTasksProperty()
     {
-        $tasks = collect($this->data['recent_tasks'] ?? []);
+        $tasks = collect($this->data['recent_tasks'] ?? [])
+            ->filter(fn($task) => ($task->status instanceof TaskStatus ? $task->status->value : $task->status) !== TaskStatus::Completed->value)
+            ->sortByDesc('updated_at');
 
         if ($this->filter === 'high_priority') {
             return $tasks->filter(function ($task) {
                 $priority = $task->priority instanceof \BackedEnum ? $task->priority->value : $task->priority;
+
                 return in_array($priority, [TaskPriority::High->value, TaskPriority::Urgent->value]);
             });
         }
@@ -181,9 +186,28 @@ new class extends Component {
                         x-transition:enter-end="opacity-100 translate-x-0" style="display: none;"
                         class="hover:border-primary dark:hover:border-primary group flex cursor-pointer flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-4 transition-all sm:flex-row sm:items-center sm:justify-between sm:gap-4 dark:border-slate-800 dark:bg-slate-900">
                         <div class="flex flex-1 items-start gap-3 sm:items-center sm:gap-4">
+                            @php
+                                $statusValue =
+                                    $task->status instanceof TaskStatus ? $task->status->value : $task->status;
+                                $statusConfig = match ($statusValue) {
+                                    'pending' => ['icon' => 'schedule', 'color' => 'text-slate-400 border-slate-200'],
+                                    'in_progress' => ['icon' => 'sync', 'color' => 'text-blue-500 border-blue-200'],
+                                    'waiting_approval' => [
+                                        'icon' => 'rate_review',
+                                        'color' => 'text-amber-500 border-amber-200',
+                                    ],
+                                    'completed' => [
+                                        'icon' => 'check_circle',
+                                        'color' => 'text-emerald-500 border-emerald-200',
+                                    ],
+                                    'cancelled' => ['icon' => 'block', 'color' => 'text-rose-500 border-rose-200'],
+                                    default => ['icon' => 'check', 'color' => 'text-slate-300 border-slate-200'],
+                                };
+                            @endphp
                             <div
-                                class="group-hover:border-primary group-hover:text-primary flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 border-slate-200 text-slate-300 transition-colors sm:h-10 sm:w-10 dark:border-slate-700">
-                                <span class="material-symbols-outlined text-lg sm:text-xl">check</span>
+                                class="{{ $statusConfig['color'] }} group-hover:border-primary group-hover:text-primary flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 transition-colors sm:h-10 sm:w-10 dark:opacity-80">
+                                <span
+                                    class="material-symbols-outlined text-lg sm:text-xl">{{ $statusConfig['icon'] }}</span>
                             </div>
                             <div class="min-w-0 flex-1 flex-col">
                                 @if ($task->phase && $task->phase->project)
@@ -213,6 +237,11 @@ new class extends Component {
                                         <span class="material-symbols-outlined text-sm">schedule</span>
                                         Hạn:
                                         {{ $task->deadline ? Carbon::parse($task->deadline)->format('d/m/Y H:i') : 'N/A' }}
+                                    </span>
+                                    <span class="flex items-center gap-1 text-[11px] text-slate-500 sm:text-xs"
+                                        title="Cập nhật lần cuối">
+                                        <span class="material-symbols-outlined text-sm">history</span>
+                                        {{ $task->updated_at->diffForHumans() }}
                                     </span>
                                     @if ($task->comments_count > 0)
                                         <span class="flex items-center gap-1 text-[11px] text-slate-500 sm:text-xs"

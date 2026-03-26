@@ -6,7 +6,6 @@ use App\Enums\NotificationChannel;
 use App\Enums\NotificationStatus;
 use App\Enums\SystemNotificationType;
 use App\Enums\TaskStatus;
-use App\Enums\TaskWorkflowType;
 use App\Models\SystemNotification;
 use App\Models\Task;
 use App\Models\TaskAttachment;
@@ -126,10 +125,7 @@ class TaskService
             $targetStatus = $incomingStatus instanceof \BackedEnum
                 ? (string) $incomingStatus->value
                 : (string) ($incomingStatus ?? $statusBeforeUpdate);
-            $workflowType = $this->resolveWorkflowType($attributes['workflow_type'] ?? $task->workflow_type);
             $isStatusChanged = $targetStatus !== $statusBeforeUpdate;
-            $isCompletionTransition = $targetStatus === TaskStatus::Completed->value
-                && $statusBeforeUpdate !== TaskStatus::Completed->value;
             $isApprovalStep = $statusBeforeUpdate === TaskStatus::WaitingApproval->value
                 && $targetStatus === TaskStatus::Completed->value;
 
@@ -147,9 +143,13 @@ class TaskService
                 ]);
             }
 
-            if ($isApprovalStep && ! $this->canApproveCompletionByWorkflow($actor, $workflowType)) {
+            if (
+                $isStatusChanged
+                && $targetStatus === TaskStatus::WaitingApproval->value
+                && (int) ($attributes['progress'] ?? $task->progress) < 90
+            ) {
                 throw ValidationException::withMessages([
-                    'status' => $this->completionPermissionMessage($workflowType),
+                    'progress' => 'Tiến độ công việc phải đạt ít nhất 90% trước khi gửi duyệt.',
                 ]);
             }
 
@@ -180,11 +180,22 @@ class TaskService
             }
 
             $payload = $this->payloadService->normalizedTaskAttributes($attributes, $task);
+            if (! $this->canManageTask($actor, $task) && $this->hasManagementFieldChanges($task, $payload, $coPicIds)) {
+                throw ValidationException::withMessages([
+                    'task' => 'Chỉ leader phụ trách dự án mới được chỉnh sửa thông tin quản trị của công việc.',
+                ]);
+            }
 
             if (
                 array_key_exists('pic_id', $payload)
                 && (int) $payload['pic_id'] !== (int) $task->pic_id
             ) {
+                if ($task->started_at !== null) {
+                    throw ValidationException::withMessages([
+                        'pic_id' => 'Không thể thay đổi PIC sau khi công việc đã được tiếp nhận.',
+                    ]);
+                }
+
                 Gate::forUser($actor)->authorize('assign', $task);
             }
 
@@ -211,11 +222,18 @@ class TaskService
             }
 
             $targetStatus = $this->normalizeStatus($payload['status'] ?? $task->status);
-            $workflowType = $this->resolveWorkflowType($payload['workflow_type'] ?? $workflowType);
-            if ($isApprovalStep && ! $this->canApproveCompletionByWorkflow($actor, $workflowType)) {
+            if (
+                $isStatusChanged
+                && $targetStatus === TaskStatus::WaitingApproval->value
+                && (int) ($payload['progress'] ?? $task->progress) < 90
+            ) {
                 throw ValidationException::withMessages([
-                    'status' => $this->completionPermissionMessage($workflowType),
+                    'progress' => 'Tiến độ công việc phải đạt ít nhất 90% trước khi gửi duyệt.',
                 ]);
+            }
+
+            if ($isApprovalStep) {
+                Gate::forUser($actor)->authorize('approve', $task);
             }
             $dependencyTaskId = array_key_exists('dependency_task_id', $payload)
                 ? ($payload['dependency_task_id'] !== null ? (int) $payload['dependency_task_id'] : null)
@@ -230,7 +248,7 @@ class TaskService
 
             if ($this->slaService->shouldRefreshSlaSnapshot($task, $payload)) {
                 $picId = (int) ($payload['pic_id'] ?? $task->pic_id);
-                $taskType = (string) ($payload['type'] ?? $task->type);
+                $taskType = $this->normalizeStatus($payload['type'] ?? $task->type);
 
                 $payload['sla_standard_hours'] = $this->slaService->resolveSlaStandardHours(
                     $phase,
@@ -310,6 +328,12 @@ class TaskService
         if (! $this->canPicControlExecutionFlow($actor, $task)) {
             throw ValidationException::withMessages([
                 'status' => 'Chỉ PIC của task mới được gửi duyệt.',
+            ]);
+        }
+
+        if ((int) $task->progress < 90) {
+            throw ValidationException::withMessages([
+                'progress' => 'Tiến độ công việc phải đạt ít nhất 90% trước khi gửi duyệt.',
             ]);
         }
 
@@ -585,50 +609,6 @@ class TaskService
     }
 
     /**
-     * Chuan hoa workflow ve gia tri string.
-     */
-    private function resolveWorkflowType(mixed $workflowType): string
-    {
-        if ($workflowType instanceof \BackedEnum) {
-            return (string) $workflowType->value;
-        }
-
-        return (string) $workflowType;
-    }
-
-    /**
-     * Kiem tra actor co duoc phe duyet hoan thanh theo workflow hay khong.
-     */
-    private function canApproveCompletionByWorkflow(User $actor, string $workflowType): bool
-    {
-        if ($actor->hasRole('super_admin')) {
-            return true;
-        }
-
-        if ($workflowType === TaskWorkflowType::Single->value) {
-            return $actor->hasRole('leader');
-        }
-
-        if ($workflowType === TaskWorkflowType::Double->value) {
-            return $actor->hasAnyRole(['leader', 'ceo']);
-        }
-
-        return false;
-    }
-
-    /**
-     * Tra ve thong diep loi quyen theo workflow.
-     */
-    private function completionPermissionMessage(string $workflowType): string
-    {
-        if ($workflowType === TaskWorkflowType::Single->value) {
-            return 'Workflow 1 cấp chỉ Leader mới được chuyển task sang Hoàn thành.';
-        }
-
-        return 'Workflow 2 cấp chỉ Leader/CEO mới được chuyển task sang Hoàn thành.';
-    }
-
-    /**
      * Kiem tra actor co phai PIC (hoac super_admin) de dieu huong flow thuc thi hay khong.
      */
     private function canPicControlExecutionFlow(User $actor, Task $task): bool
@@ -638,6 +618,109 @@ class TaskService
         }
 
         return (int) $actor->id === (int) $task->pic_id;
+    }
+
+    private function canManageTask(User $actor, Task $task): bool
+    {
+        if ($actor->hasRole('super_admin')) {
+            return true;
+        }
+
+        if (! $actor->hasRole('leader')) {
+            return false;
+        }
+
+        return $task->phase->project->projectLeaders()->where('user_id', $actor->id)->exists();
+    }
+
+    /**
+     * Kiem tra xem payload co thay doi cac truong quan tri (chi leader phu trach moi duoc sua) hay khong.
+     *
+     * @param  array<string, mixed>  $payload
+     * @param  array<int, mixed>|null  $coPicIds
+     */
+    private function hasManagementFieldChanges(Task $task, array $payload, ?array $coPicIds): bool
+    {
+        if (array_key_exists('phase_id', $payload) && (int) $payload['phase_id'] !== (int) $task->phase_id) {
+            return true;
+        }
+
+        if (array_key_exists('name', $payload) && trim((string) $payload['name']) !== trim((string) $task->name)) {
+            return true;
+        }
+
+        if (
+            array_key_exists('description', $payload)
+            && (string) ($payload['description'] ?? '') !== (string) ($task->description ?? '')
+        ) {
+            return true;
+        }
+
+        if (
+            array_key_exists('type', $payload)
+            && $this->normalizeStatus($payload['type']) !== $this->normalizeStatus($task->type)
+        ) {
+            return true;
+        }
+
+        if (
+            array_key_exists('priority', $payload)
+            && $this->normalizeStatus($payload['priority']) !== $this->normalizeStatus($task->priority)
+        ) {
+            return true;
+        }
+
+        if (
+            array_key_exists('workflow_type', $payload)
+            && $this->normalizeStatus($payload['workflow_type']) !== $this->normalizeStatus($task->workflow_type)
+        ) {
+            return true;
+        }
+
+        if (array_key_exists('pic_id', $payload) && (int) $payload['pic_id'] !== (int) $task->pic_id) {
+            return true;
+        }
+
+        if (array_key_exists('deadline', $payload)) {
+            $payloadDeadline = $payload['deadline'] instanceof \DateTimeInterface
+                ? $payload['deadline']->format('Y-m-d')
+                : ($payload['deadline'] !== null ? (string) $payload['deadline'] : null);
+            $taskDeadline = $task->deadline?->format('Y-m-d');
+
+            if ($payloadDeadline !== $taskDeadline) {
+                return true;
+            }
+        }
+
+        if (array_key_exists('dependency_task_id', $payload)) {
+            $payloadDependencyTaskId = $payload['dependency_task_id'] !== null
+                ? (int) $payload['dependency_task_id']
+                : null;
+            $taskDependencyTaskId = $task->dependency_task_id !== null
+                ? (int) $task->dependency_task_id
+                : null;
+
+            if ($payloadDependencyTaskId !== $taskDependencyTaskId) {
+                return true;
+            }
+        }
+
+        if ($coPicIds !== null) {
+            $currentCoPicIds = $task->coPics->pluck('id')->map(fn ($id): int => (int) $id)->sort()->values()->all();
+            $incomingCoPicIds = collect($coPicIds)
+                ->filter(fn ($id) => $id !== null && $id !== '')
+                ->map(fn ($id): int => (int) $id)
+                ->unique()
+                ->sort()
+                ->values()
+                ->all();
+
+            if ($currentCoPicIds !== $incomingCoPicIds) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

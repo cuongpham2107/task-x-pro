@@ -36,6 +36,13 @@ class PhaseMutationService
         // Xác thực tổng trọng lượng = 100 trước khi cập nhật (BR-008)
         $this->assertValidWeightTotal($phase->project, $attributes['weight'] ?? $phase->weight, $phase->id);
 
+        if (
+            array_key_exists('status', $attributes)
+            && (string) $attributes['status'] === \App\Enums\PhaseStatus::Completed->value
+        ) {
+            $this->assertCanCompletePhase($phase);
+        }
+
         $phase->update($attributes);
 
         return $phase;
@@ -104,6 +111,32 @@ class PhaseMutationService
         if (round($totalWeight, 2) > 100.0) {
             throw ValidationException::withMessages([
                 'weight' => "Tổng trọng số của tất cả giai đoạn không được vượt quá 100%. Hiện tại: {$totalWeight}%",
+            ]);
+        }
+    }
+
+    private function assertCanCompletePhase(Phase $phase): void
+    {
+        $tasksQuery = $phase->tasks();
+        $taskCount = (int) $tasksQuery->count();
+
+        if ($taskCount === 0) {
+            throw ValidationException::withMessages([
+                'status' => 'Không thể hoàn thành giai đoạn khi chưa có công việc.',
+            ]);
+        }
+
+        $hasIncompleteTask = $tasksQuery
+            ->where(function ($query): void {
+                $query
+                    ->where('status', '!=', \App\Enums\TaskStatus::Completed->value)
+                    ->orWhere('progress', '<', 100);
+            })
+            ->exists();
+
+        if ($hasIncompleteTask) {
+            throw ValidationException::withMessages([
+                'status' => 'Chỉ được hoàn thành giai đoạn khi tất cả task đã duyệt và đạt 100% tiến độ.',
             ]);
         }
     }

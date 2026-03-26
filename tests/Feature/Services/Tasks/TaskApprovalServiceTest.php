@@ -9,6 +9,7 @@ use App\Enums\TaskWorkflowType;
 use App\Models\ApprovalLog;
 use App\Models\Phase;
 use App\Models\Project;
+use App\Models\ProjectLeader;
 use App\Models\Task;
 use App\Models\User;
 use App\Notifications\ApprovalResults;
@@ -56,6 +57,11 @@ class TaskApprovalServiceTest extends TestCase
         $this->requester = User::factory()->create();
         $this->leader = User::factory()->create();
         $this->leader->assignRole('leader');
+        ProjectLeader::factory()->create([
+            'project_id' => $this->project->id,
+            'user_id' => $this->leader->id,
+            'assigned_by' => $this->leader->id,
+        ]);
 
         $this->ceo = User::factory()->create([
             'telegram_id' => '123456789',

@@ -1,20 +1,29 @@
 @php
     $isCompletedLocked = $this->isCompletedLocked;
+    $editingTask = $editing_task_id ? \App\Models\Task::find($editing_task_id) : null;
+    $canPersistTask = false;
+    if ($mode === 'create') {
+        $canPersistTask = auth()->user()?->can('create', \App\Models\Task::class) ?? false;
+    } elseif ($editingTask !== null) {
+        $canPersistTask = auth()->user()?->can('update', $editingTask) ?? false;
+    }
     $canApprove = false;
 
     if ($mode === 'edit' && $original_status === 'waiting_approval') {
         $user = auth()->user();
-        if ($user?->hasRole('super_admin')) {
-            $canApprove = true;
-        } elseif ($workflow_type === 'single') {
-            $canApprove = $user?->hasRole('leader') && !$this->hasLeaderApproved;
-        } elseif ($workflow_type === 'double') {
-            if ($user?->hasRole('ceo')) {
-                // CEO chỉ duyệt sau khi Leader đã duyệt và CEO chưa duyệt
-                $canApprove = $this->hasLeaderApproved && !$this->hasCeoApproved;
-            } elseif ($user?->hasRole('leader')) {
-                // Leader chỉ duyệt khi chưa duyệt (trước CEO)
+        if ($user && $editingTask && $user->can('approve', $editingTask)) {
+            if ($user->hasRole('super_admin')) {
+                $canApprove = true;
+            } elseif ($workflow_type === 'single') {
                 $canApprove = !$this->hasLeaderApproved;
+            } elseif ($workflow_type === 'double') {
+                if ($user->hasRole('ceo')) {
+                    // CEO chỉ duyệt sau khi Leader đã duyệt và CEO chưa duyệt
+                    $canApprove = $this->hasLeaderApproved && !$this->hasCeoApproved;
+                } elseif ($user->hasRole('leader')) {
+                    // Leader chỉ duyệt khi chưa duyệt (trước CEO)
+                    $canApprove = !$this->hasLeaderApproved;
+                }
             }
         }
     }
@@ -26,9 +35,8 @@
         $user = auth()->user();
         if ($user) {
             $isPic = (int) $pic_id === $user->id;
-            $isCoPic = in_array($user->id, $co_pic_ids);
 
-            if ($isPic || $isCoPic || $user->hasRole('super_admin')) {
+            if ($isPic || $user->hasRole('super_admin')) {
                 $canSubmitApproval = true;
             }
         }
@@ -39,11 +47,10 @@
         @if ($mode === 'edit' && $status === 'pending' && !$isCompletedLocked)
             @php
                 $startUser = auth()->user();
-                $isAssignee = $startUser && ((int) $pic_id === $startUser->id || in_array($startUser->id, $co_pic_ids));
+                $isAssignee = $startUser && (int) $pic_id === $startUser->id;
                 $canStartTask =
                     $startUser &&
-                    ($startUser->hasRole('super_admin') ||
-                        ($isAssignee && !$startUser->hasRole('leader') && !$startUser->hasRole('ceo')));
+                    ($startUser->hasRole('super_admin') || $isAssignee);
             @endphp
             @if ($canStartTask)
                 <x-ui.button variant="primary" icon="play_arrow" wire:click="startTask" loading="startTask">
@@ -78,7 +85,7 @@
     <div class="flex items-center gap-3">
 
         <x-ui.button variant="secondary" wire:click="$set('showFormModal', false)">Hủy</x-ui.button>
-        @if (!$isCompletedLocked && !auth()->user()->hasRole('ceo'))
+        @if (!$isCompletedLocked && !auth()->user()->hasRole('ceo') && $canPersistTask)
             <x-ui.button wire:click="save" variant="primary" icon="save" loading="save">
                 {{ !empty($editing_task_id) ? 'Cập nhật' : 'Thêm mới' }}
             </x-ui.button>

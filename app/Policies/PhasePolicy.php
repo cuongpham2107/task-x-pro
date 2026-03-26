@@ -23,31 +23,47 @@ class PhasePolicy
 
     public function create(User $user): bool
     {
+        if ($user->hasRole('ceo')) {
+            return false;
+        }
+
         return $user->can('phase.create');
     }
 
     public function update(User $user, Phase $phase): bool
     {
-        return $user->can('phase.update');
+        if (! $user->can('phase.update')) {
+            return false;
+        }
+
+        if ($user->hasRole('super_admin')) {
+            return true;
+        }
+
+        if (! $user->hasRole('leader')) {
+            return false;
+        }
+
+        return $phase->project->projectLeaders()->where('user_id', $user->id)->exists();
     }
 
     public function delete(User $user, Phase $phase): bool
     {
-        return $user->can('phase.update');
+        return $this->update($user, $phase);
     }
 
     public function restore(User $user, Phase $phase): bool
     {
-        return $user->can('phase.update');
+        return $this->update($user, $phase);
     }
 
     public function forceDelete(User $user, Phase $phase): bool
     {
-        return $user->can('phase.update');
+        return $this->update($user, $phase);
     }
 
     public function reorder(User $user, Phase $phase): bool
     {
-        return $user->can('phase.update');
+        return $this->update($user, $phase);
     }
 }

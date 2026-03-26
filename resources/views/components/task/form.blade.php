@@ -55,6 +55,10 @@ new class extends Component
 
     public ?string $ratingSource = null;
 
+    public bool $isResponsibleLeader = false;
+
+    public bool $isTaskStarted = false;
+
     #[Validate('required|string|max:255')]
     public string $name = '';
 
@@ -223,6 +227,9 @@ new class extends Component
         $this->editing_task_id = null;
         $this->project_id = $this->project?->id;
         $this->phase_id = $this->phase?->id;
+        $actor = auth()->user();
+        $this->isResponsibleLeader = $actor !== null
+            && ($actor->hasRole('super_admin') || $actor->hasRole('leader'));
         $this->loadFormOptions();
         $this->loadDependencyTaskOptions();
         $this->showFormModal = true;
@@ -245,7 +252,7 @@ new class extends Component
 
         $task = app(TaskService::class)->findForEdit(auth()->user(), $this->editing_task_id);
 
-        Gate::forUser(auth()->user())->authorize('update', $task);
+        Gate::forUser(auth()->user())->authorize('view', $task);
 
         $this->mode = 'edit';
         $this->name = (string) $task->name;
@@ -266,6 +273,18 @@ new class extends Component
         $this->co_pic_ids = $task->coPics->pluck('id')->all();
         $this->project_id = $task->phase?->project_id;
         $this->phase_id = $task->phase_id;
+        $this->isTaskStarted = $task->started_at !== null;
+        $actor = auth()->user();
+        $this->isResponsibleLeader = false;
+        if ($actor !== null) {
+            if ($actor->hasRole('super_admin')) {
+                $this->isResponsibleLeader = true;
+            } elseif ($actor->hasRole('leader')) {
+                $this->isResponsibleLeader = (bool) $task->phase?->project?->projectLeaders()
+                    ->where('user_id', $actor->id)
+                    ->exists();
+            }
+        }
         $this->existing_attachments = $task
             ->attachments()
             ->with(['uploader:id,name', 'media'])
@@ -294,7 +313,7 @@ new class extends Component
 
     public function resetFormModal(): void
     {
-        $this->reset(['name', 'type', 'status', 'priority', 'workflow_type', 'deadline', 'description', 'deliverable_url', 'progress', 'issue_note', 'recommendation', 'pic_id', 'dependency_task_id', 'project_id', 'phase_id', 'newComment', 'co_pic_ids', 'editing_task_id', 'files', 'existing_attachments', 'hasDependencyBlock', 'dependencyTaskName', 'activeTab', 'showCompletionRatingModal', 'completionStarRating', 'completionApprovalComment', 'completionTaskName', 'showRejectReasonModal', 'rejectReason', 'original_status']);
+        $this->reset(['name', 'type', 'status', 'priority', 'workflow_type', 'deadline', 'description', 'deliverable_url', 'progress', 'issue_note', 'recommendation', 'pic_id', 'dependency_task_id', 'project_id', 'phase_id', 'newComment', 'co_pic_ids', 'editing_task_id', 'files', 'existing_attachments', 'hasDependencyBlock', 'dependencyTaskName', 'activeTab', 'showCompletionRatingModal', 'completionStarRating', 'completionApprovalComment', 'completionTaskName', 'showRejectReasonModal', 'rejectReason', 'original_status', 'isResponsibleLeader', 'isTaskStarted']);
         $this->existing_attachments = collect();
         $this->taskComments = collect();
         $this->activeTab = 'general';
@@ -455,9 +474,8 @@ new class extends Component
                 $this->showFormModal = false;
                 $this->resetFormModal();
             } else {
-                // Keep modal open for edits, but refresh essential data
-                $this->loadTaskComments();
-                $this->loadFormOptions();
+                // Keep modal open for edits, but refresh ALL data from DB to ensure sync
+                $this->loadTaskDataIntoForm();
             }
 
             $this->dispatch('toast', message: $toastMessage, type: 'success');
@@ -491,6 +509,7 @@ new class extends Component
 
             app(\App\Services\Tasks\TaskApprovalService::class)->approve(auth()->user(), $task, $this->completionStarRating, $this->completionApprovalComment !== '' ? $this->completionApprovalComment : null);
 
+            $this->showCompletionRatingModal = false;
             $this->loadTaskDataIntoForm();
 
             $this->dispatch('toast', message: 'Đã phê duyệt task.', type: 'success');
@@ -516,6 +535,7 @@ new class extends Component
         } else {
             $this->save();
         }
+        $this->showCompletionRatingModal = false;
     }
 
     public function rejectTask(): void
@@ -538,8 +558,9 @@ new class extends Component
             $updatedTaskId = $task->id;
             $this->showRejectReasonModal = false;
             $this->rejectReason = '';
-            
+
             $this->loadTaskDataIntoForm();
+            $this->showFormModal = true;
 
             $this->dispatch('toast', message: 'Đã từ chối duyệt và chuyển task về Đang thực hiện.', type: 'warning');
             $this->dispatch('task-updated', taskId: $updatedTaskId);
@@ -556,34 +577,12 @@ new class extends Component
         $actor = auth()->user();
         $fromStatus = $task->status instanceof \BackedEnum ? (string) $task->status->value : (string) $task->status;
         $toStatus = (string) $this->status;
-        $workflowType = (string) $this->workflow_type;
 
         if ($fromStatus !== 'waiting_approval' || $toStatus !== 'completed') {
             return false;
         }
 
-        return $this->canApproveCompletionByWorkflow($actor, $workflowType);
-    }
-
-    private function canApproveCompletionByWorkflow(?\App\Models\User $actor, string $workflowType): bool
-    {
-        if ($actor === null) {
-            return false;
-        }
-
-        if ($actor->hasRole('super_admin')) {
-            return true;
-        }
-
-        if ($workflowType === 'single') {
-            return $actor->hasRole('leader');
-        }
-
-        if ($workflowType === 'double') {
-            return $actor->hasAnyRole(['leader', 'ceo']);
-        }
-
-        return false;
+        return $actor !== null && $actor->can('approve', $task);
     }
 
     private function shouldPromptRatingForApproval(Task $task): bool
@@ -593,14 +592,12 @@ new class extends Component
             return false;
         }
 
-        $workflowType = (string) $this->workflow_type;
-
         // Neu dang o trang thai cho duyet
         if ($this->original_status !== 'waiting_approval') {
             return false;
         }
 
-        return $this->canApproveCompletionByWorkflow($actor, $workflowType);
+        return $actor->can('approve', $task);
     }
 
     private function canApproveTask(): bool
@@ -614,7 +611,9 @@ new class extends Component
             return false;
         }
 
-        return $this->canApproveCompletionByWorkflow($actor, $this->workflow_type);
+        $task = Task::find($this->editing_task_id);
+
+        return $task !== null && $actor->can('approve', $task);
     }
 
     /**
@@ -731,7 +730,7 @@ new class extends Component
             $this->dispatch('toast', message: 'Công việc đã bắt đầu!', type: 'success');
             $this->dispatch('task-updated', taskId: $task->id);
         } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
-            $this->dispatch('toast', message: 'Lỗi: Chỉ có người được giao hoặc người hỗ trợ mới có thể bắt đầu công việc', type: 'error');
+            $this->dispatch('toast', message: 'Lỗi: Chỉ PIC của task mới có thể bắt đầu công việc.', type: 'error');
         } catch (\Exception $e) {
             $this->dispatch('toast', message: 'Lỗi: '.$e->getMessage(), type: 'error');
         }
@@ -757,7 +756,8 @@ new class extends Component
             $this->dispatch('toast', message: 'Đã gửi duyệt công việc.', type: 'success');
             $this->dispatch('task-updated', taskId: $task->id);
         } catch (ValidationException $e) {
-            throw $e;
+            $firstError = collect($e->errors())->flatten()->first();
+            $this->dispatch('toast', message: (string) ($firstError ?? 'Không thể gửi duyệt công việc.'), type: 'error');
         } catch (\Exception $e) {
             $this->dispatch('toast', message: 'Lỗi: '.$e->getMessage(), type: 'error');
         }

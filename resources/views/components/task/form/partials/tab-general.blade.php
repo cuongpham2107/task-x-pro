@@ -1,6 +1,6 @@
 @php
     $user = auth()->user();
-    $isManager = $user->hasAnyRole(['leader', 'super_admin']);
+    $isManager = $isResponsibleLeader && $status !== 'waiting_approval';
     $isCeo = $user->hasRole('ceo');
     $isRestricted = !$isManager;
 @endphp
@@ -55,7 +55,7 @@
 
     <div>
         <x-ui.user-select model="pic_id" :users="$picOptions" label="Người phụ trách (PIC)"
-            placeholder="Chọn hoặc tìm kiếm PIC..." required="true" :disabled="$isRestricted" />
+            placeholder="Chọn hoặc tìm kiếm PIC..." required="true" :disabled="$isRestricted || ($mode === 'edit' && $isTaskStarted)" />
     </div>
 
     {{-- Mức độ ưu tiên --}}
@@ -98,9 +98,7 @@
 
     {{-- Tiến độ công việc (Progress) --}}
     <x-ui.range-slider label="Tiến độ công việc" name="progress" wire:model="progress" icon="trending_up"
-        start-label="Bắt đầu (0%)" end-label="Hoàn thành (100%)" :disabled="$isCeo || $status === 'pending' ||
-            $this->phase->status === 'pending' ||
-            (auth()->id() !== (int) $pic_id && !in_array(auth()->id(), $co_pic_ids ?: []))" />
+        start-label="Bắt đầu (0%)" end-label="Hoàn thành (100%)" :disabled="$isCeo || $status === 'pending' || $this->phase->status === 'pending' || (auth()->id() !== (int) $pic_id && !in_array(auth()->id(), $co_pic_ids ?: []))" />
 
     {{-- Link sản phẩm --}}
     <div class="col-span-full">
@@ -256,6 +254,5 @@
         rows="4" wire:model="description" :disabled="$isRestricted" />
 
     {{-- Đính kèm tệp --}}
-    <x-ui.file-upload name="files" :existing-attachments="$existing_attachments" :new-files="$files" label="Đính kèm tệp"
-        :disabled="$isCeo" />
+    <x-ui.file-upload name="files" :existing-attachments="$existing_attachments" :new-files="$files" label="Đính kèm tệp" :disabled="$isCeo" />
 </div>

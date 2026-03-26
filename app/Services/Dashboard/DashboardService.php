@@ -2,6 +2,8 @@
 
 namespace App\Services\Dashboard;
 
+use App\Enums\ApprovalAction;
+use App\Enums\ApprovalLevel;
 use App\Enums\KpiPeriodType;
 use App\Enums\PhaseStatus;
 use App\Enums\ProjectStatus;
@@ -80,7 +82,36 @@ class DashboardService
 
         $approvalTasks = (clone $taskScope)
             ->where('status', TaskStatus::WaitingApproval->value)
-            ->where('workflow_type', TaskWorkflowType::Double->value)
+            ->where(function (Builder $query) use ($actor): void {
+                if ($actor->hasRole('super_admin')) {
+                    return;
+                }
+
+                if ($actor->hasRole('ceo')) {
+                    $query->where('workflow_type', TaskWorkflowType::Double->value)
+                        ->whereHas('approvalLogs', function (Builder $q): void {
+                            $q->where('approval_level', ApprovalLevel::Leader->value)
+                                ->where('action', ApprovalAction::Approved->value);
+                        })
+                        ->whereDoesntHave('approvalLogs', function (Builder $q) use ($actor): void {
+                            $q->where('reviewer_id', $actor->id)
+                                ->where('action', ApprovalAction::Approved->value);
+                        });
+
+                    return;
+                }
+
+                if ($actor->hasRole('leader')) {
+                    $query->whereDoesntHave('approvalLogs', function (Builder $q) use ($actor): void {
+                        $q->where('reviewer_id', $actor->id)
+                            ->where('action', ApprovalAction::Approved->value);
+                    });
+
+                    return;
+                }
+
+                $query->whereRaw('0 = 1');
+            })
             ->with([
                 'phase:id,project_id,name',
                 'phase.project:id,name,type,status',
@@ -113,7 +144,7 @@ class DashboardService
             ])
             ->withCount('comments')
             ->orderBy('deadline')
-            ->limit(6)
+            ->limit(10)
             ->get([
                 'id',
                 'phase_id',
@@ -166,8 +197,7 @@ class DashboardService
     private function projectScopeForActor(User $actor): Builder
     {
         $query = Project::query();
-
-        if ($actor->hasRole('ceo')) {
+        if ($actor->hasAnyRole(['ceo', 'super_admin'])) {
             return $query;
         }
 
@@ -207,8 +237,7 @@ class DashboardService
     private function taskScopeForActor(User $actor): Builder
     {
         $query = Task::query();
-
-        if ($actor->hasRole('ceo')) {
+        if ($actor->hasAnyRole(['ceo', 'super_admin'])) {
             return $query;
         }
 

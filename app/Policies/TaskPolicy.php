@@ -18,15 +18,23 @@ class TaskPolicy
             return false;
         }
 
-        if ($user->hasAnyRole(['ceo', 'leader'])) {
+        if ($user->hasAnyRole(['super_admin', 'ceo', 'leader'])) {
             return true;
         }
 
-        return $this->isTaskParticipant($user, $task);
+        if ($task->created_by === $user->id) {
+            return true;
+        }
+
+        return $this->isExecutionParticipant($user, $task);
     }
 
     public function create(User $user): bool
     {
+        if ($user->hasRole('ceo')) {
+            return false;
+        }
+
         return $user->can('task.create');
     }
 
@@ -36,11 +44,19 @@ class TaskPolicy
             return false;
         }
 
-        if ($user->hasAnyRole(['ceo', 'leader'])) {
+        if ($user->hasRole('super_admin')) {
             return true;
         }
 
-        return $this->isTaskParticipant($user, $task);
+        if ($user->hasRole('ceo')) {
+            return false;
+        }
+
+        if ($this->isResponsibleProjectLeader($user, $task)) {
+            return true;
+        }
+
+        return $this->isExecutionParticipant($user, $task);
     }
 
     public function delete(User $user, Task $task): bool
@@ -49,7 +65,15 @@ class TaskPolicy
             return false;
         }
 
-        return $user->hasRole('ceo') || $task->created_by === $user->id;
+        if ($user->hasRole('super_admin')) {
+            return true;
+        }
+
+        if (! $user->hasRole('leader')) {
+            return false;
+        }
+
+        return $this->isResponsibleProjectLeader($user, $task);
     }
 
     public function restore(User $user, Task $task): bool
@@ -68,12 +92,15 @@ class TaskPolicy
             return false;
         }
 
-        if ($user->hasRole('ceo')) {
+        if ($user->hasRole('super_admin')) {
             return true;
         }
 
-        return $task->created_by === $user->id
-            || $task->phase->project->projectLeaders()->where('user_id', $user->id)->exists();
+        if (! $user->hasRole('leader')) {
+            return false;
+        }
+
+        return $this->isResponsibleProjectLeader($user, $task);
     }
 
     public function approve(User $user, Task $task): bool
@@ -91,11 +118,15 @@ class TaskPolicy
             : (string) $task->workflow_type;
 
         if ($workflowType === \App\Enums\TaskWorkflowType::Single->value) {
-            return $user->hasRole('leader');
+            return $this->canLeaderApproveTask($user, $task);
         }
 
         if ($workflowType === \App\Enums\TaskWorkflowType::Double->value) {
-            return $user->hasAnyRole(['leader', 'ceo']);
+            if ($user->hasRole('ceo')) {
+                return true;
+            }
+
+            return $this->canLeaderApproveTask($user, $task);
         }
 
         return false;
@@ -138,10 +169,19 @@ class TaskPolicy
             return false;
         }
 
-        if ($user->hasAnyRole(['ceo', 'leader'])) {
+        if ($user->hasAnyRole(['super_admin', 'ceo'])) {
             return true;
         }
 
+        if ($this->isResponsibleProjectLeader($user, $task)) {
+            return true;
+        }
+
+        return $this->isExecutionParticipant($user, $task);
+    }
+
+    private function isExecutionParticipant(User $user, Task $task): bool
+    {
         if ((int) $task->pic_id === (int) $user->id) {
             return true;
         }
@@ -149,12 +189,21 @@ class TaskPolicy
         return $task->coPicAssignments()->where('user_id', $user->id)->exists();
     }
 
-    private function isTaskParticipant(User $user, Task $task): bool
+    private function isResponsibleProjectLeader(User $user, Task $task): bool
     {
-        if ($task->pic_id === $user->id || $task->created_by === $user->id) {
+        return $task->phase->project->projectLeaders()->where('user_id', $user->id)->exists();
+    }
+
+    private function canLeaderApproveTask(User $user, Task $task): bool
+    {
+        if (! $user->hasRole('leader')) {
+            return false;
+        }
+
+        if ((int) $task->pic_id === (int) $user->id) {
             return true;
         }
 
-        return $task->coPicAssignments()->where('user_id', $user->id)->exists();
+        return $this->isResponsibleProjectLeader($user, $task);
     }
 }

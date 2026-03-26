@@ -1,5 +1,6 @@
 <?php
 use Livewire\Component;
+use App\Enums\TaskStatus;
 use App\Enums\TaskPriority;
 use App\Models\ActivityLog;
 use Illuminate\Support\Str;
@@ -168,50 +169,132 @@ new class extends Component {
                     </div>
                 </div>
             </div>
-            <div class="grid grid-cols-1 gap-8 lg:grid-cols-3" x-show="ready"
+            <div class="grid grid-cols-1 gap-8 lg:grid-cols-4" x-show="ready"
                 x-transition:enter="transition ease-out duration-500 delay-300"
                 x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0"
                 style="display: none;">
                 <div
-                    class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm lg:col-span-2 dark:border-slate-800 dark:bg-slate-900">
+                    class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm lg:col-span-3 dark:border-slate-800 dark:bg-slate-900">
                     <div class="flex items-center justify-between border-b border-slate-100 p-6 dark:border-slate-800">
                         <h4 class="font-bold text-slate-900 dark:text-white">Danh sách cần duyệt (2 cấp)</h4>
                     </div>
-                    <div class="divide-y divide-slate-100 dark:divide-slate-800">
-                        @forelse($data['approval_tasks'] as $task)
-                            <div
-                                class="flex items-center gap-4 p-4 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                                <div
-                                    class="flex size-10 shrink-0 items-center justify-center rounded-lg bg-amber-50 dark:bg-amber-900/20">
-                                    <span
-                                        class="material-symbols-outlined text-[20px] text-amber-600">rate_review</span>
-                                </div>
-                                <div class="min-w-0 flex-1">
-                                    @if ($task->phase && $task->phase->project)
-                                        <button
-                                            wire:click="$dispatch('task-edit-requested', { taskId: {{ $task->id }} })"
-                                            class="hover:text-primary block w-full truncate text-left text-sm font-bold transition-colors">
-                                            {{ $task->name }}
-                                        </button>
-                                    @else
-                                        <h5 class="truncate text-sm font-bold">{{ $task->name }}</h5>
-                                    @endif
-                                    <p class="text-xs text-slate-500">
-                                        Dự án: {{ $task->phase?->project?->name ?? 'N/A' }} •
-                                        Người gửi: {{ $task->pic->name ?? 'N/A' }} •
-                                        {{ $task->updated_at->diffForHumans() }}
-                                    </p>
-                                </div>
-                                <span
-                                    class="text-2xs rounded bg-amber-100 px-2 py-1 font-bold uppercase text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
-                                    Chờ duyệt
-                                </span>
-                            </div>
-                        @empty
-                            <div class="p-8 text-center text-slate-500">
-                                Không có yêu cầu duyệt nào.
-                            </div>
-                        @endforelse
+                    <div class="overflow-x-auto">
+                        <table class="w-full border-collapse text-left">
+                            <thead>
+                                <tr
+                                    class="bg-slate-50/50 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:bg-slate-800/50">
+                                    <th class="px-6 py-4">Tên công việc</th>
+                                    <th class="px-6 py-4">Dự án</th>
+                                    <th class="px-6 py-4">Người thực hiện</th>
+                                    <th class="px-6 py-4">Hạn chót</th>
+                                    <th class="px-6 py-4">Tiến độ</th>
+                                    <th class="px-6 py-4">Trạng thái</th>
+                                    <th class="px-6 py-4">Cập nhập lúc</th>
+                                    <th class="px-6 py-4 text-right">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                                @forelse($data['approval_tasks'] as $task)
+                                    @php
+                                        $priorityEnum =
+                                            $task->priority instanceof TaskPriority
+                                                ? $task->priority
+                                                : TaskPriority::tryFrom($task->priority ?? '');
+                                        $priorityColor = match ($priorityEnum?->value ?? '') {
+                                            'urgent' => 'red',
+                                            'high' => 'orange',
+                                            'medium' => 'amber',
+                                            default => 'blue',
+                                        };
+                                        $statusEnum =
+                                            $task->status instanceof TaskStatus
+                                                ? $task->status
+                                                : TaskStatus::tryFrom($task->status ?? '');
+                                    @endphp
+                                    <tr class="transition-colors hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
+                                        <td class="px-6 py-4">
+                                            <div class="flex flex-col gap-1">
+                                                <button
+                                                    wire:click="$dispatch('task-edit-requested', { taskId: {{ $task->id }} })"
+                                                    class="hover:text-primary max-w-[200px] truncate text-left text-sm font-bold text-slate-900 transition-colors dark:text-slate-100">
+                                                    {{ $task->name }}
+                                                </button>
+                                                <div class="flex items-center gap-2">
+                                                    <x-ui.badge :color="$priorityColor" size="2xs">
+                                                        {{ $priorityEnum?->label() ?? '—' }}
+                                                    </x-ui.badge>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <span
+                                                class="text-xs font-medium text-slate-600 dark:text-slate-400">{{ $task->phase?->project?->name ?? 'N/A' }}</span>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="flex items-center gap-3">
+                                                @php
+                                                    $taskUsers = collect();
+                                                    if ($task->pic) {
+                                                        $taskUsers->push($task->pic);
+                                                    }
+                                                    if ($task->coPics) {
+                                                        $taskUsers = $taskUsers->concat($task->coPics);
+                                                    }
+                                                @endphp
+                                                <x-ui.avatar-stack :users="$taskUsers" size="8" />
+                                                {{-- <span
+                                                    class="text-xs font-medium text-slate-700 dark:text-slate-300">{{ $task->pic?->name ?? 'N/A' }}</span> --}}
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="flex flex-col">
+                                                <span
+                                                    class="{{ $task->deadline && \Carbon\Carbon::parse($task->deadline)->isPast() ? 'text-rose-500' : 'text-slate-600 dark:text-slate-400' }} text-xs font-medium">
+                                                    {{ $task->deadline ? \Carbon\Carbon::parse($task->deadline)->format('d/m/Y') : 'N/A' }}
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="w-24">
+                                                <div
+                                                    class="mb-1 flex items-center justify-between text-[10px] font-bold text-slate-500">
+                                                    <span>{{ $task->progress }}%</span>
+                                                </div>
+                                                <div
+                                                    class="h-1.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+                                                    <div class="{{ $task->progress >= 100 ? 'bg-emerald-500' : 'bg-primary' }} h-full transition-all duration-500"
+                                                        style="width: {{ $task->progress }}%"></div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <span
+                                                class="{{ $statusEnum?->badgeClass() ?? 'bg-slate-100 text-slate-600' }} rounded px-2 py-0.5 text-[10px] font-bold uppercase">
+                                                {{ $statusEnum?->label() ?? $task->status }}
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="text-[10px] font-bold text-slate-500">
+                                                {{ $task->updated_at->diffForHumans() }}
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 text-right">
+                                            <button
+                                                wire:click="$dispatch('task-edit-requested', { taskId: {{ $task->id }} })"
+                                                class="hover:border-primary hover:text-primary ml-auto flex size-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 transition-all dark:border-slate-800 dark:bg-slate-900">
+                                                <span class="material-symbols-outlined text-[18px]">visibility</span>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="8" class="px-6 py-12 text-center text-slate-500">
+                                            Không có yêu cầu duyệt nào.
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
                     </div>
                 </div>
                 <div

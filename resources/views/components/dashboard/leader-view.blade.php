@@ -1,12 +1,14 @@
 <?php
-use Livewire\Component;
-use App\Enums\TaskPriority;
-use App\Enums\TaskStatus;
 use App\Models\Task;
+use App\Enums\TaskStatus;
+use App\Enums\TaskPriority;
+use Livewire\Component;
 
 new class extends Component {
     public array $data = [];
+
     public $activityLogs = [];
+
     public array $weeklyStats = [];
 
     public function mount(array $data): void
@@ -252,6 +254,8 @@ new class extends Component {
                                     <th class="px-6 py-4">Người thực hiện</th>
                                     <th class="px-6 py-4">Hạn chót</th>
                                     <th class="px-6 py-4">Tiến độ</th>
+                                    <th class="px-6 py-4">Trạng thái</th>
+                                    <th class="px-6 py-4">Cập nhập lúc</th>
                                     <th class="px-6 py-4 text-right">Thao tác</th>
                                 </tr>
                             </thead>
@@ -259,9 +263,9 @@ new class extends Component {
                                 @forelse($data['approval_tasks'] as $task)
                                     @php
                                         $priorityEnum =
-                                            $task->priority instanceof TaskPriority
+                                            $task->priority instanceof App\Enums\TaskPriority
                                                 ? $task->priority
-                                                : TaskPriority::tryFrom($task->priority ?? '');
+                                                : \App\Enums\TaskPriority::tryFrom($task->priority ?? '');
                                         $priorityColor = match ($priorityEnum?->value ?? '') {
                                             'urgent' => 'red',
                                             'high' => 'orange',
@@ -337,6 +341,24 @@ new class extends Component {
                                                 </div>
                                             </div>
                                         </td>
+                                        <td class="px-6 py-4">
+                                            @php
+                                                $statusEnum =
+                                                    $task->status instanceof TaskStatus
+                                                        ? $task->status
+                                                        : TaskStatus::tryFrom($task->status ?? '');
+                                            @endphp
+                                            <span
+                                                class="{{ $statusEnum?->badgeClass() ?? 'bg-slate-100 text-slate-600' }} rounded px-2 py-0.5 text-[10px] font-bold uppercase">
+                                                {{ $statusEnum?->label() ?? $task->status }}
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div
+                                                class="mb-1 flex items-center justify-between text-[10px] font-bold text-slate-500">
+                                                <span> {{ $task->updated_at->diffForHumans() }}</span>
+                                            </div>
+                                        </td>
                                         <td class="px-6 py-4 text-right">
                                             <button
                                                 wire:click="$dispatch('task-edit-requested', { taskId: {{ $task->id }} })"
@@ -347,7 +369,7 @@ new class extends Component {
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="6" class="px-6 py-12 text-center">
+                                        <td colspan="8" class="px-6 py-12 text-center">
                                             <div class="flex flex-col items-center gap-2">
                                                 <span
                                                     class="material-symbols-outlined text-4xl text-slate-200 dark:text-slate-800">check_circle</span>
