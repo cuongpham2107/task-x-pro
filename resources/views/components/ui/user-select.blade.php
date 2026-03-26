@@ -28,7 +28,7 @@
     $dropdownPlacementClasses = $dropdownPosition === 'top' ? 'bottom-full mb-2' : 'top-full mt-2';
 @endphp
 
-<div class="space-y-2" x-data="{
+<div x-data="{
     search: '',
     showDropdown: false,
     selectedId: @entangle($model).live,
@@ -70,7 +70,7 @@
     <div class="relative mt-1">
         {{-- Trigger / Display --}}
         <div @if (!$disabled) @click="showDropdown = !showDropdown; $nextTick(() => { if (showDropdown) $refs.searchInput.focus() })" @endif
-            class="input-field flex items-center justify-between gap-2 overflow-hidden bg-white py-2 pl-3 pr-2 transition-all dark:bg-slate-900 {{ $disabled ? 'pointer-events-none opacity-50 grayscale' : 'cursor-pointer hover:border-slate-400' }}"
+            class="input-field {{ $disabled ? 'pointer-events-none opacity-50 grayscale' : 'cursor-pointer hover:border-slate-400' }} flex items-center justify-between gap-2 overflow-hidden bg-white py-2 pl-3 pr-2 transition-all dark:bg-slate-900"
             :class="showDropdown ? 'border-primary ring-2 ring-primary/20' : 'border-slate-300 dark:border-slate-700'">
             <div class="flex min-w-0 items-center gap-2.5">
                 <template x-if="selectedUser">
@@ -99,7 +99,8 @@
 
             <div class="flex shrink-0 items-center gap-1 text-slate-400">
                 <template x-if="selectedUser">
-                    <button type="button" @if (!$disabled) @click.stop="clear()" @endif class="transition-colors {{ $disabled ? 'cursor-not-allowed' : 'hover:text-red-500' }}">
+                    <button type="button" @if (!$disabled) @click.stop="clear()" @endif
+                        class="{{ $disabled ? 'cursor-not-allowed' : 'hover:text-red-500' }} transition-colors">
                         <span class="material-symbols-outlined text-lg">close</span>
                     </button>
                 </template>

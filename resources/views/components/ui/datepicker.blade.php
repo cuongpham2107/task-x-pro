@@ -115,7 +115,7 @@
         </label>
     @endif
 
-    <div class="relative">
+    <div class="relative mt-1">
         <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
             <span class="material-symbols-outlined text-[20px] text-slate-400">calendar_today</span>
         </div>

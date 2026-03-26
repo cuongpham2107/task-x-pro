@@ -6,6 +6,7 @@
     'required' => false,
     'icon' => null, // Icon for label
     'iconColor' => 'text-slate-400',
+    'disabled' => false,
 ])
 
 @php
@@ -28,8 +29,9 @@
     @endif
 
 
-    <textarea class="input-field {{ $attributes->get('class') }} w-full" placeholder="{{ $placeholder }}"
-        rows="{{ $rows }}" name="{{ $name }}" {{ $attributes->whereStartsWith('wire:model') }}></textarea>
+    <textarea class="input-field {{ $attributes->get('class') }} w-full {{ $disabled ? 'bg-slate-50 cursor-not-allowed text-slate-500' : '' }}"
+        placeholder="{{ $placeholder }}" rows="{{ $rows }}" name="{{ $name }}"
+        {{ $attributes->whereStartsWith('wire:model') }} @if ($disabled) disabled @endif></textarea>
 
     <x-ui.field-error field="{{ $name }}" />
 </div>

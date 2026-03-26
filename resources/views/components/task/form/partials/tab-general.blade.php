@@ -1,13 +1,15 @@
 @php
-    $isRestricted = !auth()
-        ->user()
-        ->hasAnyRole(['leader', 'ceo', 'super_admin']);
+    $user = auth()->user();
+    $isManager = $user->hasAnyRole(['leader', 'super_admin']);
+    $isCeo = $user->hasRole('ceo');
+    $isRestricted = !$isManager;
 @endphp
 
 <div class="{{ $this->isCompletedLocked ? 'pointer-events-none select-none opacity-70' : '' }} grid grid-cols-2 gap-6">
     {{-- Tên công việc --}}
     <div class="col-span-full">
-        <x-ui.input label="Tên công việc" name="name" placeholder="Nhập tên công việc..." wire:model="name" required />
+        <x-ui.input label="Tên công việc" name="name" placeholder="Nhập tên công việc..." wire:model="name"
+            :disabled="$isCeo" required />
     </div>
     @if (!$this->isPhaseScoped)
         <div class="col-span-full grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -26,7 +28,7 @@
     {{-- Loại công việc & Trạng thái --}}
     <div>
         <x-ui.select label="Loại công việc" name="type" wire:model="type" icon="category" :options="$taskTypeLabels"
-            required />
+            :disabled="$isRestricted" required />
     </div>
 
     <div>
@@ -96,12 +98,14 @@
 
     {{-- Tiến độ công việc (Progress) --}}
     <x-ui.range-slider label="Tiến độ công việc" name="progress" wire:model="progress" icon="trending_up"
-        start-label="Bắt đầu (0%)" end-label="Hoàn thành (100%)" :disabled="$status === 'pending' || $this->phase->status === 'pending'" />
+        start-label="Bắt đầu (0%)" end-label="Hoàn thành (100%)" :disabled="$isCeo || $status === 'pending' ||
+            $this->phase->status === 'pending' ||
+            (auth()->id() !== (int) $pic_id && !in_array(auth()->id(), $co_pic_ids ?: []))" />
 
     {{-- Link sản phẩm --}}
     <div class="col-span-full">
         <x-ui.input label="Link sản phẩm (Drive/Figma/...)" name="deliverable_url" type="url"
-            placeholder="https://..." wire:model="deliverable_url" icon="link" />
+            placeholder="https://..." wire:model="deliverable_url" icon="link" :disabled="$isCeo" />
     </div>
 
     {{-- Phụ thuộc công việc --}}
@@ -249,8 +253,9 @@
 
     {{-- Mô tả công việc --}}
     <x-ui.textarea label="Mô tả công việc" name="description" placeholder="Nhập chi tiết yêu cầu công việc..."
-        rows="4" wire:model="description" />
+        rows="4" wire:model="description" :disabled="$isRestricted" />
 
     {{-- Đính kèm tệp --}}
-    <x-ui.file-upload name="files" :existing-attachments="$existing_attachments" :new-files="$files" label="Đính kèm tệp" />
+    <x-ui.file-upload name="files" :existing-attachments="$existing_attachments" :new-files="$files" label="Đính kèm tệp"
+        :disabled="$isCeo" />
 </div>

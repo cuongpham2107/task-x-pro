@@ -232,13 +232,22 @@ new class extends Component
     public function showEditFormModal(int $taskId): void
     {
         $this->resetFormModal();
+        $this->editing_task_id = $taskId;
+        $this->loadTaskDataIntoForm();
+        $this->showFormModal = true;
+    }
 
-        $task = app(TaskService::class)->findForEdit(auth()->user(), $taskId);
+    private function loadTaskDataIntoForm(): void
+    {
+        if (! $this->editing_task_id) {
+            return;
+        }
+
+        $task = app(TaskService::class)->findForEdit(auth()->user(), $this->editing_task_id);
 
         Gate::forUser(auth()->user())->authorize('update', $task);
 
         $this->mode = 'edit';
-        $this->editing_task_id = $task->id;
         $this->name = (string) $task->name;
         $this->completionTaskName = (string) $task->name;
         $this->type = $task->type instanceof \BackedEnum ? (string) $task->type->value : (string) $task->type;
@@ -273,10 +282,14 @@ new class extends Component
             if ($depStatus !== 'completed') {
                 $this->hasDependencyBlock = true;
                 $this->dependencyTaskName = $depTask->name;
+            } else {
+                $this->hasDependencyBlock = false;
+                $this->dependencyTaskName = null;
             }
+        } else {
+            $this->hasDependencyBlock = false;
+            $this->dependencyTaskName = null;
         }
-
-        $this->showFormModal = true;
     }
 
     public function resetFormModal(): void
@@ -450,7 +463,7 @@ new class extends Component
             $this->dispatch('toast', message: $toastMessage, type: 'success');
             $this->dispatch('task-saved', taskTitle: $savedName);
         } catch (ValidationException $e) {
-            throw $e;
+            $this->dispatch('toast', message: 'Lỗi hệ thống: '.$e->getMessage(), type: 'error');
         } catch (\Exception $e) {
             $this->dispatch('toast', message: 'Lỗi hệ thống: '.$e->getMessage(), type: 'error');
         }
@@ -478,8 +491,7 @@ new class extends Component
 
             app(\App\Services\Tasks\TaskApprovalService::class)->approve(auth()->user(), $task, $this->completionStarRating, $this->completionApprovalComment !== '' ? $this->completionApprovalComment : null);
 
-            $this->showFormModal = false;
-            $this->resetFormModal();
+            $this->loadTaskDataIntoForm();
 
             $this->dispatch('toast', message: 'Đã phê duyệt task.', type: 'success');
             $this->dispatch('task-updated', taskId: $task->id);
@@ -526,8 +538,8 @@ new class extends Component
             $updatedTaskId = $task->id;
             $this->showRejectReasonModal = false;
             $this->rejectReason = '';
-            $this->showFormModal = false;
-            $this->resetFormModal();
+            
+            $this->loadTaskDataIntoForm();
 
             $this->dispatch('toast', message: 'Đã từ chối duyệt và chuyển task về Đang thực hiện.', type: 'warning');
             $this->dispatch('task-updated', taskId: $updatedTaskId);
@@ -714,8 +726,7 @@ new class extends Component
             $task = Task::findOrFail($this->editing_task_id);
             app(TaskService::class)->start(auth()->user(), $task);
 
-            $this->showFormModal = false;
-            $this->resetFormModal();
+            $this->loadTaskDataIntoForm();
 
             $this->dispatch('toast', message: 'Công việc đã bắt đầu!', type: 'success');
             $this->dispatch('task-updated', taskId: $task->id);
@@ -728,7 +739,7 @@ new class extends Component
 
     public function submitForApproval(): void
     {
-        if ($this->progress <= 90) {
+        if ($this->progress < 90) {
             $this->dispatch('toast', message: 'Tiến độ công việc phải đạt ít nhất 90% trước khi gửi duyệt.', type: 'error');
 
             return;
@@ -741,8 +752,7 @@ new class extends Component
             $task = Task::findOrFail($this->editing_task_id);
             app(TaskService::class)->submitForApproval(auth()->user(), $task);
 
-            $this->showFormModal = false;
-            $this->resetFormModal();
+            $this->loadTaskDataIntoForm();
 
             $this->dispatch('toast', message: 'Đã gửi duyệt công việc.', type: 'success');
             $this->dispatch('task-updated', taskId: $task->id);

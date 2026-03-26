@@ -39,20 +39,34 @@
         @if ($mode === 'edit' && $status === 'pending' && !$isCompletedLocked)
             @php
                 $startUser = auth()->user();
+                $isAssignee = $startUser && ((int) $pic_id === $startUser->id || in_array($startUser->id, $co_pic_ids));
                 $canStartTask =
-                    ($startUser && !$startUser->hasRole('leader') && !$startUser->hasRole('ceo')) ||
-                    $startUser?->hasRole('super_admin');
+                    $startUser &&
+                    ($startUser->hasRole('super_admin') ||
+                        ($isAssignee && !$startUser->hasRole('leader') && !$startUser->hasRole('ceo')));
             @endphp
             @if ($canStartTask)
-                <x-ui.button variant="primary" icon="play_arrow" wire:click="startTask" loading="startTask">Bắt đầu công
-                    việc</x-ui.button>
+                <x-ui.button variant="primary" icon="play_arrow" wire:click="startTask" loading="startTask">
+                    Bắt đầu công việc</x-ui.button>
             @endif
         @endif
 
         {{-- Gửi xét duyệt công việc --}}
         @if ($canSubmitApproval && !$isCompletedLocked)
-            <x-ui.button variant="primary" icon="send" wire:click="submitForApproval" loading="submitForApproval">Gửi
-                duyệt</x-ui.button>
+            <div class="group relative inline-flex flex-col">
+                <x-ui.button variant="primary" icon="send" wire:click="submitForApproval" loading="submitForApproval"
+                    :disabled="$progress < 90">
+                    Gửi duyệt</x-ui.button>
+                @if ($progress < 90)
+                    <div
+                        class="absolute bottom-full left-0 mb-2 hidden w-48 rounded-lg bg-slate-900 px-2 py-1 text-xs text-white group-hover:block z-50">
+                        Tiến độ công việc phải đạt ít nhất 90% để gửi duyệt.
+                        <div
+                            class="absolute top-full left-4 h-0 w-0 border-8 border-transparent border-t-slate-900">
+                        </div>
+                    </div>
+                @endif
+            </div>
         @endif
 
         @if ($showApprovalActions)
@@ -64,7 +78,7 @@
     <div class="flex items-center gap-3">
 
         <x-ui.button variant="secondary" wire:click="$set('showFormModal', false)">Hủy</x-ui.button>
-        @if (!$isCompletedLocked)
+        @if (!$isCompletedLocked && !auth()->user()->hasRole('ceo'))
             <x-ui.button wire:click="save" variant="primary" icon="save" loading="save">
                 {{ !empty($editing_task_id) ? 'Cập nhật' : 'Thêm mới' }}
             </x-ui.button>

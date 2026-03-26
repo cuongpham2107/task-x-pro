@@ -1,7 +1,7 @@
 <?php
 
-use App\Enums\TaskStatus;
 use App\Enums\ApprovalAction;
+use App\Enums\TaskStatus;
 use App\Models\Task;
 use App\Models\User;
 use App\Services\Tasks\TaskQueryService;
@@ -10,7 +10,8 @@ use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\On;
 use Livewire\Component;
 
-new class extends Component {
+new class extends Component
+{
     public int $projectId;
 
     public int $phaseId;
@@ -67,8 +68,8 @@ new class extends Component {
 
         $this->columns = collect(TaskStatus::cases())
             ->mapWithKeys(
-                fn($status) => [
-                    $status->value => $tasks->filter(fn($t) => $t->status === $status->value || ($t->status instanceof TaskStatus && $t->status->value === $status->value))->values(),
+                fn ($status) => [
+                    $status->value => $tasks->filter(fn ($t) => $t->status === $status->value || ($t->status instanceof TaskStatus && $t->status->value === $status->value))->values(),
                 ],
             )
             ->all();
@@ -102,8 +103,9 @@ new class extends Component {
 
                 return;
             }
-            if ($task->progress <= 90) {
+            if ($task->progress < 90 && $newStatus === TaskStatus::WaitingApproval->value) {
                 $this->dispatch('toast', message: 'Tiến độ công việc phải đạt ít nhất 90% trước khi gửi duyệt.', type: 'error');
+
                 return;
             }
             $taskService->update(auth()->user(), $task, [
@@ -118,7 +120,7 @@ new class extends Component {
             $this->dispatch('toast', message: (string) ($firstError ?? $e->getMessage()), type: 'error');
             $this->loadTasks();
         } catch (\Exception $e) {
-            $this->dispatch('toast', message: 'Lỗi: ' . $e->getMessage(), type: 'error');
+            $this->dispatch('toast', message: 'Lỗi: '.$e->getMessage(), type: 'error');
             $this->loadTasks();
         }
     }
@@ -223,7 +225,7 @@ new class extends Component {
             $this->dispatch('toast', message: (string) ($firstError ?? $e->getMessage()), type: 'error');
             $this->loadTasks();
         } catch (\Exception $e) {
-            $this->dispatch('toast', message: 'Lỗi: ' . $e->getMessage(), type: 'error');
+            $this->dispatch('toast', message: 'Lỗi: '.$e->getMessage(), type: 'error');
             $this->loadTasks();
         }
     }
@@ -255,7 +257,7 @@ new class extends Component {
             $firstError = collect($e->errors())->flatten()->first();
             $this->addError('pendingRejectComment', (string) ($firstError ?? $e->getMessage()));
         } catch (\Exception $e) {
-            $this->addError('pendingRejectComment', 'Lỗi: ' . $e->getMessage());
+            $this->addError('pendingRejectComment', 'Lỗi: '.$e->getMessage());
         }
     }
 
@@ -327,7 +329,7 @@ new class extends Component {
         } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
             $this->dispatch('toast', message: 'Lỗi: Chỉ có người được giao hoặc người hỗ trợ mới có thể bắt đầu công việc', type: 'error');
         } catch (\Exception $e) {
-            $this->dispatch('toast', message: 'Lỗi: ' . $e->getMessage(), type: 'error');
+            $this->dispatch('toast', message: 'Lỗi: '.$e->getMessage(), type: 'error');
         }
     }
 };
@@ -422,14 +424,22 @@ new class extends Component {
                                 @endif
                             </div>
                             <div class="flex items-center gap-1.5">
-                                @if (
-                                    ($status === TaskStatus::Pending &&
+                                @php
+                                    $actor = auth()->user();
+                                    $isAssignee =
+                                        $actor &&
+                                        ($actor->id === $task->pic_id ||
+                                            $task->coPics->pluck('id')->contains($actor->id));
+                                    $canStart =
+                                        $status === TaskStatus::Pending &&
                                         !$hasDependencyBlock &&
-                                        !auth()->user()?->hasRole('leader') &&
-                                        !auth()->user()?->hasRole('ceo')) ||
-                                        auth()->user()?->hasRole('super_admin'))
+                                        ($actor?->hasRole('super_admin') ||
+                                            ($isAssignee && !$actor?->hasRole('leader') && !$actor?->hasRole('ceo')));
+                                @endphp
+
+                                @if ($canStart)
                                     <button wire:click.stop="startTask({{ $task->id }})"
-                                        class="text-primary hover:bg-primary/10 flex size-6 items-center justify-center rounded-full transition-all"
+                                        class="hover:bg-primary/10 flex size-6 items-center justify-center rounded-full text-primary transition-all"
                                         title="Bắt đầu ngay">
                                         <span class="material-symbols-outlined text-[18px]">play_arrow</span>
                                     </button>
