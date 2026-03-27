@@ -33,8 +33,9 @@ class KpiExport implements FromView, ShouldAutoSize, WithStyles
     {
         return [
             1 => ['font' => ['bold' => true, 'size' => 16]],
-            2 => ['font' => ['italic' => true, 'size' => 12]],
-            4 => ['font' => ['bold' => true]],
+            2 => ['font' => ['italic' => true, 'size' => 11]],
+            3 => ['font' => ['size' => 10, 'color' => ['rgb' => '334155']]],
+            5 => ['font' => ['bold' => true]],
         ];
     }
 }

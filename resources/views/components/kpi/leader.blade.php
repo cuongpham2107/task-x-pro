@@ -152,6 +152,41 @@ new #[Title('KPI phòng ban')] class extends Component {
         ];
     }
 
+    public function getApprovalSummaryProperty(): array
+    {
+        $departmentId = auth()->user()?->department_id;
+        if (! $departmentId) {
+            return [
+                'total' => 0,
+                'pending' => 0,
+                'approved' => 0,
+                'rejected' => 0,
+                'approval_rate' => 0.0,
+            ];
+        }
+
+        $baseQuery = KpiScore::query()
+            ->where('period_type', $this->periodType)
+            ->where('period_year', $this->selectedYear)
+            ->where('period_value', $this->selectedValue)
+            ->whereHas('user', function ($query) use ($departmentId): void {
+                $query->where('department_id', $departmentId);
+            });
+
+        $total = (clone $baseQuery)->count();
+        $pending = (clone $baseQuery)->whereIn('status', ['pending', 'locked'])->count();
+        $approved = (clone $baseQuery)->where('status', 'approved')->count();
+        $rejected = (clone $baseQuery)->where('status', 'rejected')->count();
+
+        return [
+            'total' => $total,
+            'pending' => $pending,
+            'approved' => $approved,
+            'rejected' => $rejected,
+            'approval_rate' => $total > 0 ? round(($approved / $total) * 100, 1) : 0.0,
+        ];
+    }
+
     public function getWarningsProperty(): array
     {
         $departmentId = auth()->user()?->department_id;
@@ -336,7 +371,13 @@ new #[Title('KPI phòng ban')] class extends Component {
 
         $this->dispatch('toast', message: 'Bắt đầu xuất file ' . strtoupper($format), type: 'info');
 
-        return Excel::download(new KpiExport($scores, $title, $periodLabel, 'leader'), $filename, $writer);
+        $meta = [
+            'generated_at' => now()->format('d/m/Y H:i'),
+            'generated_by' => auth()->user()?->name ?? 'Hệ thống',
+            'formula' => 'Điểm = (% đúng hạn x 0.4) + (% SLA đạt x 0.4) + (sao x 0.2)',
+        ];
+
+        return Excel::download(new KpiExport($scores, $title, $periodLabel, 'leader', $meta), $filename, $writer);
     }
 
     public function periodLabel(string $periodType, int $year, int $value): string
@@ -424,7 +465,39 @@ new #[Title('KPI phòng ban')] class extends Component {
     @php
         $warnings = $this->warnings;
         $summary = $this->summary;
+        $approvalSummary = $this->approvalSummary;
     @endphp
+
+    <div class="animate-enter mb-6 rounded-xl border border-sky-100 bg-sky-50/70 p-4 dark:border-sky-900/40 dark:bg-sky-900/10"
+        style="animation-delay: 0.15s">
+        <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <h3 class="text-sm font-bold text-sky-900 dark:text-sky-300">Mục tiêu phê duyệt KPI của Leader</h3>
+            <span class="rounded-full bg-white px-3 py-1 text-xs font-semibold text-sky-700 dark:bg-slate-900 dark:text-sky-300">
+                Tỷ lệ duyệt: {{ number_format((float) $approvalSummary['approval_rate'], 1) }}%
+            </span>
+        </div>
+        <p class="mb-3 text-xs text-slate-600 dark:text-slate-300">
+            Phê duyệt KPI là bước xác nhận dữ liệu task hoàn thành của nhân sự đã phản ánh đúng deadline, SLA và chất lượng đầu ra trước khi chốt báo cáo tháng.
+        </p>
+        <div class="grid grid-cols-2 gap-3 md:grid-cols-4">
+            <div class="rounded-lg bg-white p-3 shadow-sm dark:bg-slate-900/80">
+                <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Tổng bản ghi</p>
+                <p class="mt-1 text-2xl font-black text-slate-900 dark:text-white">{{ $approvalSummary['total'] }}</p>
+            </div>
+            <div class="rounded-lg bg-white p-3 shadow-sm dark:bg-slate-900/80">
+                <p class="text-[11px] font-semibold uppercase tracking-wide text-amber-600">Chờ duyệt</p>
+                <p class="mt-1 text-2xl font-black text-amber-600">{{ $approvalSummary['pending'] }}</p>
+            </div>
+            <div class="rounded-lg bg-white p-3 shadow-sm dark:bg-slate-900/80">
+                <p class="text-[11px] font-semibold uppercase tracking-wide text-emerald-600">Đã duyệt</p>
+                <p class="mt-1 text-2xl font-black text-emerald-600">{{ $approvalSummary['approved'] }}</p>
+            </div>
+            <div class="rounded-lg bg-white p-3 shadow-sm dark:bg-slate-900/80">
+                <p class="text-[11px] font-semibold uppercase tracking-wide text-rose-600">Từ chối</p>
+                <p class="mt-1 text-2xl font-black text-rose-600">{{ $approvalSummary['rejected'] }}</p>
+            </div>
+        </div>
+    </div>
 
     <!-- Warning Cards for low performance -->
     <div class="animate-enter mb-8 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3" style="animation-delay: 0.2s">

@@ -3,6 +3,7 @@ use App\Enums\KpiPeriodType;
 use App\Exports\KpiExport;
 use App\Models\KpiScore;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -71,12 +72,19 @@ new class extends Component {
 
         $title = 'Báo cáo KPI Cá nhân';
         $periodLabel = 'Lịch sử ' . $this->historyYear;
-        $filename = 'kpi-ca-nhan-' . auth()->user()->name . '-' . $this->historyYear . '.' . ($format === 'pdf' ? 'pdf' : 'xlsx');
+        $ownerSlug = Str::slug((string) (auth()->user()?->name ?? 'nhan-su'));
+        $filename = 'kpi-ca-nhan-' . $ownerSlug . '-' . $this->historyYear . '.' . ($format === 'pdf' ? 'pdf' : 'xlsx');
         $writer = $format === 'pdf' ? \Maatwebsite\Excel\Excel::DOMPDF : \Maatwebsite\Excel\Excel::XLSX;
 
         $this->dispatch('toast', message: 'Bắt đầu xuất file ' . strtoupper($format), type: 'info');
 
-        return Excel::download(new KpiExport($scores, $title, $periodLabel, 'pic'), $filename, $writer);
+        $meta = [
+            'generated_at' => now()->format('d/m/Y H:i'),
+            'generated_by' => auth()->user()?->name ?? 'Hệ thống',
+            'formula' => 'Điểm = (% đúng hạn x 0.4) + (% SLA đạt x 0.4) + (sao x 0.2)',
+        ];
+
+        return Excel::download(new KpiExport($scores, $title, $periodLabel, 'pic', $meta), $filename, $writer);
     }
 
     public function getTeamAverageProperty(): float
@@ -203,30 +211,32 @@ new class extends Component {
             $slaWeighted = round($slaRate * 0.4, 2);
             $starWeighted = round($starScore * 0.2, 2);
             $gradeLabel =
-                $finalScore >= 80 ? 'A - Xuất sắc' : ($finalScore >= 60 ? 'B - Đạt yêu cầu' : 'C - Cần cải thiện');
+                $finalScore >= 80 ? 'A - Xuất sắc' : ($finalScore >= 70 ? 'B - Đạt yêu cầu' : 'C - Cần cải thiện');
             $gradeClass =
                 $finalScore >= 80
                     ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                    : ($finalScore >= 60
+                    : ($finalScore >= 70
                         ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
                         : 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400');
             $status = $score?->status ?? 'pending';
-            $statusLabel =
-                $status === 'approved'
-                    ? 'Đã duyệt'
-                    : ($status === 'rejected'
-                        ? 'Từ chối'
-                        : ($status === 'locked'
-                            ? 'Đã khóa'
-                            : 'Chờ duyệt'));
-            $statusClass =
-                $status === 'approved'
-                    ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                    : ($status === 'rejected'
-                        ? 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400'
-                        : ($status === 'locked'
-                            ? 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200'
-                            : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'));
+            $statusLabel = match ($status) {
+                'approved' => 'Đã duyệt',
+                'rejected' => 'Từ chối',
+                'locked' => 'Đã chốt',
+                default => 'Chờ duyệt',
+            };
+            $statusHint = match ($status) {
+                'approved' => 'Leader đã phê duyệt điểm KPI kỳ này.',
+                'rejected' => 'Điểm KPI đã bị từ chối, cần xem lại.',
+                'locked' => 'Điểm đã chốt, chờ phê duyệt cuối kỳ.',
+                default => 'Điểm đang được tính tự động, chưa được Leader xác nhận.',
+            };
+            $statusClass = match ($status) {
+                'approved' => 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
+                'rejected' => 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400',
+                'locked' => 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200',
+                default => 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
+            };
             $teamAvg = $this->teamAverage;
             $delta = $teamAvg > 0 ? round((($finalScore - $teamAvg) / $teamAvg) * 100, 1) : 0;
             $deltaLabel = $delta >= 0 ? '+' . $delta . '%' : $delta . '%';
@@ -241,7 +251,21 @@ new class extends Component {
                         : ($slaRate < 70
                             ? 'Chỉ số SLA đang thấp, cần cải thiện tốc độ xử lý.'
                             : 'Các chỉ số ổn định, tiếp tục duy trì hiệu suất.'));
+            $nextAction = match ($status) {
+                'approved' => 'KPI đã được Leader xác nhận. Bạn chỉ cần duy trì hiệu suất cho kỳ tiếp theo.',
+                'rejected' => 'KPI bị từ chối. Hãy rà soát lại task trễ hạn/SLA chưa đạt để cải thiện.',
+                'locked' => 'KPI đã chốt dữ liệu, đang chờ Leader duyệt cuối cùng.',
+                default => 'Hệ thống đang tổng hợp tự động. Bạn cần hoàn thành task đúng hạn để điểm KPI tăng.',
+            };
         @endphp
+        <div class="animate-enter rounded-xl border border-sky-100 bg-sky-50/70 p-4 dark:border-sky-900/40 dark:bg-sky-900/10"
+            style="animation-delay: 0.18s">
+            <h3 class="mb-2 text-sm font-bold text-sky-900 dark:text-sky-300">Vì sao cần Leader phê duyệt KPI?</h3>
+            <p class="text-xs text-slate-600 dark:text-slate-300">
+                Leader xác nhận dữ liệu KPI đã phản ánh đúng thực tế công việc (deadline, SLA, chất lượng) trước khi dùng cho báo cáo và đánh giá hiệu suất.
+            </p>
+            <p class="mt-2 text-xs font-semibold text-sky-700 dark:text-sky-300">Trạng thái hiện tại: {{ $nextAction }}</p>
+        </div>
         <!-- Score Cards Grid -->
         <div class="animate-enter grid grid-cols-1 gap-6 md:grid-cols-3" style="animation-delay: 0.2s">
             <!-- Main Score Card -->
@@ -262,6 +286,7 @@ new class extends Component {
                             <span class="{{ $statusClass }} rounded-full px-3 py-1.5 text-xs font-bold uppercase">
                                 {{ $statusLabel }}
                             </span>
+                            <span class="text-right text-[10px] italic text-slate-400">{{ $statusHint }}</span>
                             @if ($score?->approved_at)
                                 <span class="text-[10px] text-slate-400">
                                     Duyệt: {{ $score->approved_at->format('d/m/Y') }}
@@ -373,28 +398,51 @@ new class extends Component {
                 <h3 class="mb-6 self-start text-lg font-bold text-slate-900 dark:text-white">Biểu đồ chỉ số năng lực
                 </h3>
                 <div class="relative flex size-64 items-center justify-center">
-                    <div class="border-16 absolute inset-0 rounded-full border-slate-100 dark:border-slate-700">
-                    </div>
-                    <!-- Abstract radar/chart representation using SVG -->
-                    <svg class="size-full overflow-visible" viewbox="0 0 100 100">
-                        <circle class="text-slate-200 dark:text-slate-700" cx="50" cy="50"
-                            fill="none" r="40" stroke="currentColor" stroke-width="0.5"></circle>
-                        <circle class="text-slate-200 dark:text-slate-700" cx="50" cy="50"
-                            fill="none" r="30" stroke="currentColor" stroke-width="0.5"></circle>
-                        <circle class="text-slate-200 dark:text-slate-700" cx="50" cy="50"
-                            fill="none" r="20" stroke="currentColor" stroke-width="0.5"></circle>
-                        <circle class="text-slate-200 dark:text-slate-700" cx="50" cy="50"
-                            fill="none" r="10" stroke="currentColor" stroke-width="0.5"></circle>
-                        <path class="text-slate-200 dark:text-slate-700" d="M50 10 L50 90 M10 50 L90 50"
-                            stroke="currentColor" stroke-width="0.5"></path>
-                        <!-- The Score Shape -->
-                        <path d="M50 15 L80 40 L65 80 L25 70 Z" fill="rgba(236, 91, 19, 0.2)" stroke="#ec5b13"
-                            stroke-width="2"></path>
-                        <!-- Points -->
-                        <circle cx="50" cy="15" fill="#ec5b13" r="3"></circle>
-                        <circle cx="80" cy="40" fill="#ec5b13" r="3"></circle>
-                        <circle cx="65" cy="80" fill="#ec5b13" r="3"></circle>
-                        <circle cx="25" cy="70" fill="#ec5b13" r="3"></circle>
+                    @php
+                        // Radar chart: 4 axes at 0°, 90°, 180°, 270° (top, right, bottom, left)
+                        // Map each metric (0–100) to a radius (0–40 in SVG units), center at 50,50
+                        $maxR = 40;
+                        $cx = 50;
+                        $cy = 50;
+                        $axes = [
+                            ['angle' => -90, 'value' => $onTimeRate], // top
+                            ['angle' => 0, 'value' => $slaRate], // right
+                            ['angle' => 90, 'value' => $starScore], // bottom
+                            ['angle' => 180, 'value' => $finalScore], // left
+                        ];
+                        $points = collect($axes)->map(function ($axis) use ($cx, $cy, $maxR) {
+                            $r = ($axis['value'] / 100) * $maxR;
+                            $rad = deg2rad($axis['angle']);
+                            return [
+                                'x' => round($cx + $r * cos($rad), 2),
+                                'y' => round($cy + $r * sin($rad), 2),
+                                'ax' => round($cx + $maxR * cos($rad), 2),
+                                'ay' => round($cy + $maxR * sin($rad), 2),
+                            ];
+                        });
+                        $polyPath = $points->map(fn($p) => $p['x'] . ' ' . $p['y'])->join(' L ');
+                        $polyPath = 'M ' . $polyPath . ' Z';
+                    @endphp
+                    <svg class="size-full overflow-visible" viewBox="0 0 100 100">
+                        {{-- Grid circles --}}
+                        @foreach ([10, 20, 30, 40] as $r)
+                            <circle cx="50" cy="50" r="{{ $r }}" fill="none"
+                                stroke="currentColor" class="text-slate-200 dark:text-slate-700"
+                                stroke-width="0.5" />
+                        @endforeach
+                        {{-- Axis lines --}}
+                        @foreach ($points as $p)
+                            <line x1="50" y1="50" x2="{{ $p['ax'] }}" y2="{{ $p['ay'] }}"
+                                stroke="currentColor" class="text-slate-200 dark:text-slate-700"
+                                stroke-width="0.5" />
+                        @endforeach
+                        {{-- Data shape --}}
+                        <path d="{{ $polyPath }}" fill="rgba(236, 91, 19, 0.2)" stroke="#ec5b13"
+                            stroke-width="2" />
+                        {{-- Data points --}}
+                        @foreach ($points as $p)
+                            <circle cx="{{ $p['x'] }}" cy="{{ $p['y'] }}" r="2.5" fill="#ec5b13" />
+                        @endforeach
                     </svg>
                 </div>
                 <div class="mt-8 grid w-full max-w-sm grid-cols-2 gap-4">

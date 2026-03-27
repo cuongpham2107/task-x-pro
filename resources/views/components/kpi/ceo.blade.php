@@ -151,6 +151,24 @@ new #[Title('KPI toàn công ty')] class extends Component {
         ];
     }
 
+    public function getApprovalOverviewProperty(): array
+    {
+        $baseQuery = $this->getBaseKpiQuery();
+
+        $total = (clone $baseQuery)->count();
+        $pending = (clone $baseQuery)->whereIn('status', ['pending', 'locked'])->count();
+        $approved = (clone $baseQuery)->where('status', 'approved')->count();
+        $rejected = (clone $baseQuery)->where('status', 'rejected')->count();
+
+        return [
+            'total' => $total,
+            'pending' => $pending,
+            'approved' => $approved,
+            'rejected' => $rejected,
+            'approval_rate' => $total > 0 ? round(($approved / $total) * 100, 1) : 0.0,
+        ];
+    }
+
     private function calcTrend($curr, $prev)
     {
         if (!$prev) {
@@ -218,16 +236,16 @@ new #[Title('KPI toàn công ty')] class extends Component {
 
     public function departmentStatusMeta(float $avgScore): array
     {
-        if ($avgScore >= 9.0) {
+        if ($avgScore >= 90) {
             return ['label' => 'Xuất sắc', 'color' => 'emerald', 'bg' => 'bg-emerald-100', 'text' => 'text-emerald-800'];
         }
-        if ($avgScore >= 8.0) {
+        if ($avgScore >= 80) {
             return ['label' => 'Giỏi', 'color' => 'blue', 'bg' => 'bg-blue-100', 'text' => 'text-blue-800'];
         }
-        if ($avgScore >= 7.0) {
+        if ($avgScore >= 70) {
             return ['label' => 'Khá', 'color' => 'cyan', 'bg' => 'bg-cyan-100', 'text' => 'text-cyan-800'];
         }
-        if ($avgScore >= 5.0) {
+        if ($avgScore >= 50) {
             return ['label' => 'Đạt', 'color' => 'amber', 'bg' => 'bg-amber-100', 'text' => 'text-amber-800'];
         }
 
@@ -255,7 +273,13 @@ new #[Title('KPI toàn công ty')] class extends Component {
 
         $this->dispatch('toast', message: 'Bắt đầu xuất file ' . strtoupper($format), type: 'info');
 
-        return Excel::download(new KpiExport($stats, $title, $periodLabel, 'ceo'), $filename, $writer);
+        $meta = [
+            'generated_at' => now()->format('d/m/Y H:i'),
+            'generated_by' => auth()->user()?->name ?? 'Hệ thống',
+            'formula' => 'Điểm = (% đúng hạn x 0.4) + (% SLA đạt x 0.4) + (sao x 0.2)',
+        ];
+
+        return Excel::download(new KpiExport($stats, $title, $periodLabel, 'ceo', $meta), $filename, $writer);
     }
 };
 ?>
@@ -323,6 +347,7 @@ new #[Title('KPI toàn công ty')] class extends Component {
     @php
         $summary = $this->summary;
         $trends = $this->trends;
+        $approvalOverview = $this->approvalOverview;
     @endphp
 
     <!-- Metric Cards -->
@@ -418,6 +443,37 @@ new #[Title('KPI toàn công ty')] class extends Component {
                 @endfor
             </div>
         </div>
+    </div>
+
+    <div class="animate-enter mb-8 rounded-xl border border-indigo-100 bg-indigo-50/70 p-4 dark:border-indigo-900/40 dark:bg-indigo-900/10"
+        style="animation-delay: 0.25s">
+        <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
+            <h3 class="text-sm font-bold text-indigo-900 dark:text-indigo-300">Tình trạng phê duyệt KPI toàn công ty</h3>
+            <span class="rounded-full bg-white px-3 py-1 text-xs font-semibold text-indigo-700 dark:bg-slate-900 dark:text-indigo-300">
+                Tỷ lệ duyệt: {{ number_format((float) $approvalOverview['approval_rate'], 1) }}%
+            </span>
+        </div>
+        <div class="grid grid-cols-2 gap-3 md:grid-cols-4">
+            <div class="rounded-lg bg-white p-3 shadow-sm dark:bg-slate-900/80">
+                <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Tổng bản ghi</p>
+                <p class="mt-1 text-2xl font-black text-slate-900 dark:text-white">{{ $approvalOverview['total'] }}</p>
+            </div>
+            <div class="rounded-lg bg-white p-3 shadow-sm dark:bg-slate-900/80">
+                <p class="text-[11px] font-semibold uppercase tracking-wide text-amber-600">Chờ duyệt</p>
+                <p class="mt-1 text-2xl font-black text-amber-600">{{ $approvalOverview['pending'] }}</p>
+            </div>
+            <div class="rounded-lg bg-white p-3 shadow-sm dark:bg-slate-900/80">
+                <p class="text-[11px] font-semibold uppercase tracking-wide text-emerald-600">Đã duyệt</p>
+                <p class="mt-1 text-2xl font-black text-emerald-600">{{ $approvalOverview['approved'] }}</p>
+            </div>
+            <div class="rounded-lg bg-white p-3 shadow-sm dark:bg-slate-900/80">
+                <p class="text-[11px] font-semibold uppercase tracking-wide text-rose-600">Từ chối</p>
+                <p class="mt-1 text-2xl font-black text-rose-600">{{ $approvalOverview['rejected'] }}</p>
+            </div>
+        </div>
+        <p class="mt-3 text-xs text-slate-600 dark:text-slate-300">
+            KPI đã duyệt là dữ liệu đã được Leader xác nhận để dùng trong đánh giá hiệu suất và báo cáo quản trị.
+        </p>
     </div>
 
     <div class="animate-enter grid grid-cols-1 gap-8 lg:grid-cols-3" style="animation-delay: 0.3s">
