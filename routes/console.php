@@ -48,7 +48,7 @@ Artisan::command('tasks:daily-reminders', function (): void {
             continue;
         }
 
-        $daysLeft = (int) $now->startOfDay()->diffInDays($task->deadline, false);
+        $daysLeft = (int) $now->copy()->startOfDay()->diffInDays($task->deadline, false);
         try {
             Notification::send($pic, new TaskDeadlineReminderNotification($task, $daysLeft));
             $deadlineNotifications++;
@@ -59,6 +59,7 @@ Artisan::command('tasks:daily-reminders', function (): void {
 
     $pendingTasks = Task::query()
         ->where('status', TaskStatus::WaitingApproval->value)
+        ->where('updated_at', '<=', $now->copy()->subHours(24))
         ->with([
             'pic:id,name',
             'phase.project.leaders:id,name,telegram_id',
@@ -207,5 +208,12 @@ Artisan::command('kpi:daily-sync', function (): void {
 Schedule::command('tasks:mark-late')->everyFiveMinutes();
 Schedule::command('tasks:daily-reminders')->daily()->at('07:00');
 Schedule::command('reports:weekly')->weekly()->fridays()->at('17:00');
-Schedule::command('kpi:daily-sync')->daily()->at('01:00');
-Schedule::command('kpi:monthly-sync')->lastDayOfMonth('23:59');
+Schedule::command('kpi:daily-sync')
+    ->daily()
+    ->at('01:00')
+    ->withoutOverlapping()
+    ->onOneServer();
+Schedule::command('kpi:monthly-sync')
+    ->lastDayOfMonth('23:59')
+    ->withoutOverlapping()
+    ->onOneServer();

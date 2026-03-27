@@ -54,6 +54,18 @@ it('sends daily reminders for deadlines, pending approvals, and overdue overload
     $pendingTask->refresh();
     expect($pendingTask->status->value ?? $pendingTask->status)->toBe(TaskStatus::WaitingApproval->value);
 
+    $recentPendingTask = Task::factory()->create([
+        'phase_id' => $phase->id,
+        'pic_id' => $pic->id,
+        'status' => TaskStatus::WaitingApproval,
+        'deadline' => now()->addDays(1),
+    ]);
+    Task::query()
+        ->whereKey($recentPendingTask->id)
+        ->update(['updated_at' => now()->subHours(3)]);
+    $recentPendingTask->refresh();
+    expect($recentPendingTask->status->value ?? $recentPendingTask->status)->toBe(TaskStatus::WaitingApproval->value);
+
     Task::factory()->count(4)->create([
         'phase_id' => $phase->id,
         'pic_id' => $pic->id,
@@ -105,6 +117,12 @@ it('sends daily reminders for deadlines, pending approvals, and overdue overload
     Notification::assertSentTo($pic, TaskDeadlineReminderNotification::class);
     Notification::assertSentTo($pic, PicOverdueTasksNotification::class);
     Notification::assertSentTo($leader, TaskApprovalPendingReminderNotification::class);
+    Notification::assertSentToTimes($leader, TaskApprovalPendingReminderNotification::class, 1);
+    Notification::assertNotSentTo(
+        $leader,
+        TaskApprovalPendingReminderNotification::class,
+        fn (TaskApprovalPendingReminderNotification $notification): bool => $notification->task->id === $recentPendingTask->id
+    );
 
     Carbon::setTestNow();
 });

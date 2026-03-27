@@ -4,7 +4,9 @@ use App\Enums\KpiPeriodType;
 use App\Exports\KpiExport;
 use App\Models\KpiScore;
 use App\Models\User;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\ValidationException;
 use Maatwebsite\Excel\Facades\Excel;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -181,26 +183,129 @@ new #[Title('KPI phòng ban')] class extends Component {
         ];
     }
 
-    public function lockScore(int $scoreId): void
+    public function canManageScore(KpiScore $score): bool
     {
-        if (!auth()->user()?->can('kpi.manage')) {
-            return;
+        $actor = auth()->user();
+        if ($actor === null) {
+            return false;
         }
 
-        KpiScore::query()
-            ->where('id', $scoreId)
-            ->update(['status' => 'locked']);
+        if ($actor->can('kpi.manage')) {
+            return true;
+        }
+
+        if (! $actor->hasRole('leader') || ! $actor->can('kpi.view')) {
+            return false;
+        }
+
+        $actorDepartmentId = (int) ($actor->department_id ?? 0);
+        $scoreDepartmentId = (int) ($score->user?->department_id ?? 0);
+
+        if ($actorDepartmentId <= 0 || $scoreDepartmentId <= 0) {
+            return false;
+        }
+
+        return $actorDepartmentId === $scoreDepartmentId;
+    }
+
+    public function canReviewScore(KpiScore $score): bool
+    {
+        return $this->canManageScore($score)
+            && in_array((string) $score->status, ['pending', 'locked'], true);
+    }
+
+    public function canToggleLock(KpiScore $score): bool
+    {
+        $actor = auth()->user();
+
+        return $actor !== null
+            && $actor->can('kpi.manage')
+            && $this->canManageScore($score);
+    }
+
+    public function approveScore(int $scoreId): void
+    {
+        $score = $this->findScoreForAction($scoreId);
+
+        if (! in_array((string) $score->status, ['pending', 'locked'], true)) {
+            throw ValidationException::withMessages([
+                'status' => 'Chỉ KPI đang chờ duyệt hoặc đã chốt mới được phê duyệt.',
+            ]);
+        }
+
+        $score->forceFill([
+            'status' => 'approved',
+            'approved_at' => now(),
+        ])->save();
+    }
+
+    public function rejectScore(int $scoreId): void
+    {
+        $score = $this->findScoreForAction($scoreId);
+
+        if (! in_array((string) $score->status, ['pending', 'locked'], true)) {
+            throw ValidationException::withMessages([
+                'status' => 'Chỉ KPI đang chờ duyệt hoặc đã chốt mới được từ chối.',
+            ]);
+        }
+
+        $score->forceFill([
+            'status' => 'rejected',
+            'approved_at' => null,
+        ])->save();
+    }
+
+    public function lockScore(int $scoreId): void
+    {
+        if (! auth()->user()?->can('kpi.manage')) {
+            throw new AuthorizationException('Bạn không có quyền chốt KPI.');
+        }
+
+        $score = $this->findScoreForAction($scoreId);
+
+        if ((string) $score->status === 'approved') {
+            throw ValidationException::withMessages([
+                'status' => 'Không thể chốt KPI đã phê duyệt.',
+            ]);
+        }
+
+        $score->forceFill([
+            'status' => 'locked',
+            'approved_at' => null,
+        ])->save();
     }
 
     public function unlockScore(int $scoreId): void
     {
-        if (!auth()->user()?->can('kpi.manage')) {
-            return;
+        if (! auth()->user()?->can('kpi.manage')) {
+            throw new AuthorizationException('Bạn không có quyền mở khóa KPI.');
         }
 
-        KpiScore::query()
-            ->where('id', $scoreId)
-            ->update(['status' => 'pending']);
+        $score = $this->findScoreForAction($scoreId);
+
+        if ((string) $score->status !== 'locked') {
+            throw ValidationException::withMessages([
+                'status' => 'Chỉ KPI đã chốt mới được mở khóa.',
+            ]);
+        }
+
+        $score->forceFill([
+            'status' => 'pending',
+            'approved_at' => null,
+        ])->save();
+    }
+
+    private function findScoreForAction(int $scoreId): KpiScore
+    {
+        $score = KpiScore::query()
+            ->with('user:id,department_id')
+            ->findOrFail($scoreId);
+
+        if (! $this->canManageScore($score)) {
+            throw new AuthorizationException('Bạn không có quyền thao tác KPI này.');
+        }
+
+        return $score;
     }
 
     public function exportExcel(?string $format = 'xlsx'): mixed
@@ -481,31 +586,50 @@ new #[Title('KPI phòng ban')] class extends Component {
                                 </div>
                             </td>
                             <td class="px-4 py-5 text-center">
-                                @if ($score->status === 'locked')
-                                    <span
-                                        class="inline-flex items-center rounded-md bg-amber-50 px-2 py-1 text-xs font-medium text-amber-700 ring-1 ring-inset ring-amber-600/20">Đã
-                                        chốt</span>
-                                @else
-                                    <span
-                                        class="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10">Chờ
-                                        duyệt</span>
-                                @endif
+                                @php
+                                    $statusBadge = match($score->status) {
+                                        'approved' => ['label' => 'Đã duyệt', 'class' => 'bg-emerald-50 text-emerald-700 ring-emerald-600/20'],
+                                        'rejected' => ['label' => 'Từ chối', 'class' => 'bg-red-50 text-red-700 ring-red-600/20'],
+                                        'locked'   => ['label' => 'Đã chốt', 'class' => 'bg-amber-50 text-amber-700 ring-amber-600/20'],
+                                        default    => ['label' => 'Chờ duyệt', 'class' => 'bg-blue-50 text-blue-700 ring-blue-700/10'],
+                                    };
+                                @endphp
+                                <span class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset {{ $statusBadge['class'] }}">
+                                    {{ $statusBadge['label'] }}
+                                </span>
                             </td>
                             <td class="px-4 py-5 text-right">
-                                @can('kpi.manage')
-                                    @if ($score->status === 'locked')
-                                        <button wire:click="unlockScore({{ $score->id }})"
-                                            class="text-slate-400 transition-colors hover:text-amber-600" title="Mở khóa">
-                                            <span class="material-symbols-outlined">lock_open</span>
-                                        </button>
-                                    @else
-                                        <button wire:click="lockScore({{ $score->id }})"
-                                            class="text-slate-400 transition-colors hover:text-emerald-600"
-                                            title="Chốt KPI">
-                                            <span class="material-symbols-outlined">lock</span>
-                                        </button>
-                                    @endif
-                                @endcan
+                                @if ($this->canManageScore($score))
+                                    <div class="flex items-center justify-end gap-2">
+                                        @if ($this->canReviewScore($score))
+                                            <button wire:click="approveScore({{ $score->id }})"
+                                                class="text-slate-400 transition-colors hover:text-emerald-600"
+                                                title="Phê duyệt KPI">
+                                                <span class="material-symbols-outlined">check_circle</span>
+                                            </button>
+                                            <button wire:click="rejectScore({{ $score->id }})"
+                                                class="text-slate-400 transition-colors hover:text-rose-600"
+                                                title="Từ chối KPI">
+                                                <span class="material-symbols-outlined">cancel</span>
+                                            </button>
+                                        @endif
+
+                                        @if ($this->canToggleLock($score))
+                                            @if ($score->status === 'locked')
+                                                <button wire:click="unlockScore({{ $score->id }})"
+                                                    class="text-slate-400 transition-colors hover:text-amber-600" title="Mở khóa">
+                                                    <span class="material-symbols-outlined">lock_open</span>
+                                                </button>
+                                            @else
+                                                <button wire:click="lockScore({{ $score->id }})"
+                                                    class="text-slate-400 transition-colors hover:text-emerald-600"
+                                                    title="Chốt KPI">
+                                                    <span class="material-symbols-outlined">lock</span>
+                                                </button>
+                                            @endif
+                                        @endif
+                                    </div>
+                                @endif
                             </td>
                         </tr>
                     @empty
