@@ -1,4 +1,5 @@
 <?php
+use App\Models\ActivityLog;
 use App\Models\Task;
 use App\Enums\TaskStatus;
 use App\Enums\TaskPriority;
@@ -14,7 +15,7 @@ new class extends Component {
     public function mount(array $data): void
     {
         $this->data = $data;
-        $this->activityLogs = \App\Models\ActivityLog::with('user')->latest()->limit(5)->get();
+        $this->activityLogs = ActivityLog::with('user')->latest()->limit(5)->get();
 
         // Tính toán số task hoàn thành và tạo mới trong 7 ngày qua
         $this->weeklyStats = collect(range(6, 0))
@@ -23,8 +24,8 @@ new class extends Component {
 
                 return [
                     'label' => $date->isoFormat('dd'),
-                    'completed' => \App\Models\Task::whereDate('updated_at', $date)->where('status', \App\Enums\TaskStatus::Completed->value)->count(),
-                    'created' => \App\Models\Task::whereDate('created_at', $date)->count(),
+                    'completed' => Task::whereDate('updated_at', $date)->where('status', \App\Enums\TaskStatus::Completed->value)->count(),
+                    'created' => Task::whereDate('created_at', $date)->count(),
                 ];
             })
             ->all();
@@ -240,7 +241,7 @@ new class extends Component {
                         <div class="flex items-center gap-2">
                             <span
                                 class="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-bold text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
-                                {{ count($data['approval_tasks'] ?? []) }} tasks
+                                {{ count($data['approval_tasks'] ?? []) }} công việc
                             </span>
                         </div>
                     </div>
@@ -262,10 +263,9 @@ new class extends Component {
                             <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
                                 @forelse($data['approval_tasks'] as $task)
                                     @php
-                                        $priorityEnum =
-                                            $task->priority instanceof App\Enums\TaskPriority
-                                                ? $task->priority
-                                                : \App\Enums\TaskPriority::tryFrom($task->priority ?? '');
+                                        $priorityEnum = \App\Enums\TaskPriority::tryFrom(
+                                            $task->priority->value ?? ($task->priority ?? ''),
+                                        );
                                         $priorityColor = match ($priorityEnum?->value ?? '') {
                                             'urgent' => 'red',
                                             'high' => 'orange',
@@ -343,10 +343,10 @@ new class extends Component {
                                         </td>
                                         <td class="px-6 py-4">
                                             @php
-                                                $statusEnum =
-                                                    $task->status instanceof TaskStatus
-                                                        ? $task->status
-                                                        : TaskStatus::tryFrom($task->status ?? '');
+                                                $statusValue = $task->status instanceof \BackedEnum 
+                                                    ? $task->status->value 
+                                                    : ($task->status->value ?? ($task->status ?? ''));
+                                                $statusEnum = \App\Enums\TaskStatus::tryFrom($statusValue);
                                             @endphp
                                             <span
                                                 class="{{ $statusEnum?->badgeClass() ?? 'bg-slate-100 text-slate-600' }} rounded px-2 py-0.5 text-[10px] font-bold uppercase">

@@ -1,27 +1,34 @@
 @php
+    $user = auth()->user();
     $isCompletedLocked = $this->isCompletedLocked;
     $editingTask = $editing_task_id ? \App\Models\Task::find($editing_task_id) : null;
+
+    $isCeo = $user->hasRole('ceo');
+    $isLeader = $isResponsibleLeader;
+    $isPicUser = (int) $pic_id === $user->id;
+
+    // Leader can save in create mode or when editing a non-completed task
     $canPersistTask = false;
     if ($mode === 'create') {
-        $canPersistTask = auth()->user()?->can('create', \App\Models\Task::class) ?? false;
+        $canPersistTask = $isLeader && !$isCeo && $user->can('create', \App\Models\Task::class);
     } elseif ($editingTask !== null) {
-        $canPersistTask = auth()->user()?->can('update', $editingTask) ?? false;
+        // Leader can always save; PIC can save if they have permission (Participant/PIC)
+        $canPersistTask =
+            !$isCeo &&
+            (($isLeader && $user->can('update', $editingTask)) || ($isPicUser && $user->can('update', $editingTask)));
     }
-    $canApprove = false;
 
+    $canApprove = false;
     if ($mode === 'edit' && $original_status === 'waiting_approval') {
-        $user = auth()->user();
         if ($user && $editingTask && $user->can('approve', $editingTask)) {
             if ($user->hasRole('super_admin')) {
                 $canApprove = true;
             } elseif ($workflow_type === 'single') {
                 $canApprove = !$this->hasLeaderApproved;
             } elseif ($workflow_type === 'double') {
-                if ($user->hasRole('ceo')) {
-                    // CEO chỉ duyệt sau khi Leader đã duyệt và CEO chưa duyệt
+                if ($isCeo) {
                     $canApprove = $this->hasLeaderApproved && !$this->hasCeoApproved;
-                } elseif ($user->hasRole('leader')) {
-                    // Leader chỉ duyệt khi chưa duyệt (trước CEO)
+                } elseif ($isLeader) {
                     $canApprove = !$this->hasLeaderApproved;
                 }
             }
@@ -32,13 +39,9 @@
 
     $canSubmitApproval = false;
     if ($mode === 'edit' && ($original_status === 'in_progress' || $original_status === 'late')) {
-        $user = auth()->user();
-        if ($user) {
-            $isPic = (int) $pic_id === $user->id;
-
-            if ($isPic || $user->hasRole('super_admin')) {
-                $canSubmitApproval = true;
-            }
+        // Only PIC can submit for approval (not leaders who are not the PIC)
+        if ($isPicUser || $user->hasRole('super_admin')) {
+            $canSubmitApproval = true;
         }
     }
 @endphp
@@ -48,9 +51,7 @@
             @php
                 $startUser = auth()->user();
                 $isAssignee = $startUser && (int) $pic_id === $startUser->id;
-                $canStartTask =
-                    $startUser &&
-                    ($startUser->hasRole('super_admin') || $isAssignee);
+                $canStartTask = $startUser && ($startUser->hasRole('super_admin') || $isAssignee);
             @endphp
             @if ($canStartTask)
                 <x-ui.button variant="primary" icon="play_arrow" wire:click="startTask" loading="startTask">
@@ -66,10 +67,9 @@
                     Gửi duyệt</x-ui.button>
                 @if ($progress < 90)
                     <div
-                        class="absolute bottom-full left-0 mb-2 hidden w-48 rounded-lg bg-slate-900 px-2 py-1 text-xs text-white group-hover:block z-50">
+                        class="absolute bottom-full left-0 z-50 mb-2 hidden w-48 rounded-lg bg-slate-900 px-2 py-1 text-xs text-white group-hover:block">
                         Tiến độ công việc phải đạt ít nhất 90% để gửi duyệt.
-                        <div
-                            class="absolute top-full left-4 h-0 w-0 border-8 border-transparent border-t-slate-900">
+                        <div class="absolute left-4 top-full h-0 w-0 border-8 border-transparent border-t-slate-900">
                         </div>
                     </div>
                 @endif
@@ -85,7 +85,7 @@
     <div class="flex items-center gap-3">
 
         <x-ui.button variant="secondary" wire:click="$set('showFormModal', false)">Hủy</x-ui.button>
-        @if (!$isCompletedLocked && !auth()->user()->hasRole('ceo') && $canPersistTask)
+        @if (!$isCompletedLocked && $canPersistTask)
             <x-ui.button wire:click="save" variant="primary" icon="save" loading="save">
                 {{ !empty($editing_task_id) ? 'Cập nhật' : 'Thêm mới' }}
             </x-ui.button>

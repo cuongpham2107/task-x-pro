@@ -1,37 +1,50 @@
 <?php
 use App\Enums\TaskPriority;
 use App\Enums\TaskStatus;
+use App\Enums\TaskType;
 use App\Models\Task;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Livewire\Component;
+use Livewire\WithPagination;
 
-new class extends Component {
+new class extends Component
+{
+    use WithPagination;
+
     public array $data = [];
 
     public string $filter = 'all';
+
+    public int $perPage = 5;
+
+    public array $calendar = [];
 
     public $currentMonth;
 
     public $selectedDate;
 
-    public function mount(array $data)
+    public function mount(array $data): void
     {
         $this->data = $data;
         $this->currentMonth = now()->startOfMonth()->format('Y-m-d');
         $this->selectedDate = now()->format('Y-m-d');
+        $this->loadCalendar();
     }
 
-    public function prevMonth()
+    public function prevMonth(): void
     {
         $this->currentMonth = Carbon::parse($this->currentMonth)->subMonth()->startOfMonth()->format('Y-m-d');
+        $this->loadCalendar();
     }
 
-    public function nextMonth()
+    public function nextMonth(): void
     {
         $this->currentMonth = Carbon::parse($this->currentMonth)->addMonth()->startOfMonth()->format('Y-m-d');
+        $this->loadCalendar();
     }
 
-    public function getCalendarProperty()
+    private function loadCalendar(): void
     {
         $startOfMonth = Carbon::parse($this->currentMonth);
         $endOfMonth = $startOfMonth->copy()->endOfMonth();
@@ -73,33 +86,45 @@ new class extends Component {
             $current->addDay();
         }
 
-        return $dates;
+        $this->calendar = $dates;
     }
 
-    public function setFilter(string $filter)
+    public function setFilter(string $filter): void
     {
         $this->filter = $filter;
+        $this->resetPage('recentTasksPage');
     }
 
-    public function getFilteredTasksProperty()
+    public function getPaginatedTasksProperty()
     {
-        $tasks = collect($this->data['recent_tasks'] ?? [])
-            ->filter(fn($task) => ($task->status instanceof TaskStatus ? $task->status->value : $task->status) !== TaskStatus::Completed->value)
-            ->sortByDesc('updated_at');
+        $userId = (int) auth()->id();
 
-        if ($this->filter === 'high_priority') {
-            return $tasks->filter(function ($task) {
-                $priority = $task->priority instanceof \BackedEnum ? $task->priority->value : $task->priority;
-
-                return in_array($priority, [TaskPriority::High->value, TaskPriority::Urgent->value]);
-            });
-        }
-
-        return $tasks;
+        return Task::query()
+            ->where('status', '!=', TaskStatus::Completed->value)
+            ->where(function (Builder $query) use ($userId): void {
+                $query
+                    ->where('pic_id', $userId)
+                    ->orWhere('created_by', $userId)
+                    ->orWhereHas('coPics', function (Builder $coPicQuery) use ($userId): void {
+                        $coPicQuery->where('users.id', $userId);
+                    });
+            })
+            ->when($this->filter === 'high_priority', function (Builder $query): void {
+                $query->whereIn('priority', [TaskPriority::High->value, TaskPriority::Urgent->value]);
+            })
+            ->with([
+                'phase:id,project_id,name',
+                'phase.project:id,name,type,status',
+                'pic:id,name,email,avatar,job_title',
+                'coPics:id,name,email,avatar,job_title',
+            ])
+            ->withCount('comments')
+            ->orderByDesc('updated_at')
+            ->paginate($this->perPage, ['*'], 'recentTasksPage');
     }
 };
 ?>
-<div x-data="{ ready: false }" x-init="setTimeout(() => ready = true, 100)">
+<div x-data="{ ready: true }">
     <!-- Main Content Area -->
     <main class="grid grid-cols-1 md:grid-cols-2 md:gap-4 lg:grid-cols-4">
         <!-- Stats Grid -->
@@ -178,12 +203,12 @@ new class extends Component {
                     </x-ui.button>
                 </div>
             </div>
+            @php
+                $paginatedTasks = $this->paginatedTasks;
+            @endphp
             <div class="flex flex-col gap-3">
-                @forelse($this->filteredTasks as $task)
-                    <div x-data="{ show: false }" x-init="setTimeout(() => show = true, {{ $loop->index * 100 + 200 }})" x-show="show"
-                        x-transition:enter="transition ease-out duration-300"
-                        x-transition:enter-start="opacity-0 translate-x-4"
-                        x-transition:enter-end="opacity-100 translate-x-0" style="display: none;"
+                @forelse($paginatedTasks as $task)
+                    <div
                         class="hover:border-primary dark:hover:border-primary group flex cursor-pointer flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-4 transition-all sm:flex-row sm:items-center sm:justify-between sm:gap-4 dark:border-slate-800 dark:bg-slate-900">
                         <div class="flex flex-1 items-start gap-3 sm:items-center sm:gap-4">
                             @php
@@ -328,6 +353,27 @@ new class extends Component {
                     </div>
                 @endforelse
             </div>
+            @if ($paginatedTasks->total() > 0)
+                <div class="mt-1 flex items-center justify-between gap-3 border-t border-slate-200 pt-3 dark:border-slate-800">
+                    <p class="text-xs text-slate-500 dark:text-slate-400">
+                        Hiển thị {{ $paginatedTasks->firstItem() }}-{{ $paginatedTasks->lastItem() }} trên
+                        {{ $paginatedTasks->total() }} công việc
+                    </p>
+                    <div class="flex items-center gap-2">
+                        <x-ui.button size="xs" variant="ghost" wire:click="previousPage('recentTasksPage')"
+                            @disabled($paginatedTasks->onFirstPage())>
+                            Trước
+                        </x-ui.button>
+                        <span class="min-w-20 text-center text-xs font-semibold text-slate-600 dark:text-slate-300">
+                            Trang {{ $paginatedTasks->currentPage() }}/{{ $paginatedTasks->lastPage() }}
+                        </span>
+                        <x-ui.button size="xs" variant="ghost" wire:click="nextPage('recentTasksPage')"
+                            @disabled(! $paginatedTasks->hasMorePages())>
+                            Sau
+                        </x-ui.button>
+                    </div>
+                </div>
+            @endif
         </div>
         <!-- Right Side Panel -->
         <aside class="col-span-1 hidden shrink-0 flex-col gap-6 lg:flex" x-show="ready"

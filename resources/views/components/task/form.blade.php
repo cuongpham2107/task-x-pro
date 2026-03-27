@@ -139,6 +139,10 @@ new class extends Component
         $this->taskComments = collect();
         $this->dependencyTaskOptions = collect();
         $this->loadFormOptions();
+        $actor = auth()->user();
+        if ($actor && ($actor->hasRole('super_admin') || $actor->hasRole('leader'))) {
+            $this->isResponsibleLeader = true;
+        }
     }
 
     private function loadFormOptions(): void
@@ -238,10 +242,18 @@ new class extends Component
     #[On('task-edit-requested')]
     public function showEditFormModal(int $taskId): void
     {
-        $this->resetFormModal();
-        $this->editing_task_id = $taskId;
-        $this->loadTaskDataIntoForm();
-        $this->showFormModal = true;
+        try {
+            $this->resetFormModal();
+            $this->editing_task_id = $taskId;
+            $this->loadTaskDataIntoForm();
+            $this->showFormModal = true;
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            $this->showFormModal = false;
+            $this->dispatch('toast', message: 'Công việc không tồn tại hoặc đã bị xóa.', type: 'error');
+        } catch (\Exception $e) {
+            $this->showFormModal = false;
+            $this->dispatch('toast', message: 'Lỗi: '.$e->getMessage(), type: 'error');
+        }
     }
 
     private function loadTaskDataIntoForm(): void

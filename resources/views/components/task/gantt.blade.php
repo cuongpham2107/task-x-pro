@@ -1,6 +1,4 @@
-@props([
-    'tasks',
-])
+@props(['tasks'])
 
 @php
     use App\Enums\TaskStatus;
@@ -9,9 +7,7 @@
 
     $taskCollection = $tasks instanceof LengthAwarePaginator ? $tasks->getCollection() : collect($tasks);
 
-    $datedTasks = $taskCollection->filter(
-        fn ($task) => $task->started_at !== null && $task->deadline !== null
-    );
+    $datedTasks = $taskCollection->filter(fn($task) => $task->started_at !== null && $task->deadline !== null);
 
     if ($datedTasks->isEmpty()) {
         $gantt = [
@@ -64,17 +60,21 @@
 
         $items = [];
         foreach ($taskCollection as $task) {
-            $statusEnum = $task->status instanceof TaskStatus
-                ? $task->status
-                : TaskStatus::tryFrom($task->status ?? '');
+            $statusEnum = \App\Enums\TaskStatus::tryFrom($task->status->value ?? ($task->status ?? ''));
 
-            $start = $task->started_at instanceof Carbon
-                ? $task->started_at->copy()->startOfDay()
-                : ($task->started_at ? Carbon::parse($task->started_at)->startOfDay() : null);
+            $start =
+                $task->started_at instanceof Carbon
+                    ? $task->started_at->copy()->startOfDay()
+                    : ($task->started_at
+                        ? Carbon::parse($task->started_at)->startOfDay()
+                        : null);
 
-            $end = $task->deadline instanceof Carbon
-                ? $task->deadline->copy()->startOfDay()
-                : ($task->deadline ? Carbon::parse($task->deadline)->startOfDay() : null);
+            $end =
+                $task->deadline instanceof Carbon
+                    ? $task->deadline->copy()->startOfDay()
+                    : ($task->deadline
+                        ? Carbon::parse($task->deadline)->startOfDay()
+                        : null);
 
             $hasDate = $start !== null && $end !== null;
             if ($hasDate && $end->lt($start)) {
@@ -108,8 +108,8 @@
                 'project' => $task->phase?->project?->name ?? '—',
                 'phase' => $task->phase?->name ?? '—',
                 'statusLabel' => $statusEnum?->label() ?? '—',
-                'statusClass' => $statusEnum?->badgeClass()
-                    ?? 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400',
+                'statusClass' =>
+                    $statusEnum?->badgeClass() ?? 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400',
                 'hasDate' => $hasDate,
                 'startLabel' => $start?->format('d/m/Y'),
                 'endLabel' => $end?->format('d/m/Y'),
@@ -152,10 +152,8 @@
         </div>
     </div>
 
-    <div
-        class="flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900"
-        style="height: 520px;"
-        x-data="{
+    <div class="flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900"
+        style="height: 520px;" x-data="{
             busy: false,
             fromLeft(e) {
                 if (this.busy) return;
@@ -170,35 +168,35 @@
                 this.$refs.rh.scrollLeft = e.target.scrollLeft;
                 this.$nextTick(() => this.busy = false);
             },
-        }"
-    >
-        @if (! $gantt['hasTimeline'])
+        }">
+        @if (!$gantt['hasTimeline'])
             <div class="flex flex-1 flex-col items-center justify-center gap-3 text-center">
                 <span class="material-symbols-outlined text-5xl text-slate-300 dark:text-slate-700">view_timeline</span>
-                <p class="text-sm font-semibold text-slate-500 dark:text-slate-400">Không đủ dữ liệu để hiển thị Gantt</p>
+                <p class="text-sm font-semibold text-slate-500 dark:text-slate-400">Không đủ dữ liệu để hiển thị Gantt
+                </p>
                 <p class="text-xs text-slate-400">Hãy cập nhật ngày bắt đầu và hạn chót cho công việc.</p>
             </div>
         @else
             <div class="flex min-h-0 flex-1 overflow-hidden">
-                <div class="flex w-120 shrink-0 flex-col border-r border-slate-200 dark:border-slate-700">
-                    <div class="grid h-16 shrink-0 grid-cols-[minmax(0,1fr)_140px] items-center gap-4 border-b border-slate-200 bg-slate-50 pl-4 pr-6 text-xs font-bold uppercase tracking-wider text-slate-500 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-400">
+                <div class="w-120 flex shrink-0 flex-col border-r border-slate-200 dark:border-slate-700">
+                    <div
+                        class="grid h-16 shrink-0 grid-cols-[minmax(0,1fr)_140px] items-center gap-4 border-b border-slate-200 bg-slate-50 pl-4 pr-6 text-xs font-bold uppercase tracking-wider text-slate-500 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-400">
                         <span class="truncate">Công việc</span>
                         <span class="text-right">Trạng thái</span>
                     </div>
 
-                    <div
-                        class="flex-1 overflow-y-auto overflow-x-hidden"
-                        x-ref="lb"
-                        @scroll="fromLeft($event)"
-                        style="scrollbar-width: thin; scrollbar-gutter: stable;"
-                    >
+                    <div class="flex-1 overflow-y-auto overflow-x-hidden" x-ref="lb" @scroll="fromLeft($event)"
+                        style="scrollbar-width: thin; scrollbar-gutter: stable;">
                         @foreach ($gantt['items'] as $item)
-                            <div class="grid h-16 grid-cols-[minmax(0,1fr)_140px] items-center gap-4 border-b border-slate-100 pl-4 pr-6 dark:border-slate-800">
+                            <div
+                                class="grid h-16 grid-cols-[minmax(0,1fr)_140px] items-center gap-4 border-b border-slate-100 pl-4 pr-6 dark:border-slate-800">
                                 <div class="min-w-0">
-                                    <p class="truncate text-sm font-semibold text-slate-700 dark:text-slate-200">{{ $item['name'] }}</p>
+                                    <p class="truncate text-sm font-semibold text-slate-700 dark:text-slate-200">
+                                        {{ $item['name'] }}</p>
                                     <div class="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-slate-500">
                                         <span class="truncate">{{ $item['project'] }}</span>
-                                        <span class="rounded-md bg-slate-100 px-2 py-0.5 text-2xs font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                                        <span
+                                            class="text-2xs rounded-md bg-slate-100 px-2 py-0.5 font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
                                             {{ $item['phase'] }}
                                         </span>
                                     </div>
@@ -211,7 +209,8 @@
                                     </p>
                                 </div>
                                 <div class="flex justify-end">
-                                    <span class="inline-flex shrink-0 items-center justify-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-semibold {{ $item['statusClass'] }}">
+                                    <span
+                                        class="{{ $item['statusClass'] }} inline-flex shrink-0 items-center justify-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-semibold">
                                         {{ $item['statusLabel'] !== '' ? $item['statusLabel'] : '—' }}
                                     </span>
                                 </div>
@@ -222,46 +221,38 @@
                 </div>
 
                 <div class="flex min-w-0 flex-1 flex-col overflow-hidden">
-                    <div
-                        class="h-16 shrink-0 border-b border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800/60"
-                        x-ref="rh"
-                        style="overflow-y: clip; overflow-x: hidden; scrollbar-width: none;"
-                    >
+                    <div class="h-16 shrink-0 border-b border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800/60"
+                        x-ref="rh" style="overflow-y: clip; overflow-x: hidden; scrollbar-width: none;">
                         <div class="relative h-full" style="min-width: {{ $minInnerPx }}px;">
                             @foreach ($gantt['months'] as $month)
-                                <div
-                                    class="absolute top-0 flex h-full items-center border-r border-slate-200/70 px-2 dark:border-slate-700/70"
-                                    style="left: {{ $month['left'] }}%; width: {{ $month['width'] }}%;"
-                                >
+                                <div class="absolute top-0 flex h-full items-center border-r border-slate-200/70 px-2 dark:border-slate-700/70"
+                                    style="left: {{ $month['left'] }}%; width: {{ $month['width'] }}%;">
                                     <span class="truncate text-xs font-bold text-slate-700 dark:text-slate-200">
                                         {{ $month['label'] }}
-                                        <span class="ml-0.5 font-normal text-slate-400 dark:text-slate-500">{{ $month['year'] }}</span>
+                                        <span
+                                            class="ml-0.5 font-normal text-slate-400 dark:text-slate-500">{{ $month['year'] }}</span>
                                     </span>
                                 </div>
                             @endforeach
                         </div>
                     </div>
 
-                    <div
-                        class="flex-1 overflow-auto"
-                        x-ref="rb"
-                        @scroll="fromRight($event)"
-                        style="scrollbar-width: thin;"
-                    >
+                    <div class="flex-1 overflow-auto" x-ref="rb" @scroll="fromRight($event)"
+                        style="scrollbar-width: thin;">
                         <div class="relative" style="min-width: {{ $minInnerPx }}px;">
                             @foreach ($gantt['weekLines'] as $line)
-                                <div class="absolute inset-y-0 w-px bg-slate-100 dark:bg-slate-800" style="left: {{ $line }}%;"></div>
+                                <div class="absolute inset-y-0 w-px bg-slate-100 dark:bg-slate-800"
+                                    style="left: {{ $line }}%;"></div>
                             @endforeach
 
                             @foreach ($gantt['items'] as $item)
                                 <div class="relative h-16 border-b border-slate-100 px-4 dark:border-slate-800">
                                     <div class="absolute inset-y-0 left-0 right-0 flex items-center">
                                         @if ($item['hasDate'])
-                                            <div class="relative h-2.5 w-full rounded-full {{ $item['trackClass'] }}">
-                                                <div
-                                                    class="absolute h-2.5 rounded-full {{ $item['barClass'] }}"
-                                                    style="left: {{ $item['left'] }}%; width: {{ $item['width'] }}%;"
-                                                ></div>
+                                            <div class="{{ $item['trackClass'] }} relative h-2.5 w-full rounded-full">
+                                                <div class="{{ $item['barClass'] }} absolute h-2.5 rounded-full"
+                                                    style="left: {{ $item['left'] }}%; width: {{ $item['width'] }}%;">
+                                                </div>
                                             </div>
                                         @else
                                             <span class="text-xs italic text-slate-400">Chưa có ngày để hiển thị</span>
@@ -281,7 +272,8 @@
         <div class="mt-1 flex items-center justify-between px-2">
             <div class="text-sm text-slate-500 dark:text-slate-400">
                 Hiển thị
-                <span class="font-semibold text-slate-900 dark:text-slate-100">{{ $tasks->firstItem() }}–{{ $tasks->lastItem() }}</span>
+                <span
+                    class="font-semibold text-slate-900 dark:text-slate-100">{{ $tasks->firstItem() }}–{{ $tasks->lastItem() }}</span>
                 trên
                 <span class="font-semibold text-slate-900 dark:text-slate-100">{{ $tasks->total() }}</span>
                 công việc

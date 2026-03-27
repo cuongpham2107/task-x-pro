@@ -3,23 +3,36 @@ use App\Enums\KpiPeriodType;
 use App\Exports\KpiExport;
 use App\Models\KpiScore;
 use App\Models\Task;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
-use Maatwebsite\Excel\Facades\Excel;
 use Livewire\Component;
 use Livewire\WithPagination;
+use Maatwebsite\Excel\Facades\Excel;
 
-new class extends Component {
+new class extends Component
+{
     use WithPagination;
 
     public string $periodType = KpiPeriodType::Monthly->value;
+
     public int $selectedYear;
+
     public int $selectedValue;
+
     public string $historyPeriodType = KpiPeriodType::Monthly->value;
+
     public int $historyYear;
+
     public int $perPage = 10;
+
+    public string $taskApprovalFilter = 'all';
+
+    public function updatedTaskApprovalFilter(): void
+    {
+        $this->resetPage('tasksPage');
+    }
 
     public function mount(): void
     {
@@ -74,12 +87,12 @@ new class extends Component {
             ->get();
 
         $title = 'Báo cáo KPI Cá nhân';
-        $periodLabel = 'Lịch sử ' . $this->historyYear;
+        $periodLabel = 'Lịch sử '.$this->historyYear;
         $ownerSlug = Str::slug((string) (auth()->user()?->name ?? 'nhan-su'));
-        $filename = 'kpi-ca-nhan-' . $ownerSlug . '-' . $this->historyYear . '.' . ($format === 'pdf' ? 'pdf' : 'xlsx');
+        $filename = 'kpi-ca-nhan-'.$ownerSlug.'-'.$this->historyYear.'.'.($format === 'pdf' ? 'pdf' : 'xlsx');
         $writer = $format === 'pdf' ? \Maatwebsite\Excel\Excel::DOMPDF : \Maatwebsite\Excel\Excel::XLSX;
 
-        $this->dispatch('toast', message: 'Bắt đầu xuất file ' . strtoupper($format), type: 'info');
+        $this->dispatch('toast', message: 'Bắt đầu xuất file '.strtoupper($format), type: 'info');
 
         $meta = [
             'generated_at' => now()->format('d/m/Y H:i'),
@@ -93,7 +106,7 @@ new class extends Component {
     public function getTeamAverageProperty(): float
     {
         $user = auth()->user();
-        if (!$user || !$user->department_id) {
+        if (! $user || ! $user->department_id) {
             return 0;
         }
 
@@ -110,11 +123,11 @@ new class extends Component {
     public function getPeriodValueOptionsProperty(): array
     {
         if ($this->periodType === KpiPeriodType::Monthly->value) {
-            return collect(range(1, 12))->mapWithKeys(fn($m) => [$m => "Tháng $m"])->all();
+            return collect(range(1, 12))->mapWithKeys(fn ($m) => [$m => "Tháng $m"])->all();
         }
 
         if ($this->periodType === KpiPeriodType::Quarterly->value) {
-            return collect(range(1, 4))->mapWithKeys(fn($q) => [$q => "Quý $q"])->all();
+            return collect(range(1, 4))->mapWithKeys(fn ($q) => [$q => "Quý $q"])->all();
         }
 
         return [1 => 'Cả năm'];
@@ -123,44 +136,72 @@ new class extends Component {
     public function getYearOptionsProperty(): array
     {
         return collect(range(now()->year - 2, now()->year))
-            ->mapWithKeys(fn($y) => [$y => "Năm $y"])
+            ->mapWithKeys(fn ($y) => [$y => "Năm $y"])
             ->all();
     }
 
     public function getHistoryYearOptionsProperty(): array
     {
         return collect(range(now()->year - 3, now()->year))
-            ->mapWithKeys(fn($y) => [$y => "Năm $y"])
+            ->mapWithKeys(fn ($y) => [$y => "Năm $y"])
             ->all();
     }
 
-    public function getTaskReviewItemsProperty(): Collection
+    public function getTaskReviewQuery(): Builder
     {
         [$periodStart, $periodEnd] = $this->selectedPeriodDateRange();
 
-        return Task::query()
+        $query = Task::query()
+            ->where('pic_id', auth()->id())
+            ->where('status', 'completed')
+            ->whereNotNull('completed_at')
+            ->whereBetween('completed_at', [$periodStart, $periodEnd]);
+
+        if ($this->taskApprovalFilter !== 'all') {
+            $query->where(function ($q): void {
+                if ($this->taskApprovalFilter === 'waiting') {
+                    $q->whereDoesntHave('approvalLogs')
+                        ->orWhereHas('approvalLogs', function ($sub): void {
+                            $sub->whereIn('id', function ($latest): void {
+                                $latest->selectRaw('max(id)')
+                                    ->from('approval_logs')
+                                    ->groupBy('task_id');
+                            })->where('action', 'submitted');
+                        });
+                } else {
+                    $q->whereHas('approvalLogs', function ($sub): void {
+                        $sub->whereIn('id', function ($latest): void {
+                            $latest->selectRaw('max(id)')
+                                ->from('approval_logs')
+                                ->groupBy('task_id');
+                        })->where('action', $this->taskApprovalFilter);
+                    });
+                }
+            });
+        }
+
+        return $query;
+    }
+
+    public function getTaskReviewItemsProperty()
+    {
+        return $this->getTaskReviewQuery()
             ->with([
                 'phase:id,name,project_id',
                 'phase.project:id,name',
                 'approvalLogs:id,task_id,reviewer_id,approval_level,action,star_rating,created_at',
                 'approvalLogs.reviewer:id,name',
             ])
-            ->where('pic_id', auth()->id())
-            ->where(function ($query) use ($periodStart, $periodEnd): void {
-                $query
-                    ->whereBetween('completed_at', [$periodStart, $periodEnd])
-                    ->orWhereBetween('started_at', [$periodStart, $periodEnd])
-                    ->orWhereBetween('deadline', [$periodStart, $periodEnd]);
-            })
-            ->orderByRaw('COALESCE(completed_at, deadline, started_at, created_at) DESC')
-            ->limit(80)
-            ->get();
+            ->orderByDesc('completed_at')
+            ->paginate(10, ['*'], 'taskReviewPage');
     }
 
     public function getTaskReviewSummaryProperty(): array
     {
-        $tasks = $this->taskReviewItems;
-        if ($tasks->isEmpty()) {
+        $query = $this->getTaskReviewQuery();
+        $totalCount = (clone $query)->count();
+
+        if ($totalCount === 0) {
             return [
                 'total' => 0,
                 'completed' => 0,
@@ -172,31 +213,63 @@ new class extends Component {
             ];
         }
 
-        $statusValue = fn(Task $task): string => $task->status instanceof \BackedEnum ? (string) $task->status->value : (string) $task->status;
+        // To get counts for specific approval states, we need to apply the approval filter
+        // on a cloned query that doesn't already have the main taskApprovalFilter applied.
+        // However, the current getTaskReviewQuery already applies $this->taskApprovalFilter.
+        // So, we need to clone the base query before applying the specific approval filters for summary.
+        // Let's re-evaluate the base query for summary calculations to avoid double-filtering.
 
-        $approvalActions = $tasks->map(function (Task $task): ?string {
-            $latestLog = $task->approvalLogs->sortByDesc('id')->first();
+        [$periodStart, $periodEnd] = $this->selectedPeriodDateRange();
+        $baseSummaryQuery = Task::query()
+            ->where('pic_id', auth()->id())
+            ->where('status', 'completed')
+            ->whereNotNull('completed_at')
+            ->whereBetween('completed_at', [$periodStart, $periodEnd]);
 
-            return $latestLog?->action;
-        });
+        $waitingCount = (clone $baseSummaryQuery)->where(function ($q): void {
+            $q->whereDoesntHave('approvalLogs')
+                ->orWhereHas('approvalLogs', function ($sub): void {
+                    $sub->whereIn('id', function ($latest): void {
+                        $latest->selectRaw('max(id)')
+                            ->from('approval_logs')
+                            ->groupBy('task_id');
+                    })->where('action', 'submitted');
+                });
+        })->count();
+
+        $approvedCount = (clone $baseSummaryQuery)->whereHas('approvalLogs', function ($sub): void {
+            $sub->whereIn('id', function ($latest): void {
+                $latest->selectRaw('max(id)')
+                    ->from('approval_logs')
+                    ->groupBy('task_id');
+            })->where('action', 'approved');
+        })->count();
+
+        $rejectedCount = (clone $baseSummaryQuery)->whereHas('approvalLogs', function ($sub): void {
+            $sub->whereIn('id', function ($latest): void {
+                $latest->selectRaw('max(id)')
+                    ->from('approval_logs')
+                    ->groupBy('task_id');
+            })->where('action', 'rejected');
+        })->count();
 
         return [
-            'total' => $tasks->count(),
-            'completed' => $tasks->filter(fn(Task $task): bool => $statusValue($task) === 'completed')->count(),
-            'waiting_approval' => $tasks->filter(fn(Task $task): bool => $statusValue($task) === 'waiting_approval')->count(),
-            'approved' => $approvalActions->filter(fn(?string $action): bool => $action === 'approved')->count(),
-            'rejected' => $approvalActions->filter(fn(?string $action): bool => $action === 'rejected')->count(),
-            'sla_met' => $tasks->filter(fn(Task $task): bool => $task->sla_met === true)->count(),
-            'avg_progress' => round((float) $tasks->avg(fn(Task $task): int => (int) $task->progress), 1),
+            'total' => $totalCount,
+            'completed' => $totalCount, // Since query already filters for completed
+            'waiting_approval' => $waitingCount,
+            'approved' => $approvedCount,
+            'rejected' => $rejectedCount,
+            'sla_met' => (clone $baseSummaryQuery)->where('sla_met', true)->count(),
+            'avg_progress' => round((float) (clone $baseSummaryQuery)->avg('progress'), 1),
         ];
     }
 
     public function getTaskReviewPeriodLabelProperty(): string
     {
         return match ($this->periodType) {
-            KpiPeriodType::Quarterly->value => 'Quý ' . $this->selectedValue . '/' . $this->selectedYear,
-            KpiPeriodType::Yearly->value => 'Năm ' . $this->selectedYear,
-            default => 'Tháng ' . $this->selectedValue . '/' . $this->selectedYear,
+            KpiPeriodType::Quarterly->value => 'Quý '.$this->selectedValue.'/'.$this->selectedYear,
+            KpiPeriodType::Yearly->value => 'Năm '.$this->selectedYear,
+            default => 'Tháng '.$this->selectedValue.'/'.$this->selectedYear,
         };
     }
 
@@ -646,9 +719,21 @@ new class extends Component {
                         Danh sách task trong {{ $this->taskReviewPeriodLabel }} để đối soát trước/sau duyệt KPI.
                     </p>
                 </div>
-                <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700 dark:bg-slate-700 dark:text-slate-200">
-                    Tổng task: {{ $taskReviewSummary['total'] }}
-                </span>
+                <div class="flex flex-wrap items-center gap-3">
+                    <div class="flex items-center gap-2">
+                        <span class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Lọc duyệt</span>
+                        <x-ui.filter-select model="taskApprovalFilter" :value="$taskApprovalFilter" icon="filter_alt"
+                            :permit-all="false" width="w-36" :options="[
+                                'all' => 'Tất cả',
+                                'approved' => 'Đã duyệt',
+                                'waiting' => 'Chờ duyệt',
+                                'rejected' => 'Từ chối',
+                            ]" />
+                    </div>
+                    <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700 dark:bg-slate-700 dark:text-slate-200">
+                        Tổng task: {{ $taskReviewSummary['total'] }}
+                    </span>
+                </div>
             </div>
 
             <div class="grid grid-cols-2 gap-3 border-b border-slate-100 p-4 md:grid-cols-6 dark:border-slate-700">
@@ -758,6 +843,12 @@ new class extends Component {
                     </tbody>
                 </table>
             </div>
+
+            @if ($taskReviewItems->hasPages())
+                <div class="border-t border-slate-100 bg-slate-50/50 px-6 py-4 dark:border-slate-700 dark:bg-slate-900/20">
+                    {{ $taskReviewItems->links() }}
+                </div>
+            @endif
         </div>
 
         <!-- History Table -->

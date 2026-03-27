@@ -32,11 +32,7 @@ class PhasePolicy
 
     public function update(User $user, Phase $phase): bool
     {
-        if (! $user->can('phase.update')) {
-            return false;
-        }
-
-        if ($user->hasRole('super_admin')) {
+        if ($user->hasAnyRole(['super_admin', 'ceo'])) {
             return true;
         }
 
@@ -44,7 +40,7 @@ class PhasePolicy
             return false;
         }
 
-        return $phase->project->projectLeaders()->where('user_id', $user->id)->exists();
+        return true;
     }
 
     public function delete(User $user, Phase $phase): bool

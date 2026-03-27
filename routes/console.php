@@ -205,6 +205,59 @@ Artisan::command('kpi:daily-sync', function (): void {
     $this->info("Daily KPI synced for {$users->count()} users.");
 })->purpose('Đồng bộ KPI hàng ngày để tránh sync đồng bộ khi lưu task');
 
+Artisan::command('kpi:backfill-all {--chunk=200 : Số lượng thành viên xử lý mỗi lượt}', function (): void {
+    $chunkSize = max(50, (int) $this->option('chunk'));
+
+    $baseQuery = User::query()
+        ->select('id')
+        ->where(function ($query): void {
+            $query
+                ->whereHas('picTasks', function ($taskQuery): void {
+                    $taskQuery
+                        ->where('status', TaskStatus::Completed->value)
+                        ->whereNotNull('completed_at');
+                })
+                ->orWhereHas('kpiScores');
+        })
+        ->orderBy('id');
+
+    $totalUsers = (clone $baseQuery)->count();
+    if ($totalUsers === 0) {
+        $this->info('Không có thành viên có dữ liệu KPI để đồng bộ lịch sử.');
+
+        return;
+    }
+
+    $this->info("Bắt đầu đồng bộ KPI lịch sử cho {$totalUsers} thành viên...");
+
+    $processed = 0;
+    $failed = 0;
+    $progressBar = $this->output->createProgressBar($totalUsers);
+    $progressBar->start();
+
+    $baseQuery->chunkById($chunkSize, function ($users) use (&$processed, &$failed, $progressBar): void {
+        foreach ($users as $user) {
+            try {
+                KpiScore::syncForUser((int) $user->id);
+                $processed++;
+            } catch (\Throwable $exception) {
+                report($exception);
+                $failed++;
+            }
+
+            $progressBar->advance();
+        }
+    });
+
+    $progressBar->finish();
+    $this->newLine(2);
+    $this->info("Đã đồng bộ KPI lịch sử cho {$processed}/{$totalUsers} thành viên.");
+
+    if ($failed > 0) {
+        $this->warn("Có {$failed} thành viên đồng bộ thất bại. Vui lòng kiểm tra log.");
+    }
+})->purpose('Backfill KPI lịch sử cho toàn bộ thành viên có dữ liệu task/KPI');
+
 Schedule::command('tasks:mark-late')->everyFiveMinutes();
 Schedule::command('tasks:daily-reminders')->daily()->at('07:00');
 Schedule::command('reports:weekly')->weekly()->fridays()->at('17:00');

@@ -224,7 +224,6 @@ class Task extends Model
 
     /**
      * Ap dung BR-007 khi task hoan thanh:
-     * - Ep progress = 100
      * - Tinh sla_met theo sla_standard_hours
      * - Tinh delay_days theo deadline
      */
@@ -248,7 +247,6 @@ class Task extends Model
 
         $this->completed_at = $completedAt;
         $this->started_at = $startedAt;
-        $this->progress = 100;
 
         if ($this->sla_standard_hours !== null) {
             $actualSeconds = max(0, $startedAt->diffInSeconds($completedAt));

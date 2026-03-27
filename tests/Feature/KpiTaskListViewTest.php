@@ -59,6 +59,25 @@ it('shows task approval list on pic kpi page', function (): void {
         'star_rating' => 5,
     ]);
 
+    $taskWaiting = Task::factory()->create([
+        'name' => 'Task PIC Cho Duyet',
+        'pic_id' => $pic->id,
+        'status' => 'completed',
+        'progress' => 100,
+        'started_at' => now()->startOfMonth()->addDays(2),
+        'completed_at' => now()->startOfMonth()->addDays(4),
+        'deadline' => now()->startOfMonth()->addDays(6),
+        'sla_met' => true,
+    ]);
+
+    ApprovalLog::factory()->create([
+        'task_id' => $taskWaiting->id,
+        'reviewer_id' => $leader->id,
+        'approval_level' => 'leader',
+        'action' => 'submitted',
+        'star_rating' => null,
+    ]);
+
     $taskOutPeriod = Task::factory()->create([
         'name' => 'Task Out PIC',
         'pic_id' => $pic->id,
@@ -74,7 +93,11 @@ it('shows task approval list on pic kpi page', function (): void {
         ->test('kpi.pic')
         ->assertSee($taskInPeriod->name)
         ->assertSee($leader->name)
-        ->assertDontSee($taskOutPeriod->name);
+        ->assertSee($taskWaiting->name)
+        ->assertDontSee($taskOutPeriod->name)
+        ->set('taskApprovalFilter', 'approved')
+        ->assertSee($taskInPeriod->name)
+        ->assertDontSee($taskWaiting->name);
 });
 
 it('shows task kpi and approver data on ceo kpi page', function (): void {
@@ -116,6 +139,25 @@ it('shows task kpi and approver data on ceo kpi page', function (): void {
         'star_rating' => 4,
     ]);
 
+    $taskWaiting = Task::factory()->create([
+        'name' => 'Task Waiting CEO',
+        'pic_id' => $pic->id,
+        'status' => 'completed',
+        'progress' => 100,
+        'started_at' => now()->startOfMonth()->addDays(1),
+        'completed_at' => now()->startOfMonth()->addDays(2),
+        'deadline' => now()->startOfMonth()->addDays(6),
+        'sla_met' => true,
+    ]);
+
+    ApprovalLog::factory()->create([
+        'task_id' => $taskWaiting->id,
+        'reviewer_id' => $leader->id,
+        'approval_level' => 'leader',
+        'action' => 'submitted',
+        'star_rating' => null,
+    ]);
+
     $taskOutPeriod = Task::factory()->create([
         'name' => 'Task Out CEO',
         'pic_id' => $pic->id,
@@ -132,5 +174,9 @@ it('shows task kpi and approver data on ceo kpi page', function (): void {
         ->assertSee($taskInPeriod->name)
         ->assertSee('90.0')
         ->assertSee($leader->name)
-        ->assertDontSee($taskOutPeriod->name);
+        ->assertSee($taskWaiting->name)
+        ->assertDontSee($taskOutPeriod->name)
+        ->set('taskApprovalFilter', 'approved')
+        ->assertSee($taskInPeriod->name)
+        ->assertDontSee($taskWaiting->name);
 });

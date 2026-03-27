@@ -1,5 +1,7 @@
 <?php
 
+use App\Enums\ApprovalAction;
+use App\Enums\ApprovalLevel;
 use App\Models\Phase;
 use App\Models\Project;
 use App\Models\ProjectLeader;
@@ -150,6 +152,22 @@ it('prevents ceo from updating task details', function () {
     })->toThrow(AuthorizationException::class);
 });
 
+it('allows ceo to open task details in read-only mode', function () {
+    $ceo = User::factory()->ceo()->create();
+    $ceo->assignRole('ceo');
+
+    $task = Task::factory()->create([
+        'phase_id' => $this->phase->id,
+        'status' => 'pending',
+        'pic_id' => $this->pic->id,
+        'created_by' => $this->responsibleLeader->id,
+    ]);
+
+    $loadedTask = $this->taskService->findForEdit($ceo, $task->id);
+
+    expect($loadedTask->id)->toBe($task->id);
+});
+
 it('lets leader as pic approve first level, then ceo finalizes in double workflow', function () {
     $leaderPic = User::factory()->leader()->create();
     $leaderPic->assignRole('leader');
@@ -176,12 +194,12 @@ it('lets leader as pic approve first level, then ceo finalizes in double workflo
     expect($task->refresh()->status->value)->toBe('completed');
 });
 
-it('prevents final approval when task progress is below 100 percent', function () {
+it('prevents final approval when task progress is below 90 percent', function () {
     $task = Task::factory()->create([
         'phase_id' => $this->phase->id,
         'status' => 'waiting_approval',
         'workflow_type' => 'single',
-        'progress' => 95,
+        'progress' => 89,
         'started_at' => now()->subDay(),
         'pic_id' => $this->pic->id,
         'created_by' => $this->responsibleLeader->id,
@@ -194,4 +212,35 @@ it('prevents final approval when task progress is below 100 percent', function (
     } catch (ValidationException $exception) {
         expect($exception->errors())->toHaveKey('progress');
     }
+});
+
+it('does not create ceo approval log when final approval fails due to progress below 90', function () {
+    $ceo = User::factory()->ceo()->create();
+    $ceo->assignRole('ceo');
+
+    $task = Task::factory()->create([
+        'phase_id' => $this->phase->id,
+        'status' => 'waiting_approval',
+        'workflow_type' => 'double',
+        'progress' => 89,
+        'started_at' => now()->subDay(),
+        'pic_id' => $this->pic->id,
+        'created_by' => $this->responsibleLeader->id,
+    ]);
+
+    $this->approvalService->approve($this->responsibleLeader, $task);
+
+    try {
+        $this->approvalService->approve($ceo, $task->refresh());
+        $this->fail('Expected ValidationException was not thrown.');
+    } catch (ValidationException $exception) {
+        expect($exception->errors())->toHaveKey('progress');
+    }
+
+    expect($task->refresh()->status->value)->toBe('waiting_approval');
+    expect($task->approvalLogs()
+        ->where('reviewer_id', $ceo->id)
+        ->where('approval_level', ApprovalLevel::Ceo->value)
+        ->where('action', ApprovalAction::Approved->value)
+        ->count())->toBe(0);
 });

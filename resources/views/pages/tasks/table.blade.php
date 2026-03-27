@@ -123,7 +123,7 @@ new #[Title('Công việc')] class extends Component {
     {
         $task = Task::query()->findOrFail($taskId);
 
-        Gate::forUser(auth()->user())->authorize('update', $task);
+        Gate::forUser(auth()->user())->authorize('view', $task);
 
         $this->dispatch('task-edit-requested', taskId: $task->id);
     }

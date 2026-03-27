@@ -3,11 +3,15 @@
 use App\Enums\KpiPeriodType;
 use App\Exports\KpiExport;
 use App\Models\KpiScore;
+use App\Models\Task;
 use App\Models\User;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Database\Eloquent\Builder;
+use BackedEnum;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -20,6 +24,11 @@ new #[Title('KPI phòng ban')] class extends Component {
     public int $selectedValue;
     public ?int $selectedUserId = null;
     public int $perPage = 10;
+    public bool $showTaskReviewModal = false;
+    public ?int $reviewScoreId = null;
+    public ?int $reviewUserId = null;
+    public string $reviewUserName = '';
+    public string $reviewApprovalFilter = 'all';
 
     public function mount(): void
     {
@@ -155,7 +164,7 @@ new #[Title('KPI phòng ban')] class extends Component {
     public function getApprovalSummaryProperty(): array
     {
         $departmentId = auth()->user()?->department_id;
-        if (! $departmentId) {
+        if (!$departmentId) {
             return [
                 'total' => 0,
                 'pending' => 0,
@@ -229,7 +238,7 @@ new #[Title('KPI phòng ban')] class extends Component {
             return true;
         }
 
-        if (! $actor->hasRole('leader') || ! $actor->can('kpi.view')) {
+        if (!$actor->hasRole('leader') || !$actor->can('kpi.view')) {
             return false;
         }
 
@@ -245,54 +254,213 @@ new #[Title('KPI phòng ban')] class extends Component {
 
     public function canReviewScore(KpiScore $score): bool
     {
-        return $this->canManageScore($score)
-            && in_array((string) $score->status, ['pending', 'locked'], true);
+        return $this->canManageScore($score) && in_array((string) $score->status, ['pending', 'locked'], true);
     }
 
     public function canToggleLock(KpiScore $score): bool
     {
         $actor = auth()->user();
 
-        return $actor !== null
-            && $actor->can('kpi.manage')
-            && $this->canManageScore($score);
+        return $actor !== null && $actor->can('kpi.manage') && $this->canManageScore($score);
+    }
+
+    public function resetReviewModalPage(): void
+    {
+        $this->setPage(1, 'reviewTaskPage');
+    }
+
+    public function updatedReviewApprovalFilter(): void
+    {
+        $this->resetReviewModalPage();
+    }
+
+    public function openTaskReview(int $scoreId): void
+    {
+        $score = $this->findScoreForAction($scoreId);
+
+        $this->reviewScoreId = (int) $score->id;
+        $this->reviewUserId = (int) $score->user_id;
+        $this->reviewUserName = (string) ($score->user?->name ?? 'Nhân sự');
+        $this->resetReviewModalPage();
+        $this->showTaskReviewModal = true;
+    }
+
+    public function closeTaskReviewModal(): void
+    {
+        $this->showTaskReviewModal = false;
+        $this->reviewScoreId = null;
+        $this->reviewUserId = null;
+        $this->reviewUserName = '';
+    }
+
+    public function getReviewScoreProperty(): ?KpiScore
+    {
+        if ($this->reviewScoreId === null) {
+            return null;
+        }
+
+        return KpiScore::query()->with('user:id,name,department_id,job_title,avatar')->find($this->reviewScoreId);
+    }
+
+    private function getReviewTasksQuery(): Builder
+    {
+        [$periodStart, $periodEnd] = $this->selectedPeriodDateRange();
+
+        $query = Task::query()
+            ->where('pic_id', $this->reviewUserId)
+            ->where('status', 'completed')
+            ->whereNotNull('completed_at')
+            ->whereBetween('completed_at', [$periodStart, $periodEnd]);
+
+        if ($this->reviewApprovalFilter === 'approved') {
+            $query->whereHas('approvalLogs', function ($q) {
+                $q->where('id', function ($sub) {
+                    $sub->selectRaw('max(id)')->from('approval_logs')->whereColumn('task_id', 'tasks.id');
+                })->where('action', 'approved');
+            });
+        } elseif ($this->reviewApprovalFilter === 'rejected') {
+            $query->whereHas('approvalLogs', function ($q) {
+                $q->where('id', function ($sub) {
+                    $sub->selectRaw('max(id)')->from('approval_logs')->whereColumn('task_id', 'tasks.id');
+                })->where('action', 'rejected');
+            });
+        } elseif ($this->reviewApprovalFilter === 'waiting') {
+            $query->where(function ($q) {
+                $q->whereDoesntHave('approvalLogs')
+                    ->orWhereHas('approvalLogs', function ($subq) {
+                        $subq->where('id', function ($sub) {
+                            $sub->selectRaw('max(id)')->from('approval_logs')->whereColumn('task_id', 'tasks.id');
+                        })->where('action', 'submitted');
+                    });
+            });
+        }
+
+        return $query;
+    }
+
+    public function getReviewTasksProperty()
+    {
+        if ($this->reviewUserId === null || !$this->showTaskReviewModal) {
+            return new \Illuminate\Pagination\LengthAwarePaginator([], 0, 10);
+        }
+
+        return $this->getReviewTasksQuery()
+            ->with(['phase:id,name,project_id', 'phase.project:id,name', 'approvalLogs:id,task_id,action,approval_level,star_rating,created_at'])
+            ->orderByDesc('completed_at')
+            ->paginate(10, ['*'], 'reviewTaskPage');
+    }
+
+    public function getReviewTaskSummaryProperty(): array
+    {
+        if ($this->reviewUserId === null || !$this->showTaskReviewModal) {
+            return [
+                'total' => 0, 'completed' => 0, 'waiting_approval' => 0, 'in_progress' => 0,
+                'late' => 0, 'avg_progress' => 0.0, 'sla_met' => 0, 'on_time' => 0, 'avg_star' => 0.0,
+            ];
+        }
+
+        $query = $this->getReviewTasksQuery();
+        $total = $query->count();
+        if ($total === 0) {
+            return [
+                'total' => 0, 'completed' => 0, 'waiting_approval' => 0, 'in_progress' => 0,
+                'late' => 0, 'avg_progress' => 0.0, 'sla_met' => 0, 'on_time' => 0, 'avg_star' => 0.0,
+            ];
+        }
+
+        // We still need labels for some stats, let's use some optimized queries
+        $completedCount = (clone $query)->where('status', 'completed')->count();
+        $stats = (clone $query)->selectRaw('
+            AVG(progress) as avg_progress,
+            SUM(CASE WHEN sla_met = 1 THEN 1 ELSE 0 END) as sla_met,
+            SUM(CASE WHEN deadline < completed_at THEN 1 ELSE 0 END) as late_count
+        ')->first();
+
+        // For stars, we need to look into logs
+        $avgStar = \App\Models\ApprovalLog::query()
+            ->whereIn('task_id', (clone $query)->select('id'))
+            ->where('action', 'approved')
+            ->whereNotNull('star_rating')
+            ->avg('star_rating');
+
+        $waitingCount = (clone $query)->where(function ($q) {
+            $q->whereDoesntHave('approvalLogs')
+                ->orWhereHas('approvalLogs', function ($sub) {
+                    $sub->where('id', function ($inner) {
+                        $inner->selectRaw('max(id)')->from('approval_logs')->whereColumn('task_id', 'tasks.id');
+                    })->where('action', 'submitted');
+                });
+        })->count();
+
+        return [
+            'total' => $total,
+            'completed' => $completedCount,
+            'waiting_approval' => $waitingCount,
+            'in_progress' => 0,
+            'late' => (int) $stats->late_count,
+            'avg_progress' => round((float) $stats->avg_progress, 1),
+            'sla_met' => (int) $stats->sla_met,
+            'on_time' => $completedCount - (int) $stats->late_count,
+            'avg_star' => round((float) ($avgStar ?? 0), 1),
+        ];
+    }
+
+    public function getReviewPeriodLabelProperty(): string
+    {
+        return $this->periodLabel($this->periodType, $this->selectedYear, $this->selectedValue);
     }
 
     public function approveScore(int $scoreId): void
     {
         $score = $this->findScoreForAction($scoreId);
 
-        if (! in_array((string) $score->status, ['pending', 'locked'], true)) {
+        if (!in_array((string) $score->status, ['pending', 'locked'], true)) {
             throw ValidationException::withMessages([
                 'status' => 'Chỉ KPI đang chờ duyệt hoặc đã chốt mới được phê duyệt.',
             ]);
         }
 
-        $score->forceFill([
-            'status' => 'approved',
-            'approved_at' => now(),
-        ])->save();
+        $score
+            ->forceFill([
+                'status' => 'approved',
+                'approved_at' => now(),
+            ])
+            ->save();
+
+        if ($this->reviewScoreId === (int) $score->id) {
+            $this->closeTaskReviewModal();
+        }
+
+        $this->dispatch('toast', message: 'Đã duyệt KPI cho nhân sự.', type: 'success');
     }
 
     public function rejectScore(int $scoreId): void
     {
         $score = $this->findScoreForAction($scoreId);
 
-        if (! in_array((string) $score->status, ['pending', 'locked'], true)) {
+        if (!in_array((string) $score->status, ['pending', 'locked'], true)) {
             throw ValidationException::withMessages([
                 'status' => 'Chỉ KPI đang chờ duyệt hoặc đã chốt mới được từ chối.',
             ]);
         }
 
-        $score->forceFill([
-            'status' => 'rejected',
-            'approved_at' => null,
-        ])->save();
+        $score
+            ->forceFill([
+                'status' => 'rejected',
+                'approved_at' => null,
+            ])
+            ->save();
+
+        if ($this->reviewScoreId === (int) $score->id) {
+            $this->closeTaskReviewModal();
+        }
+
+        $this->dispatch('toast', message: 'Đã từ chối KPI, vui lòng yêu cầu nhân sự bổ sung/cải thiện.', type: 'warning');
     }
 
     public function lockScore(int $scoreId): void
     {
-        if (! auth()->user()?->can('kpi.manage')) {
+        if (!auth()->user()?->can('kpi.manage')) {
             throw new AuthorizationException('Bạn không có quyền chốt KPI.');
         }
 
@@ -304,15 +472,17 @@ new #[Title('KPI phòng ban')] class extends Component {
             ]);
         }
 
-        $score->forceFill([
-            'status' => 'locked',
-            'approved_at' => null,
-        ])->save();
+        $score
+            ->forceFill([
+                'status' => 'locked',
+                'approved_at' => null,
+            ])
+            ->save();
     }
 
     public function unlockScore(int $scoreId): void
     {
-        if (! auth()->user()?->can('kpi.manage')) {
+        if (!auth()->user()?->can('kpi.manage')) {
             throw new AuthorizationException('Bạn không có quyền mở khóa KPI.');
         }
 
@@ -324,24 +494,25 @@ new #[Title('KPI phòng ban')] class extends Component {
             ]);
         }
 
-        $score->forceFill([
-            'status' => 'pending',
-            'approved_at' => null,
-        ])->save();
+        $score
+            ->forceFill([
+                'status' => 'pending',
+                'approved_at' => null,
+            ])
+            ->save();
     }
 
     private function findScoreForAction(int $scoreId): KpiScore
     {
-        $score = KpiScore::query()
-            ->with('user:id,department_id')
-            ->findOrFail($scoreId);
+        $score = KpiScore::query()->with('user:id,department_id')->findOrFail($scoreId);
 
-        if (! $this->canManageScore($score)) {
+        if (!$this->canManageScore($score)) {
             throw new AuthorizationException('Bạn không có quyền thao tác KPI này.');
         }
 
         return $score;
     }
+
 
     public function exportExcel(?string $format = 'xlsx'): mixed
     {
@@ -388,6 +559,29 @@ new #[Title('KPI phòng ban')] class extends Component {
             default => 'Tháng ' . $value . '/' . $year,
         };
     }
+
+    /**
+     * @return array{0: Carbon, 1: Carbon}
+     */
+    private function selectedPeriodDateRange(): array
+    {
+        if ($this->periodType === KpiPeriodType::Yearly->value) {
+            $start = Carbon::create($this->selectedYear, 1, 1)->startOfDay();
+
+            return [$start, $start->copy()->endOfYear()->endOfDay()];
+        }
+
+        if ($this->periodType === KpiPeriodType::Quarterly->value) {
+            $startMonth = ($this->selectedValue - 1) * 3 + 1;
+            $start = Carbon::create($this->selectedYear, $startMonth, 1)->startOfDay();
+
+            return [$start, $start->copy()->addMonths(2)->endOfMonth()->endOfDay()];
+        }
+
+        $start = Carbon::create($this->selectedYear, $this->selectedValue, 1)->startOfDay();
+
+        return [$start, $start->copy()->endOfMonth()->endOfDay()];
+    }
 };
 ?>
 
@@ -414,7 +608,7 @@ new #[Title('KPI phòng ban')] class extends Component {
     <!-- Page Header & Filters -->
     <div class="animate-enter relative z-20 mb-8 flex flex-col justify-between gap-6 md:flex-row md:items-end"
         style="animation-delay: 0.1s">
-        <x-ui.heading title="Báo cáo hiệu suất KPI" description="Dữ liệu tổng hợp của Team" class="mb-0" />
+        <x-ui.heading title="Báo cáo hiệu suất KPI" description="Dữ liệu tổng hợp của phòng ban" class="mb-0" />
         <div class="flex flex-col gap-4 md:flex-row md:items-center">
             <div class="flex items-center gap-2 overflow-x-auto pb-2 md:overflow-visible md:pb-0">
                 <div class="flex shrink-0 flex-col gap-1">
@@ -472,12 +666,14 @@ new #[Title('KPI phòng ban')] class extends Component {
         style="animation-delay: 0.15s">
         <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
             <h3 class="text-sm font-bold text-sky-900 dark:text-sky-300">Mục tiêu phê duyệt KPI của Leader</h3>
-            <span class="rounded-full bg-white px-3 py-1 text-xs font-semibold text-sky-700 dark:bg-slate-900 dark:text-sky-300">
+            <span
+                class="rounded-full bg-white px-3 py-1 text-xs font-semibold text-sky-700 dark:bg-slate-900 dark:text-sky-300">
                 Tỷ lệ duyệt: {{ number_format((float) $approvalSummary['approval_rate'], 1) }}%
             </span>
         </div>
         <p class="mb-3 text-xs text-slate-600 dark:text-slate-300">
-            Phê duyệt KPI là bước xác nhận dữ liệu task hoàn thành của nhân sự đã phản ánh đúng deadline, SLA và chất lượng đầu ra trước khi chốt báo cáo tháng.
+            Phê duyệt KPI là bước xác nhận dữ liệu task hoàn thành của nhân sự đã phản ánh đúng deadline, SLA và chất
+            lượng đầu ra trước khi chốt báo cáo tháng.
         </p>
         <div class="grid grid-cols-2 gap-3 md:grid-cols-4">
             <div class="rounded-lg bg-white p-3 shadow-sm dark:bg-slate-900/80">
@@ -581,14 +777,6 @@ new #[Title('KPI phòng ban')] class extends Component {
                         @php
                             $user = $score->user;
                             $finalScore = (float) $score->final_score;
-                            $scoreTone =
-                                $finalScore >= 85
-                                    ? 'bg-emerald-500 shadow-emerald-500/20'
-                                    : ($finalScore >= 70
-                                        ? 'bg-blue-500 shadow-blue-500/20'
-                                        : ($finalScore >= 60
-                                            ? 'bg-amber-500 shadow-amber-500/20'
-                                            : 'bg-red-600 shadow-red-600/20'));
                             $slaColor =
                                 $score->sla_rate >= 80
                                     ? 'bg-blue-500'
@@ -653,44 +841,50 @@ new #[Title('KPI phòng ban')] class extends Component {
                                 </div>
                             </td>
                             <td class="px-6 py-5 text-right">
-                                <div
-                                    class="{{ $scoreTone }} inline-flex h-12 w-12 items-center justify-center rounded-xl text-lg font-black text-white shadow-lg">
+                                <div class="items-center justify-center text-sm font-black">
                                     {{ number_format($finalScore, 1) }}
                                 </div>
                             </td>
                             <td class="px-4 py-5 text-center">
                                 @php
-                                    $statusBadge = match($score->status) {
-                                        'approved' => ['label' => 'Đã duyệt', 'class' => 'bg-emerald-50 text-emerald-700 ring-emerald-600/20'],
-                                        'rejected' => ['label' => 'Từ chối', 'class' => 'bg-red-50 text-red-700 ring-red-600/20'],
-                                        'locked'   => ['label' => 'Đã chốt', 'class' => 'bg-amber-50 text-amber-700 ring-amber-600/20'],
-                                        default    => ['label' => 'Chờ duyệt', 'class' => 'bg-blue-50 text-blue-700 ring-blue-700/10'],
+                                    $statusBadge = match ($score->status) {
+                                        'approved' => [
+                                            'label' => 'Đã duyệt',
+                                            'class' => 'bg-emerald-50 text-emerald-700 ring-emerald-600/20',
+                                        ],
+                                        'rejected' => [
+                                            'label' => 'Từ chối',
+                                            'class' => 'bg-red-50 text-red-700 ring-red-600/20',
+                                        ],
+                                        'locked' => [
+                                            'label' => 'Đã chốt',
+                                            'class' => 'bg-amber-50 text-amber-700 ring-amber-600/20',
+                                        ],
+                                        default => [
+                                            'label' => 'Chờ duyệt',
+                                            'class' => 'bg-blue-50 text-blue-700 ring-blue-700/10',
+                                        ],
                                     };
                                 @endphp
-                                <span class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset {{ $statusBadge['class'] }}">
+                                <span
+                                    class="{{ $statusBadge['class'] }} inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset">
                                     {{ $statusBadge['label'] }}
                                 </span>
                             </td>
                             <td class="px-4 py-5 text-right">
                                 @if ($this->canManageScore($score))
                                     <div class="flex items-center justify-end gap-2">
-                                        @if ($this->canReviewScore($score))
-                                            <button wire:click="approveScore({{ $score->id }})"
-                                                class="text-slate-400 transition-colors hover:text-emerald-600"
-                                                title="Phê duyệt KPI">
-                                                <span class="material-symbols-outlined">check_circle</span>
-                                            </button>
-                                            <button wire:click="rejectScore({{ $score->id }})"
-                                                class="text-slate-400 transition-colors hover:text-rose-600"
-                                                title="Từ chối KPI">
-                                                <span class="material-symbols-outlined">cancel</span>
-                                            </button>
-                                        @endif
+                                        <button wire:click="openTaskReview({{ $score->id }})"
+                                            class="hover:text-primary text-slate-400 transition-colors"
+                                            title="Xem chi tiết task theo kỳ trước khi duyệt">
+                                            <span class="material-symbols-outlined">visibility</span>
+                                        </button>
 
                                         @if ($this->canToggleLock($score))
                                             @if ($score->status === 'locked')
                                                 <button wire:click="unlockScore({{ $score->id }})"
-                                                    class="text-slate-400 transition-colors hover:text-amber-600" title="Mở khóa">
+                                                    class="text-slate-400 transition-colors hover:text-amber-600"
+                                                    title="Mở khóa">
                                                     <span class="material-symbols-outlined">lock_open</span>
                                                 </button>
                                             @else
@@ -727,7 +921,7 @@ new #[Title('KPI phòng ban')] class extends Component {
     <div class="animate-enter grid grid-cols-1 gap-6 lg:grid-cols-4" style="animation-delay: 0.4s">
         <div
             class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-            <p class="mb-1 text-sm font-medium text-slate-500">Hiệu suất trung bình Team</p>
+            <p class="mb-1 text-sm font-medium text-slate-500">Hiệu suất trung bình phòng ban</p>
             <div class="flex items-end gap-2">
                 <span class="text-primary text-4xl font-black">{{ number_format($summary['avg_score'], 1) }}</span>
             </div>
@@ -753,7 +947,7 @@ new #[Title('KPI phòng ban')] class extends Component {
         </div>
         <div
             class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-            <p class="mb-1 text-sm font-medium text-slate-500">Tổng task hoàn thành</p>
+            <p class="mb-1 text-sm font-medium text-slate-500">Tổng số công việc hoàn thành</p>
             <div class="flex items-end gap-2">
                 <span
                     class="text-4xl font-black text-slate-900 dark:text-white">{{ number_format($summary['total_tasks']) }}</span>
@@ -779,4 +973,215 @@ new #[Title('KPI phòng ban')] class extends Component {
             <p class="mt-4 text-xs text-slate-400">Dựa trên kết quả đánh giá</p>
         </div>
     </div>
+
+    <x-ui.modal wire:model="showTaskReviewModal" maxWidth="6xl"
+        wire:key="kpi-task-review-modal-{{ $reviewScoreId ?? 'none' }}">
+        <x-slot name="header">
+            <x-ui.form.heading icon="fact_check" title="Chi tiết công việc trước khi duyệt KPI"
+                description="Kiểm tra công việc trong kỳ để xác nhận KPI phản ánh đúng hiệu suất thực tế." />
+        </x-slot>
+
+        @php
+            $reviewScore = $this->reviewScore;
+            $reviewTasks = $this->reviewTasks;
+            $reviewSummary = $this->reviewTaskSummary;
+        @endphp
+
+        @if ($reviewScore)
+            <div
+                class="mb-4 rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/50">
+                <div class="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Nhân sự</p>
+                        <h4 class="text-lg font-bold text-slate-900 dark:text-white">
+                            {{ $reviewScore->user?->name ?? $reviewUserName }}</h4>
+                        <p class="text-xs text-slate-500">{{ $reviewScore->user?->job_title ?? 'N/A' }}</p>
+                    </div>
+                    <div class="flex flex-col items-end gap-3 text-right">
+                        <div>
+                            <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Kỳ đánh giá</p>
+                            <p class="text-sm font-bold text-slate-900 dark:text-white">{{ $this->reviewPeriodLabel }}
+                            </p>
+                            <p class="mt-1 text-xs text-slate-500">Final score hiện tại:
+                                <span
+                                    class="text-primary font-bold">{{ number_format((float) $reviewScore->final_score, 1) }}</span>
+                            </p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Lọc
+                                duyệt</span>
+                            <x-ui.filter-select model="reviewApprovalFilter" :value="$reviewApprovalFilter" icon="filter_alt"
+                                :permit-all="false" width="w-36" :options="[
+                                    'all' => 'Tất cả',
+                                    'approved' => 'Đã duyệt',
+                                    'waiting' => 'Chờ duyệt',
+                                    'rejected' => 'Từ chối',
+                                ]" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-4 grid grid-cols-2 gap-3 md:grid-cols-5">
+                <div class="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900">
+                    <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Tổng task</p>
+                    <p class="mt-1 text-2xl font-black text-slate-900 dark:text-white">{{ $reviewSummary['total'] }}
+                    </p>
+                </div>
+                <div class="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900">
+                    <p class="text-[11px] font-semibold uppercase tracking-wide text-emerald-600">Hoàn thành</p>
+                    <p class="mt-1 text-2xl font-black text-emerald-600">{{ $reviewSummary['completed'] }}</p>
+                </div>
+                <div class="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900">
+                    <p class="text-[11px] font-semibold uppercase tracking-wide text-amber-600">Chờ duyệt</p>
+                    <p class="mt-1 text-2xl font-black text-amber-600">{{ $reviewSummary['waiting_approval'] }}</p>
+                </div>
+                <div class="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900">
+                    <p class="text-[11px] font-semibold uppercase tracking-wide text-rose-600">Trễ hạn</p>
+                    <p class="mt-1 text-2xl font-black text-rose-600">{{ $reviewSummary['late'] }}</p>
+                </div>
+                <div class="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900">
+                    <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Avg tiến độ</p>
+                    <p class="mt-1 text-2xl font-black text-slate-900 dark:text-white">
+                        {{ number_format((float) $reviewSummary['avg_progress'], 1) }}%</p>
+                </div>
+            </div>
+
+            <div class="mb-3 flex flex-wrap items-center gap-4 text-xs text-slate-600 dark:text-slate-300">
+                <span>Đúng hạn: <strong>{{ $reviewSummary['on_time'] }}</strong></span>
+                <span>SLA đạt: <strong>{{ $reviewSummary['sla_met'] }}</strong></span>
+                <span>Avg sao: <strong>{{ number_format((float) $reviewSummary['avg_star'], 1) }}</strong></span>
+            </div>
+
+            <div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700">
+                <table class="w-full border-collapse text-left">
+                    <thead>
+                        <tr
+                            class="bg-slate-50 text-xs font-bold uppercase tracking-wide text-slate-500 dark:bg-slate-800/70 dark:text-slate-300">
+                            <th class="px-4 py-3">Công việc</th>
+                            <th class="px-4 py-3">Dự án / Giai đoạn</th>
+                            <th class="px-4 py-3 text-center">Trạng thái</th>
+                            <th class="px-4 py-3 text-center">Tiến độ</th>
+                            <th class="px-4 py-3 text-center">Deadline</th>
+                            <th class="px-4 py-3 text-center">Hoàn thành</th>
+                            <th class="px-4 py-3 text-center">SLA</th>
+                            <th class="px-4 py-3 text-center">Sao</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                        @forelse ($reviewTasks as $task)
+                            @php
+                                $taskStatus = $task->status;
+                                $taskStatusValue = $taskStatus instanceof \BackedEnum 
+                                    ? $taskStatus->value 
+                                    : ($taskStatus->value ?? ($taskStatus ?? ''));
+                                
+                                $statusEnum = \App\Enums\TaskStatus::tryFrom($taskStatusValue);
+                                $statusLabel = $statusEnum?->label() ?? ucfirst($taskStatusValue);
+                                $statusClass = $statusEnum?->badgeClass() ?? 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300';
+                                
+                                $latestApprovedLog = $task->approvalLogs
+                                    ->where('action', 'approved')
+                                    ->whereNotNull('star_rating')
+                                    ->sortByDesc('id')
+                                    ->first();
+                            @endphp
+                            <tr class="align-top hover:bg-slate-50/80 dark:hover:bg-slate-800/40">
+                                <td class="px-4 py-3">
+                                    <p class="font-semibold text-slate-900 dark:text-white">{{ $task->name }}</p>
+                                    @if ($task->description)
+                                        <p class="mt-0.5 line-clamp-2 text-xs text-slate-500">{{ $task->description }}
+                                        </p>
+                                    @endif
+                                </td>
+                                <td class="px-4 py-3 text-xs text-slate-600 dark:text-slate-300">
+                                    <p class="font-medium">{{ $task->phase?->project?->name ?? 'N/A' }}</p>
+                                    <p class="text-slate-500">{{ $task->phase?->name ?? 'N/A' }}</p>
+                                </td>
+                                <td class="px-4 py-3 text-center">
+                                    <span
+                                        class="{{ $statusClass }} inline-flex items-center rounded px-2 py-0.5 text-[11px] font-semibold">
+                                        {{ $statusLabel }}
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3 text-center">
+                                    <div class="mx-auto w-24">
+                                        <div class="mb-1 text-xs font-semibold text-slate-700 dark:text-slate-200">
+                                            {{ (int) $task->progress }}%</div>
+                                        <div class="h-1.5 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
+                                            <div class="bg-primary h-full rounded-full"
+                                                style="width: {{ max(0, min(100, (int) $task->progress)) }}%"></div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-3 text-center text-xs text-slate-600 dark:text-slate-300">
+                                    {{ $task->deadline?->format('d/m/Y') ?? '—' }}
+                                </td>
+                                <td class="px-4 py-3 text-center text-xs text-slate-600 dark:text-slate-300">
+                                    {{ $task->completed_at?->format('d/m/Y') ?? '—' }}
+                                </td>
+                                <td class="px-4 py-3 text-center text-xs">
+                                    @if ($taskStatusValue === 'completed')
+                                        @if ($task->sla_met === true)
+                                            <span
+                                                class="rounded bg-emerald-100 px-2 py-0.5 font-semibold text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">Đạt</span>
+                                        @elseif($task->sla_met === false)
+                                            <span
+                                                class="rounded bg-rose-100 px-2 py-0.5 font-semibold text-rose-700 dark:bg-rose-900/30 dark:text-rose-300">Không
+                                                đạt</span>
+                                        @else
+                                            <span class="text-slate-400">—</span>
+                                        @endif
+                                    @else
+                                        <span class="text-slate-400">—</span>
+                                    @endif
+                                </td>
+                                <td class="px-4 py-3 text-center text-xs text-slate-700 dark:text-slate-200">
+                                    @if ($latestApprovedLog?->star_rating)
+                                        <div class="inline-flex items-center gap-1">
+                                            <span class="font-semibold">{{ $latestApprovedLog->star_rating }}</span>
+                                            <span
+                                                class="material-symbols-outlined text-primary fill-[1] text-sm">star</span>
+                                        </div>
+                                    @else
+                                        <span class="text-slate-400">—</span>
+                                    @endif
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="8" class="px-4 py-8 text-center text-sm text-slate-500">
+                                    Không có task nào của nhân sự trong kỳ này để đối soát.
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+            @if ($reviewTasks->hasPages())
+                <div class="mt-4 border-t border-slate-100 p-4 dark:border-slate-800">
+                    {{ $reviewTasks->links() }}
+                </div>
+            @endif
+        @else
+            <div
+                class="rounded-xl border border-slate-200 bg-slate-50 p-6 text-center text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-800/50">
+                Không tìm thấy dữ liệu KPI để xem chi tiết.
+            </div>
+        @endif
+
+        <x-slot name="footer">
+            <x-ui.button variant="secondary" wire:click="closeTaskReviewModal">Đóng</x-ui.button>
+            @if ($reviewScore && $this->canReviewScore($reviewScore))
+                <x-ui.button variant="danger" icon="cancel" wire:click="rejectScore({{ $reviewScore->id }})"
+                    loading="rejectScore({{ $reviewScore->id }})">
+                    Từ chối KPI
+                </x-ui.button>
+                <x-ui.button variant="success" icon="check_circle" wire:click="approveScore({{ $reviewScore->id }})"
+                    loading="approveScore({{ $reviewScore->id }})">
+                    Duyệt KPI
+                </x-ui.button>
+            @endif
+        </x-slot>
+    </x-ui.modal>
 </main>

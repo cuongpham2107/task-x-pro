@@ -67,6 +67,15 @@ class TaskApprovalService
             ]);
         }
 
+        $isFinalApprovalStep = $workflowType === TaskWorkflowType::Single->value
+            || $approvalLevel === ApprovalLevel::Ceo->value;
+
+        if ($isFinalApprovalStep && (int) $task->progress < 90) {
+            throw ValidationException::withMessages([
+                'progress' => 'Task chỉ được hoàn thành khi tiến độ đạt ít nhất 90%.',
+            ]);
+        }
+
         ApprovalLog::query()->create([
             'task_id' => $task->id,
             'reviewer_id' => $actor->id,
@@ -77,16 +86,7 @@ class TaskApprovalService
             'created_at' => now(),
         ]);
 
-        if (
-            $workflowType === TaskWorkflowType::Single->value
-            || $approvalLevel === ApprovalLevel::Ceo->value
-        ) {
-            if ((int) $task->progress < 100) {
-                throw ValidationException::withMessages([
-                    'progress' => 'Task chỉ được hoàn thành khi tiến độ đạt 100%.',
-                ]);
-            }
-
+        if ($isFinalApprovalStep) {
             $task->forceFill([
                 'status' => TaskStatus::Completed->value,
                 'completed_at' => $task->completed_at ?? now(),

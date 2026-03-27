@@ -47,7 +47,7 @@ new class extends Component {
 <div x-data="{ ready: false }" x-init="setTimeout(() => ready = true, 100)">
     <main class="flex flex-1 overflow-hidden">
 
-        <div class="dark:bg-background-dark flex-1 overflow-y-auto bg-slate-50 p-6 lg:p-8">
+        <div class="dark:bg-background-dark flex-1 overflow-y-auto p-6 lg:p-8">
             <div class="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-center" x-show="ready"
                 x-transition:enter="transition ease-out duration-500" x-transition:enter-start="opacity-0 translate-y-4"
                 x-transition:enter-end="opacity-100 translate-y-0" style="display: none;">
@@ -196,20 +196,18 @@ new class extends Component {
                             <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
                                 @forelse($data['approval_tasks'] as $task)
                                     @php
-                                        $priorityEnum =
-                                            $task->priority instanceof TaskPriority
-                                                ? $task->priority
-                                                : TaskPriority::tryFrom($task->priority ?? '');
+                                        $priorityEnum = \App\Enums\TaskPriority::tryFrom(
+                                            $task->priority->value ?? ($task->priority ?? ''),
+                                        );
                                         $priorityColor = match ($priorityEnum?->value ?? '') {
                                             'urgent' => 'red',
                                             'high' => 'orange',
                                             'medium' => 'amber',
                                             default => 'blue',
                                         };
-                                        $statusEnum =
-                                            $task->status instanceof TaskStatus
-                                                ? $task->status
-                                                : TaskStatus::tryFrom($task->status ?? '');
+                                        $statusEnum = \App\Enums\TaskStatus::tryFrom(
+                                            $task->status->value ?? ($task->status ?? ''),
+                                        );
                                     @endphp
                                     <tr class="transition-colors hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
                                         <td class="px-6 py-4">

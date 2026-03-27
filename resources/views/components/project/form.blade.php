@@ -355,6 +355,13 @@ new class extends Component {
             <div class="flex flex-1 items-center justify-start gap-2">
                 @if ($editingProjectId && $this->project)
                     @can('update', $this->project)
+                        @if (!in_array($this->project->status->value, ['running', 'completed', 'cancelled'], true))
+                            <x-ui.button variant="primary" size="sm" icon="play_circle"
+                                wire:click="updateStatus('running')" loading="updateStatus('running')">
+                                Bắt đầu
+                            </x-ui.button>
+                        @endif
+
                         @if ($this->project->status->value !== 'completed')
                             <x-ui.button variant="success" size="sm" icon="check_circle" :hidden="$this->project->progress !== 100"
                                 wire:click="updateStatus('completed')" loading="updateStatus('completed')">

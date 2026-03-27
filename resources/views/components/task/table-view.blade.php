@@ -157,7 +157,7 @@
                                 @endphp
                                 @if ($canStartTask)
                                     <x-ui.icon-button icon="play_circle" size="sm" color="primary"
-                                        tooltip="Bắt đầu ngay" wire:click="startTask({{ $task->id }})" />
+                                        tooltip="Bắt đầu ngay" wire:click.stop="startTask({{ $task->id }})" />
                                 @endif
                             @endif
 
@@ -167,7 +167,7 @@
                             @endcan
                             @can('delete', $task)
                                 <x-ui.icon-button icon="delete" size="sm" color="red" tooltip="Xóa"
-                                    wire:click="deleteTask({{ $task->id }})"
+                                    wire:click.stop="deleteTask({{ $task->id }})"
                                     wire:confirm="Bạn có chắc muốn xóa công việc này không?" />
                             @endcan
                         </div>

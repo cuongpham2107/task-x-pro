@@ -79,11 +79,7 @@ class Phase extends Model
 
         $taskCount = (int) $tasksQuery->count();
         $hasIncompleteTask = $tasksQuery
-            ->where(function ($query): void {
-                $query
-                    ->where('status', '!=', \App\Enums\TaskStatus::Completed->value)
-                    ->orWhere('progress', '<', 100);
-            })
+            ->where('status', '!=', \App\Enums\TaskStatus::Completed->value)
             ->exists();
 
         $canMarkCompleted = $taskCount > 0 && ! $hasIncompleteTask;

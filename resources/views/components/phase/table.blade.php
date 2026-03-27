@@ -79,7 +79,7 @@
                     </x-ui.table.cell>
                     <x-ui.table.cell align="right" x-on:click.stop>
                         <div class="flex items-center justify-end gap-1">
-                            <x-ui.icon-button icon="visibility" size="sm" tooltip="Sửa"
+                            <x-ui.icon-button icon="visibility" size="sm" tooltip="Xem"
                                 href="{{ route('projects.phases.tasks.index', [$project, $phase]) }}" />
                             @can('update', $phase)
                                 @if ($phase->status === 'pending')

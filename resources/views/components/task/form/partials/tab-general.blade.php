@@ -1,15 +1,28 @@
 @php
     $user = auth()->user();
-    $isManager = $isResponsibleLeader && $status !== 'waiting_approval';
     $isCeo = $user->hasRole('ceo');
+    $isLeader = $isResponsibleLeader;
+    $isPic = (int) $pic_id === $user->id || in_array($user->id, $co_pic_ids ?: []);
+
+    // Leaders can edit all manager fields, while task hasn't started for PIC-related fields.
+// CEOs and PICs cannot edit manager fields.
+$isManager = $isLeader && !$isCeo && $status !== 'waiting_approval';
     $isRestricted = !$isManager;
+
+    // PIC cannot change the pic field itself - only Leaders can change PIC, but not after task started
+    $canChangePic = $isManager && !$isTaskStarted;
+
+    $canEditTaskType = $isLeader && !$isCeo;
+
+    // Only PIC/Co-PIC (not leaders) can edit progress
+    $canEditProgressFields = !$isCeo && ($isPic && $isTaskStarted);
 @endphp
 
 <div class="{{ $this->isCompletedLocked ? 'pointer-events-none select-none opacity-70' : '' }} grid grid-cols-2 gap-6">
     {{-- Tên công việc --}}
     <div class="col-span-full">
         <x-ui.input label="Tên công việc" name="name" placeholder="Nhập tên công việc..." wire:model="name"
-            :disabled="$isCeo" required />
+            :disabled="$isCeo || $isRestricted" required />
     </div>
     @if (!$this->isPhaseScoped)
         <div class="col-span-full grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -28,7 +41,7 @@
     {{-- Loại công việc & Trạng thái --}}
     <div>
         <x-ui.select label="Loại công việc" name="type" wire:model="type" icon="category" :options="$taskTypeLabels"
-            :disabled="$isRestricted" required />
+            :disabled="!$canEditTaskType" required />
     </div>
 
     <div>
@@ -55,7 +68,7 @@
 
     <div>
         <x-ui.user-select model="pic_id" :users="$picOptions" label="Người phụ trách (PIC)"
-            placeholder="Chọn hoặc tìm kiếm PIC..." required="true" :disabled="$isRestricted || ($mode === 'edit' && $isTaskStarted)" />
+            placeholder="Chọn hoặc tìm kiếm PIC..." required="true" :disabled="!$canChangePic" />
     </div>
 
     {{-- Mức độ ưu tiên --}}
@@ -98,12 +111,12 @@
 
     {{-- Tiến độ công việc (Progress) --}}
     <x-ui.range-slider label="Tiến độ công việc" name="progress" wire:model="progress" icon="trending_up"
-        start-label="Bắt đầu (0%)" end-label="Hoàn thành (100%)" :disabled="$isCeo || $status === 'pending' || $this->phase->status === 'pending' || (auth()->id() !== (int) $pic_id && !in_array(auth()->id(), $co_pic_ids ?: []))" />
+        start-label="Bắt đầu (0%)" end-label="Hoàn thành (100%)" :disabled="!$canEditProgressFields || $status === 'pending' || $this->phase->status === 'pending'" />
 
     {{-- Link sản phẩm --}}
     <div class="col-span-full">
         <x-ui.input label="Link sản phẩm (Drive/Figma/...)" name="deliverable_url" type="url"
-            placeholder="https://..." wire:model="deliverable_url" icon="link" :disabled="$isCeo" />
+            placeholder="https://..." wire:model="deliverable_url" icon="link" :disabled="$isCeo || (!$isManager && !($isPic && $isTaskStarted))" />
     </div>
 
     {{-- Phụ thuộc công việc --}}

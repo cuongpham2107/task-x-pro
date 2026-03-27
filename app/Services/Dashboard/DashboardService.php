@@ -136,6 +136,7 @@ class DashboardService
             ]);
 
         $recentTasks = (clone $taskScope)
+            ->where('status', '!=', TaskStatus::Completed->value)
             ->with([
                 'phase:id,project_id,name',
                 'phase.project:id,name,type,status',
@@ -143,7 +144,7 @@ class DashboardService
                 'coPics:id,name,email,avatar,job_title',
             ])
             ->withCount('comments')
-            ->orderBy('deadline')
+            ->orderBy('updated_at')
             ->limit(10)
             ->get([
                 'id',
