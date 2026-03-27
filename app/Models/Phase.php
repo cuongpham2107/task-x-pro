@@ -78,14 +78,18 @@ class Phase extends Model
         $progress = (int) round(max(0, min(100, $averageTaskProgress)));
 
         $taskCount = (int) $tasksQuery->count();
-        $hasIncompleteTask = $tasksQuery
+        $hasIncompleteTask = $this->tasks()
             ->where('status', '!=', \App\Enums\TaskStatus::Completed->value)
+            ->exists();
+
+        $hasStartedTask = $this->tasks()
+            ->where('status', '!=', \App\Enums\TaskStatus::Pending->value)
             ->exists();
 
         $canMarkCompleted = $taskCount > 0 && ! $hasIncompleteTask;
         $status = match (true) {
             $canMarkCompleted => 'completed',
-            $progress > 0 => 'active',
+            $progress > 0 || $hasStartedTask => 'active',
             default => 'pending',
         };
 

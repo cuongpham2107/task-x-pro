@@ -285,6 +285,7 @@ new class extends Component
         $this->co_pic_ids = $task->coPics->pluck('id')->all();
         $this->project_id = $task->phase?->project_id;
         $this->phase_id = $task->phase_id;
+        $this->phase = $task->phase;
         $this->isTaskStarted = $task->started_at !== null;
         $actor = auth()->user();
         $this->isResponsibleLeader = false;

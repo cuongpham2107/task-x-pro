@@ -111,7 +111,7 @@ $isManager = $isLeader && !$isCeo && $status !== 'waiting_approval';
 
     {{-- Tiến độ công việc (Progress) --}}
     <x-ui.range-slider label="Tiến độ công việc" name="progress" wire:model="progress" icon="trending_up"
-        start-label="Bắt đầu (0%)" end-label="Hoàn thành (100%)" :disabled="!$canEditProgressFields || $status === 'pending' || $this->phase->status === 'pending'" />
+        start-label="Bắt đầu (0%)" end-label="Hoàn thành (100%)" :disabled="!$canEditProgressFields || $status === 'pending' || ($this->phase?->status === 'pending')" />
 
     {{-- Link sản phẩm --}}
     <div class="col-span-full">
