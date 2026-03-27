@@ -2,6 +2,9 @@
 use App\Enums\KpiPeriodType;
 use App\Exports\KpiExport;
 use App\Models\KpiScore;
+use App\Models\Task;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
@@ -129,6 +132,164 @@ new class extends Component {
         return collect(range(now()->year - 3, now()->year))
             ->mapWithKeys(fn($y) => [$y => "Năm $y"])
             ->all();
+    }
+
+    public function getTaskReviewItemsProperty(): Collection
+    {
+        [$periodStart, $periodEnd] = $this->selectedPeriodDateRange();
+
+        return Task::query()
+            ->with([
+                'phase:id,name,project_id',
+                'phase.project:id,name',
+                'approvalLogs:id,task_id,reviewer_id,approval_level,action,star_rating,created_at',
+                'approvalLogs.reviewer:id,name',
+            ])
+            ->where('pic_id', auth()->id())
+            ->where(function ($query) use ($periodStart, $periodEnd): void {
+                $query
+                    ->whereBetween('completed_at', [$periodStart, $periodEnd])
+                    ->orWhereBetween('started_at', [$periodStart, $periodEnd])
+                    ->orWhereBetween('deadline', [$periodStart, $periodEnd]);
+            })
+            ->orderByRaw('COALESCE(completed_at, deadline, started_at, created_at) DESC')
+            ->limit(80)
+            ->get();
+    }
+
+    public function getTaskReviewSummaryProperty(): array
+    {
+        $tasks = $this->taskReviewItems;
+        if ($tasks->isEmpty()) {
+            return [
+                'total' => 0,
+                'completed' => 0,
+                'waiting_approval' => 0,
+                'approved' => 0,
+                'rejected' => 0,
+                'sla_met' => 0,
+                'avg_progress' => 0.0,
+            ];
+        }
+
+        $statusValue = fn(Task $task): string => $task->status instanceof \BackedEnum ? (string) $task->status->value : (string) $task->status;
+
+        $approvalActions = $tasks->map(function (Task $task): ?string {
+            $latestLog = $task->approvalLogs->sortByDesc('id')->first();
+
+            return $latestLog?->action;
+        });
+
+        return [
+            'total' => $tasks->count(),
+            'completed' => $tasks->filter(fn(Task $task): bool => $statusValue($task) === 'completed')->count(),
+            'waiting_approval' => $tasks->filter(fn(Task $task): bool => $statusValue($task) === 'waiting_approval')->count(),
+            'approved' => $approvalActions->filter(fn(?string $action): bool => $action === 'approved')->count(),
+            'rejected' => $approvalActions->filter(fn(?string $action): bool => $action === 'rejected')->count(),
+            'sla_met' => $tasks->filter(fn(Task $task): bool => $task->sla_met === true)->count(),
+            'avg_progress' => round((float) $tasks->avg(fn(Task $task): int => (int) $task->progress), 1),
+        ];
+    }
+
+    public function getTaskReviewPeriodLabelProperty(): string
+    {
+        return match ($this->periodType) {
+            KpiPeriodType::Quarterly->value => 'Quý ' . $this->selectedValue . '/' . $this->selectedYear,
+            KpiPeriodType::Yearly->value => 'Năm ' . $this->selectedYear,
+            default => 'Tháng ' . $this->selectedValue . '/' . $this->selectedYear,
+        };
+    }
+
+    /**
+     * @return array{label: string, class: string}
+     */
+    public function taskStatusMeta(Task $task): array
+    {
+        $status = $task->status;
+        if ($status instanceof \App\Enums\TaskStatus) {
+            return [
+                'label' => $status->label(),
+                'class' => $status->badgeClass(),
+            ];
+        }
+
+        $statusValue = $status instanceof \BackedEnum ? (string) $status->value : (string) $status;
+
+        return match ($statusValue) {
+            'completed' => ['label' => 'Hoàn thành', 'class' => 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'],
+            'waiting_approval' => ['label' => 'Chờ duyệt', 'class' => 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'],
+            'in_progress' => ['label' => 'Đang thực hiện', 'class' => 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'],
+            'late' => ['label' => 'Trễ hạn', 'class' => 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300'],
+            default => ['label' => 'Chưa bắt đầu', 'class' => 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300'],
+        };
+    }
+
+    /**
+     * @return array{label: string, class: string, reviewer: string, level: string, star: ?int}
+     */
+    public function taskApprovalMeta(Task $task): array
+    {
+        $latestLog = $task->approvalLogs->sortByDesc('id')->first();
+        if (! $latestLog) {
+            return [
+                'label' => 'Chưa gửi duyệt',
+                'class' => 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300',
+                'reviewer' => '',
+                'level' => '',
+                'star' => null,
+            ];
+        }
+
+        $level = $latestLog->approval_level ? strtoupper((string) $latestLog->approval_level) : '';
+        $reviewer = (string) ($latestLog->reviewer?->name ?? '');
+        $star = $latestLog->star_rating !== null ? (int) $latestLog->star_rating : null;
+
+        return match ((string) $latestLog->action) {
+            'approved' => [
+                'label' => 'Đã duyệt',
+                'class' => 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
+                'reviewer' => $reviewer,
+                'level' => $level,
+                'star' => $star,
+            ],
+            'rejected' => [
+                'label' => 'Từ chối',
+                'class' => 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300',
+                'reviewer' => $reviewer,
+                'level' => $level,
+                'star' => null,
+            ],
+            default => [
+                'label' => 'Đang chờ duyệt',
+                'class' => 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
+                'reviewer' => $reviewer,
+                'level' => $level,
+                'star' => null,
+            ],
+        };
+    }
+
+    /**
+     * @return array{0: Carbon, 1: Carbon}
+     */
+    private function selectedPeriodDateRange(): array
+    {
+        if ($this->periodType === KpiPeriodType::Yearly->value) {
+            $start = Carbon::create($this->selectedYear, 1, 1)->startOfDay();
+
+            return [$start, $start->copy()->endOfYear()->endOfDay()];
+        }
+
+        if ($this->periodType === KpiPeriodType::Quarterly->value) {
+            $startMonth = (($this->selectedValue - 1) * 3) + 1;
+            $start = Carbon::create($this->selectedYear, $startMonth, 1)->startOfDay();
+
+            return [$start, $start->copy()->addMonths(2)->endOfMonth()->endOfDay()];
+        }
+
+        $start = Carbon::create($this->selectedYear, $this->selectedValue, 1)->startOfDay();
+
+        return [$start, $start->copy()->endOfMonth()->endOfDay()];
     }
 };
 ?>
@@ -469,6 +630,136 @@ new class extends Component {
                 </div>
             </div>
         </div>
+
+        @php
+            $taskReviewItems = $this->taskReviewItems;
+            $taskReviewSummary = $this->taskReviewSummary;
+        @endphp
+
+        <div class="animate-enter overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800"
+            style="animation-delay: 0.35s">
+            <div
+                class="flex flex-col justify-between gap-3 border-b border-slate-100 px-6 py-5 md:flex-row md:items-center dark:border-slate-700">
+                <div>
+                    <h3 class="text-xl font-bold text-slate-900 dark:text-white">Task KPI - SLA - Phê duyệt</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-300">
+                        Danh sách task trong {{ $this->taskReviewPeriodLabel }} để đối soát trước/sau duyệt KPI.
+                    </p>
+                </div>
+                <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700 dark:bg-slate-700 dark:text-slate-200">
+                    Tổng task: {{ $taskReviewSummary['total'] }}
+                </span>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 border-b border-slate-100 p-4 md:grid-cols-6 dark:border-slate-700">
+                <div class="rounded-lg bg-slate-50 p-3 dark:bg-slate-900/50">
+                    <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Hoàn thành</p>
+                    <p class="mt-1 text-xl font-black text-emerald-600">{{ $taskReviewSummary['completed'] }}</p>
+                </div>
+                <div class="rounded-lg bg-slate-50 p-3 dark:bg-slate-900/50">
+                    <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Chờ duyệt</p>
+                    <p class="mt-1 text-xl font-black text-amber-600">{{ $taskReviewSummary['waiting_approval'] }}</p>
+                </div>
+                <div class="rounded-lg bg-slate-50 p-3 dark:bg-slate-900/50">
+                    <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Task đã duyệt</p>
+                    <p class="mt-1 text-xl font-black text-emerald-600">{{ $taskReviewSummary['approved'] }}</p>
+                </div>
+                <div class="rounded-lg bg-slate-50 p-3 dark:bg-slate-900/50">
+                    <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Task bị từ chối</p>
+                    <p class="mt-1 text-xl font-black text-rose-600">{{ $taskReviewSummary['rejected'] }}</p>
+                </div>
+                <div class="rounded-lg bg-slate-50 p-3 dark:bg-slate-900/50">
+                    <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">SLA đạt</p>
+                    <p class="mt-1 text-xl font-black text-blue-600">{{ $taskReviewSummary['sla_met'] }}</p>
+                </div>
+                <div class="rounded-lg bg-slate-50 p-3 dark:bg-slate-900/50">
+                    <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Avg tiến độ</p>
+                    <p class="mt-1 text-xl font-black text-slate-900 dark:text-white">{{ number_format((float) $taskReviewSummary['avg_progress'], 1) }}%</p>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead class="bg-slate-50 text-[10px] font-black uppercase tracking-widest text-slate-500 dark:bg-slate-900/50">
+                        <tr>
+                            <th class="px-6 py-4">Công việc</th>
+                            <th class="px-6 py-4">Dự án / Giai đoạn</th>
+                            <th class="px-6 py-4 text-center">Trạng thái</th>
+                            <th class="px-6 py-4 text-center">Tiến độ</th>
+                            <th class="px-6 py-4 text-center">Deadline</th>
+                            <th class="px-6 py-4 text-center">SLA</th>
+                            <th class="px-6 py-4 text-center">Task Approver</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
+                        @forelse($taskReviewItems as $task)
+                            @php
+                                $taskStatusMeta = $this->taskStatusMeta($task);
+                                $taskApprovalMeta = $this->taskApprovalMeta($task);
+                            @endphp
+                            <tr class="transition-colors hover:bg-slate-50 dark:hover:bg-slate-900/30">
+                                <td class="px-6 py-4">
+                                    <p class="font-semibold text-slate-900 dark:text-white">{{ $task->name }}</p>
+                                    @if ($task->description)
+                                        <p class="mt-0.5 line-clamp-2 text-xs text-slate-500">{{ $task->description }}</p>
+                                    @endif
+                                </td>
+                                <td class="px-6 py-4 text-xs text-slate-600 dark:text-slate-300">
+                                    <p class="font-medium">{{ $task->phase?->project?->name ?? 'N/A' }}</p>
+                                    <p class="text-slate-500">{{ $task->phase?->name ?? 'N/A' }}</p>
+                                </td>
+                                <td class="px-6 py-4 text-center">
+                                    <span class="{{ $taskStatusMeta['class'] }} rounded-full px-2.5 py-1 text-xs font-bold">
+                                        {{ $taskStatusMeta['label'] }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 text-center">
+                                    <div class="mx-auto w-24">
+                                        <div class="mb-1 text-xs font-semibold text-slate-700 dark:text-slate-200">{{ (int) $task->progress }}%</div>
+                                        <div class="h-1.5 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
+                                            <div class="bg-primary h-full rounded-full" style="width: {{ max(0, min(100, (int) $task->progress)) }}%"></div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-center text-xs text-slate-600 dark:text-slate-300">
+                                    {{ $task->deadline?->format('d/m/Y') ?? '—' }}
+                                </td>
+                                <td class="px-6 py-4 text-center text-xs">
+                                    @if ($task->sla_met === true)
+                                        <span class="rounded bg-emerald-100 px-2 py-0.5 font-semibold text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">Đạt</span>
+                                    @elseif ($task->sla_met === false)
+                                        <span class="rounded bg-rose-100 px-2 py-0.5 font-semibold text-rose-700 dark:bg-rose-900/30 dark:text-rose-300">Không đạt</span>
+                                    @else
+                                        <span class="text-slate-400">—</span>
+                                    @endif
+                                </td>
+                                <td class="px-6 py-4 text-center">
+                                    <span class="{{ $taskApprovalMeta['class'] }} inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold">
+                                        {{ $taskApprovalMeta['label'] }}
+                                    </span>
+                                    @if ($taskApprovalMeta['reviewer'] !== '' || $taskApprovalMeta['star'] !== null)
+                                        <p class="mt-1 text-[11px] text-slate-500">
+                                            {{ $taskApprovalMeta['level'] !== '' ? $taskApprovalMeta['level'] . ':' : '' }}
+                                            {{ $taskApprovalMeta['reviewer'] !== '' ? $taskApprovalMeta['reviewer'] : 'N/A' }}
+                                            @if ($taskApprovalMeta['star'] !== null)
+                                                · {{ $taskApprovalMeta['star'] }}★
+                                            @endif
+                                        </p>
+                                    @endif
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="7" class="px-6 py-8 text-center text-sm text-slate-500">
+                                    Chưa có task nào trong kỳ này.
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
         <!-- History Table -->
         <div class="animate-enter overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800"
             style="animation-delay: 0.4s">
