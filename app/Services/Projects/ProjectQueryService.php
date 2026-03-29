@@ -30,11 +30,11 @@ class ProjectQueryService
 
         $tab = $filters['tab'] ?? 'all';
         if ($tab === 'mine' && $actor) {
-            $query->where('created_by', $actor->id);
+            $query->where('projects.created_by', $actor->id);
         } elseif ($tab === 'mine') {
             $query->whereRaw('1 = 0');
         } elseif ($tab !== 'all') {
-            $query->where('status', $tab);
+            $query->where('projects.status', $tab);
         }
 
         $this->applyAdvancedFilters($query, $filters);
@@ -65,7 +65,7 @@ class ProjectQueryService
         ];
 
         if ($actor) {
-            $tabs['mine'] = ['label' => 'Của tôi', 'count' => $baseQuery->clone()->where('created_by', $actor->id)->count()];
+            $tabs['mine'] = ['label' => 'Của tôi', 'count' => $baseQuery->clone()->where('projects.created_by', $actor->id)->count()];
         }
 
         foreach (ProjectStatus::cases() as $status) {
@@ -85,13 +85,13 @@ class ProjectQueryService
     {
         if ($actor && ! $actor->hasAnyRole(['super_admin', 'ceo'])) {
             $query->where(function (Builder $builder) use ($actor) {
-                $builder->where('created_by', $actor->id)
+                $builder->where('projects.created_by', $actor->id)
                     ->orWhereHas('leaders', function (Builder $q) use ($actor) {
                         $q->where('users.id', $actor->id);
                     })
                     ->orWhereHas('tasks', function (Builder $q) use ($actor) {
-                        $q->where('pic_id', $actor->id)
-                            ->orWhere('created_by', $actor->id)
+                        $q->where('tasks.pic_id', $actor->id)
+                            ->orWhere('tasks.created_by', $actor->id)
                             ->orWhereHas('coPics', function (Builder $coPicQuery) use ($actor) {
                                 $coPicQuery->where('users.id', $actor->id);
                             });

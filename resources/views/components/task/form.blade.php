@@ -26,7 +26,6 @@ new class extends Component
 
     public ?int $project_id = null;
 
-    #[Validate('required|integer|exists:phases,id')]
     public ?int $phase_id = null;
 
     public bool $showFormModal = false;
@@ -59,46 +58,19 @@ new class extends Component
 
     public bool $isTaskStarted = false;
 
-    #[Validate('required|string|max:255')]
     public string $name = '';
-
-    #[Validate('required|string')]
     public string $type = 'technical';
-
-    #[Validate('required|string')]
     public string $status = 'pending';
-
-    #[Validate('required|string')]
     public string $priority = 'medium';
-
-    #[Validate('required|string')]
     public string $workflow_type = 'single';
-
-    #[Validate('required|date')]
     public string $deadline = '';
-
-    #[Validate('nullable|string|max:5000')]
     public string $description = '';
-
-    #[Validate('nullable|string|max:5000')]
     public string $issue_note = '';
-
-    #[Validate('nullable|string|max:5000')]
     public string $recommendation = '';
-
-    #[Validate('nullable|url|max:255')]
     public string $deliverable_url = '';
-
-    #[Validate('required|integer|min:0|max:100')]
     public int $progress = 0;
-
-    #[Validate('required|integer|exists:users,id')]
     public ?int $pic_id = null;
-
-    #[Validate('nullable|integer|exists:tasks,id')]
     public ?int $dependency_task_id = null;
-
-    #[Validate('nullable|string|max:5000')]
     public string $newComment = '';
 
     public array $co_pic_ids = [];
@@ -188,12 +160,50 @@ new class extends Component
     {
         $this->dependency_task_id = null;
         $this->loadDependencyTaskOptions();
+
+        if ($this->phase_id) {
+            $this->phase = Phase::find($this->phase_id);
+        } else {
+            $this->phase = null;
+        }
     }
 
     #[Computed]
     public function isPhaseScoped(): bool
     {
         return $this->project?->id !== null && $this->phase?->id !== null;
+    }
+
+    #[Computed]
+    public function canStartTask(): bool
+    {
+        if ($this->mode !== 'edit' || $this->status !== 'pending' || $this->isCompletedLocked()) {
+            return false;
+        }
+
+        $actor = auth()->user();
+        if (! $actor) {
+            return false;
+        }
+
+        $isAssignee = (int) $this->pic_id === (int) $actor->id;
+
+        return $actor->hasRole('super_admin') || $isAssignee;
+    }
+
+    #[Computed]
+    public function isPhaseStarted(): bool
+    {
+        // If we have a phase_id but no phase model or start_date yet, fetch it fresh and SYNC it to the property
+        if ($this->phase_id && (! $this->phase || ! $this->phase->start_date)) {
+            $this->phase = Phase::find($this->phase_id);
+        }
+
+        if (! $this->phase || ! $this->phase->start_date) {
+            return true;
+        }
+
+        return now()->greaterThanOrEqualTo($this->phase->start_date->startOfDay());
     }
 
     /**
@@ -341,8 +351,46 @@ new class extends Component
         $this->resetValidation();
     }
 
+    public function rules(): array
+    {
+        $rules = [
+            'phase_id' => 'required|integer|exists:phases,id',
+            'name' => 'required|string|max:255',
+            'type' => 'required|string',
+            'status' => 'required|string',
+            'priority' => 'required|string',
+            'workflow_type' => 'required|string',
+            'deadline' => ['required', 'date'],
+            'description' => 'nullable|string|max:5000',
+            'issue_note' => 'nullable|string|max:5000',
+            'recommendation' => 'nullable|string|max:5000',
+            'deliverable_url' => 'nullable|url|max:255',
+            'progress' => 'required|integer|min:0|max:100',
+            'pic_id' => 'required|integer|exists:users,id',
+            'dependency_task_id' => 'nullable|integer|exists:tasks,id',
+            'newComment' => 'nullable|string|max:5000',
+        ];
+
+        if ($this->phase) {
+            $phaseStart = $this->phase->start_date ? $this->phase->start_date->toDateString() : null;
+            $phaseEnd = $this->phase->end_date ? $this->phase->end_date->toDateString() : null;
+
+            if ($phaseStart) {
+                $rules['deadline'][] = "after_or_equal:{$phaseStart}";
+            }
+            if ($phaseEnd) {
+                $rules['deadline'][] = "before_or_equal:{$phaseEnd}";
+            }
+        }
+
+        return $rules;
+    }
+
     protected function messages(): array
     {
+        $phaseStartLabel = $this->phase?->start_date ? $this->phase->start_date->format('d/m/Y') : 'N/A';
+        $phaseEndLabel = $this->phase?->end_date ? $this->phase->end_date->format('d/m/Y') : 'N/A';
+
         return [
             'name.required' => 'Tên công việc là bắt buộc.',
             'name.max' => 'Tên công việc không được vượt quá 255 ký tự.',
@@ -352,6 +400,8 @@ new class extends Component
             'pic_id.exists' => 'Người phụ trách không hợp lệ.',
             'deadline.required' => 'Hạn chót là bắt buộc.',
             'deadline.date' => 'Hạn chót phải là định dạng ngày hợp lệ.',
+            'deadline.after_or_equal' => "Hạn chót phải sau hoặc bằng ngày bắt đầu giai đoạn ({$phaseStartLabel}).",
+            'deadline.before_or_equal' => "Hạn chót phải trước hoặc bằng ngày kết thúc giai đoạn ({$phaseEndLabel}).",
             'type.required' => 'Loại công việc là bắt buộc.',
             'status.required' => 'Trạng thái là bắt buộc.',
             'priority.required' => 'Mức độ ưu tiên là bắt buộc.',
@@ -751,8 +801,8 @@ new class extends Component
 
     public function submitForApproval(): void
     {
-        if ($this->progress < 90) {
-            $this->dispatch('toast', message: 'Tiến độ công việc phải đạt ít nhất 90% trước khi gửi duyệt.', type: 'error');
+        if ($this->progress < 100) {
+            $this->dispatch('toast', message: 'Tiến độ công việc phải đạt 100% trước khi gửi duyệt.', type: 'error');
 
             return;
         }

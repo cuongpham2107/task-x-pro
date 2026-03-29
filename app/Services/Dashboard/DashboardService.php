@@ -46,9 +46,9 @@ class DashboardService
 
         // Project Stats
         $projectsTotal = (clone $projectScope)->count();
-        $projectsRunning = (clone $projectScope)->where('status', ProjectStatus::Running->value)->count();
-        $projectsPaused = (clone $projectScope)->where('status', ProjectStatus::Paused->value)->count();
-        $projectsCompleted = (clone $projectScope)->where('status', ProjectStatus::Completed->value)->count();
+        $projectsRunning = (clone $projectScope)->where('projects.status', ProjectStatus::Running->value)->count();
+        $projectsPaused = (clone $projectScope)->where('projects.status', ProjectStatus::Paused->value)->count();
+        $projectsCompleted = (clone $projectScope)->where('projects.status', ProjectStatus::Completed->value)->count();
         $projectsAvgProgress = round((float) ((clone $projectScope)->avg('progress') ?? 0), 2);
 
         // Phase Stats (KPI B)
@@ -60,9 +60,9 @@ class DashboardService
             ->first();
 
         // Task Stats
-        $tasksOpen = (clone $taskScope)->where('status', '!=', TaskStatus::Completed->value)->count();
-        $tasksInProgress = (clone $taskScope)->where('status', TaskStatus::InProgress->value)->count();
-        $tasksWaitingApproval = (clone $taskScope)->where('status', TaskStatus::WaitingApproval->value)->count();
+        $tasksOpen = (clone $taskScope)->where('tasks.status', '!=', TaskStatus::Completed->value)->count();
+        $tasksInProgress = (clone $taskScope)->where('tasks.status', TaskStatus::InProgress->value)->count();
+        $tasksWaitingApproval = (clone $taskScope)->where('tasks.status', TaskStatus::WaitingApproval->value)->count();
         $tasksLate = (clone $taskScope)
             ->where(function (Builder $builder) use ($now): void {
                 $builder
@@ -205,7 +205,7 @@ class DashboardService
         if ($actor->hasRole('leader')) {
             return $query->where(function (Builder $builder) use ($actor): void {
                 $builder
-                    ->where('created_by', $actor->id)
+                    ->where('projects.created_by', $actor->id)
                     ->orWhereHas('projectLeaders', function (Builder $leaderQuery) use ($actor): void {
                         $leaderQuery->where('user_id', $actor->id);
                     });
@@ -215,15 +215,15 @@ class DashboardService
         // Default for normal users
         return $query->where(function (Builder $builder) use ($actor): void {
             $builder
-                ->where('created_by', $actor->id)
+                ->where('projects.created_by', $actor->id)
                 ->orWhereHas('projectLeaders', function (Builder $leaderQuery) use ($actor): void {
                     $leaderQuery->where('user_id', $actor->id);
                 })
                 ->orWhereHas('phases.tasks', function (Builder $taskQuery) use ($actor): void {
                     $taskQuery->where(function (Builder $participantQuery) use ($actor): void {
                         $participantQuery
-                            ->where('pic_id', $actor->id)
-                            ->orWhere('created_by', $actor->id)
+                            ->where('tasks.pic_id', $actor->id)
+                            ->orWhere('tasks.created_by', $actor->id)
                             ->orWhereHas('coPics', function (Builder $coPicQuery) use ($actor): void {
                                 $coPicQuery->where('users.id', $actor->id);
                             });
@@ -246,7 +246,7 @@ class DashboardService
             return $query->whereHas('phase.project', function (Builder $projectQuery) use ($actor): void {
                 $projectQuery->where(function (Builder $builder) use ($actor): void {
                     $builder
-                        ->where('created_by', $actor->id)
+                        ->where('projects.created_by', $actor->id)
                         ->orWhereHas('projectLeaders', function (Builder $leaderQuery) use ($actor): void {
                             $leaderQuery->where('user_id', $actor->id);
                         });
@@ -257,8 +257,8 @@ class DashboardService
         // Default for normal users
         return $query->where(function (Builder $builder) use ($actor): void {
             $builder
-                ->where('pic_id', $actor->id)
-                ->orWhere('created_by', $actor->id)
+                ->where('tasks.pic_id', $actor->id)
+                ->orWhere('tasks.created_by', $actor->id)
                 ->orWhereHas('coPics', function (Builder $coPicQuery) use ($actor): void {
                     $coPicQuery->where('users.id', $actor->id);
                 });

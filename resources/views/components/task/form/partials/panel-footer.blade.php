@@ -47,28 +47,32 @@
 @endphp
 <div class="flex w-full items-center justify-between">
     <div>
-        @if ($mode === 'edit' && $status === 'pending' && !$isCompletedLocked)
-            @php
-                $startUser = auth()->user();
-                $isAssignee = $startUser && (int) $pic_id === $startUser->id;
-                $canStartTask = $startUser && ($startUser->hasRole('super_admin') || $isAssignee);
-            @endphp
-            @if ($canStartTask)
-                <x-ui.button variant="primary" icon="play_arrow" wire:click="startTask" loading="startTask">
+        @if ($this->canStartTask)
+            <div class="group relative inline-flex flex-col">
+                <x-ui.button variant="primary" icon="play_arrow" wire:click="startTask" loading="startTask"
+                    :disabled="!$this->isPhaseStarted">
                     Bắt đầu công việc</x-ui.button>
-            @endif
+                @if (!$this->isPhaseStarted && $this->phase?->start_date)
+                    <div
+                        class="absolute bottom-full left-0 z-50 mb-2 hidden w-48 rounded-lg bg-slate-900 px-2 py-1 text-xs text-white group-hover:block">
+                        Giai đoạn chưa bắt đầu (Từ {{ $this->phase->start_date->format('d/m/Y') }}).
+                        <div class="absolute left-4 top-full h-0 w-0 border-8 border-transparent border-t-slate-900">
+                        </div>
+                    </div>
+                @endif
+            </div>
         @endif
 
         {{-- Gửi xét duyệt công việc --}}
         @if ($canSubmitApproval && !$isCompletedLocked)
             <div class="group relative inline-flex flex-col">
                 <x-ui.button variant="primary" icon="send" wire:click="submitForApproval" loading="submitForApproval"
-                    :disabled="$progress < 90">
+                    :disabled="$progress < 100">
                     Gửi duyệt</x-ui.button>
-                @if ($progress < 90)
+                @if ($progress < 100)
                     <div
                         class="absolute bottom-full left-0 z-50 mb-2 hidden w-48 rounded-lg bg-slate-900 px-2 py-1 text-xs text-white group-hover:block">
-                        Tiến độ công việc phải đạt ít nhất 90% để gửi duyệt.
+                        Tiến độ công việc phải đạt 100% để gửi duyệt.
                         <div class="absolute left-4 top-full h-0 w-0 border-8 border-transparent border-t-slate-900">
                         </div>
                     </div>
@@ -85,10 +89,31 @@
     <div class="flex items-center gap-3">
 
         <x-ui.button variant="secondary" wire:click="$set('showFormModal', false)">Hủy</x-ui.button>
-        @if (!$isCompletedLocked && $canPersistTask)
-            <x-ui.button wire:click="save" variant="primary" icon="save" loading="save">
+
+        <div class="group relative inline-flex flex-col">
+            <x-ui.button wire:click="save" variant="primary" icon="save" loading="save" :disabled="$isCompletedLocked || !$canPersistTask">
                 {{ !empty($editing_task_id) ? 'Cập nhật' : 'Thêm mới' }}
             </x-ui.button>
-        @endif
+
+            @if ($isCompletedLocked)
+                <div
+                    class="absolute bottom-full right-0 z-50 mb-2 hidden w-48 rounded-lg bg-slate-900 px-2 py-1 text-xs text-white group-hover:block">
+                    Công việc đã hoàn thành, không thể chỉnh sửa.
+                    <div class="absolute right-4 top-full h-0 w-0 border-8 border-transparent border-t-slate-900">
+                    </div>
+                </div>
+            @elseif (!$canPersistTask)
+                <div
+                    class="absolute bottom-full right-0 z-50 mb-2 hidden w-48 rounded-lg bg-slate-900 px-2 py-1 text-xs text-white group-hover:block">
+                    @if ($isCeo)
+                        CEO chỉ có quyền xem, không thể chỉnh sửa.
+                    @else
+                        Bạn không có quyền chỉnh sửa công việc này.
+                    @endif
+                    <div class="absolute right-4 top-full h-0 w-0 border-8 border-transparent border-t-slate-900">
+                    </div>
+                </div>
+            @endif
+        </div>
     </div>
 </div>

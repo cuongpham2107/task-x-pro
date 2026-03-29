@@ -6,28 +6,37 @@ use App\Models\KpiScore;
 use App\Models\Task;
 use App\Models\User;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
-use Maatwebsite\Excel\Facades\Excel;
-use Illuminate\Database\Eloquent\Builder;
-use BackedEnum;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 use Livewire\WithPagination;
+use Maatwebsite\Excel\Facades\Excel;
 
-new #[Title('KPI phòng ban')] class extends Component {
+new #[Title('KPI phòng ban')] class extends Component
+{
     use WithPagination;
 
     public string $periodType = KpiPeriodType::Monthly->value;
+
     public int $selectedYear;
+
     public int $selectedValue;
+
     public ?int $selectedUserId = null;
+
     public int $perPage = 10;
+
     public bool $showTaskReviewModal = false;
+
     public ?int $reviewScoreId = null;
+
     public ?int $reviewUserId = null;
+
     public string $reviewUserName = '';
+
     public string $reviewApprovalFilter = 'all';
 
     public function mount(): void
@@ -86,16 +95,16 @@ new #[Title('KPI phòng ban')] class extends Component {
         }
 
         if ($this->periodType === KpiPeriodType::Quarterly->value) {
-            return collect(range(1, 4))->mapWithKeys(fn(int $value): array => [$value => 'Quý ' . $value])->all();
+            return collect(range(1, 4))->mapWithKeys(fn (int $value): array => [$value => 'Quý '.$value])->all();
         }
 
-        return collect(range(1, 12))->mapWithKeys(fn(int $value): array => [$value => 'Tháng ' . $value])->all();
+        return collect(range(1, 12))->mapWithKeys(fn (int $value): array => [$value => 'Tháng '.$value])->all();
     }
 
     public function getTeamUsersProperty()
     {
         $departmentId = auth()->user()?->department_id;
-        if (!$departmentId) {
+        if (! $departmentId) {
             return collect();
         }
 
@@ -108,7 +117,7 @@ new #[Title('KPI phòng ban')] class extends Component {
     public function getScoresProperty()
     {
         $departmentId = auth()->user()?->department_id;
-        if (!$departmentId) {
+        if (! $departmentId) {
             return KpiScore::query()->where('id', 0)->paginate($this->perPage);
         }
 
@@ -130,7 +139,7 @@ new #[Title('KPI phòng ban')] class extends Component {
     public function getSummaryProperty(): array
     {
         $departmentId = auth()->user()?->department_id;
-        if (!$departmentId) {
+        if (! $departmentId) {
             return [
                 'avg_score' => 0.0,
                 'avg_on_time_rate' => 0.0,
@@ -164,7 +173,7 @@ new #[Title('KPI phòng ban')] class extends Component {
     public function getApprovalSummaryProperty(): array
     {
         $departmentId = auth()->user()?->department_id;
-        if (!$departmentId) {
+        if (! $departmentId) {
             return [
                 'total' => 0,
                 'pending' => 0,
@@ -199,7 +208,7 @@ new #[Title('KPI phòng ban')] class extends Component {
     public function getWarningsProperty(): array
     {
         $departmentId = auth()->user()?->department_id;
-        if (!$departmentId) {
+        if (! $departmentId) {
             return [
                 'low_sla_count' => 0,
                 'most_late_user' => null,
@@ -238,7 +247,7 @@ new #[Title('KPI phòng ban')] class extends Component {
             return true;
         }
 
-        if (!$actor->hasRole('leader') || !$actor->can('kpi.view')) {
+        if (! $actor->hasRole('leader') || ! $actor->can('kpi.view')) {
             return false;
         }
 
@@ -307,8 +316,8 @@ new #[Title('KPI phòng ban')] class extends Component {
         [$periodStart, $periodEnd] = $this->selectedPeriodDateRange();
 
         $query = Task::query()
-            ->where('pic_id', $this->reviewUserId)
-            ->where('status', 'completed')
+            ->where('tasks.pic_id', $this->reviewUserId)
+            ->where('tasks.status', 'completed')
             ->whereNotNull('completed_at')
             ->whereBetween('completed_at', [$periodStart, $periodEnd]);
 
@@ -340,7 +349,7 @@ new #[Title('KPI phòng ban')] class extends Component {
 
     public function getReviewTasksProperty()
     {
-        if ($this->reviewUserId === null || !$this->showTaskReviewModal) {
+        if ($this->reviewUserId === null || ! $this->showTaskReviewModal) {
             return new \Illuminate\Pagination\LengthAwarePaginator([], 0, 10);
         }
 
@@ -352,7 +361,7 @@ new #[Title('KPI phòng ban')] class extends Component {
 
     public function getReviewTaskSummaryProperty(): array
     {
-        if ($this->reviewUserId === null || !$this->showTaskReviewModal) {
+        if ($this->reviewUserId === null || ! $this->showTaskReviewModal) {
             return [
                 'total' => 0, 'completed' => 0, 'waiting_approval' => 0, 'in_progress' => 0,
                 'late' => 0, 'avg_progress' => 0.0, 'sla_met' => 0, 'on_time' => 0, 'avg_star' => 0.0,
@@ -378,7 +387,7 @@ new #[Title('KPI phòng ban')] class extends Component {
 
         // For stars, we need to look into logs
         $avgStar = \App\Models\ApprovalLog::query()
-            ->whereIn('task_id', (clone $query)->select('id'))
+            ->whereIn('task_id', (clone $query)->select('tasks.id'))
             ->where('action', 'approved')
             ->whereNotNull('star_rating')
             ->avg('star_rating');
@@ -414,7 +423,7 @@ new #[Title('KPI phòng ban')] class extends Component {
     {
         $score = $this->findScoreForAction($scoreId);
 
-        if (!in_array((string) $score->status, ['pending', 'locked'], true)) {
+        if (! in_array((string) $score->status, ['pending', 'locked'], true)) {
             throw ValidationException::withMessages([
                 'status' => 'Chỉ KPI đang chờ duyệt hoặc đã chốt mới được phê duyệt.',
             ]);
@@ -438,7 +447,7 @@ new #[Title('KPI phòng ban')] class extends Component {
     {
         $score = $this->findScoreForAction($scoreId);
 
-        if (!in_array((string) $score->status, ['pending', 'locked'], true)) {
+        if (! in_array((string) $score->status, ['pending', 'locked'], true)) {
             throw ValidationException::withMessages([
                 'status' => 'Chỉ KPI đang chờ duyệt hoặc đã chốt mới được từ chối.',
             ]);
@@ -460,7 +469,7 @@ new #[Title('KPI phòng ban')] class extends Component {
 
     public function lockScore(int $scoreId): void
     {
-        if (!auth()->user()?->can('kpi.manage')) {
+        if (! auth()->user()?->can('kpi.manage')) {
             throw new AuthorizationException('Bạn không có quyền chốt KPI.');
         }
 
@@ -482,7 +491,7 @@ new #[Title('KPI phòng ban')] class extends Component {
 
     public function unlockScore(int $scoreId): void
     {
-        if (!auth()->user()?->can('kpi.manage')) {
+        if (! auth()->user()?->can('kpi.manage')) {
             throw new AuthorizationException('Bạn không có quyền mở khóa KPI.');
         }
 
@@ -506,18 +515,17 @@ new #[Title('KPI phòng ban')] class extends Component {
     {
         $score = KpiScore::query()->with('user:id,department_id')->findOrFail($scoreId);
 
-        if (!$this->canManageScore($score)) {
+        if (! $this->canManageScore($score)) {
             throw new AuthorizationException('Bạn không có quyền thao tác KPI này.');
         }
 
         return $score;
     }
 
-
     public function exportExcel(?string $format = 'xlsx'): mixed
     {
         $departmentId = auth()->user()?->department_id;
-        if (!$departmentId) {
+        if (! $departmentId) {
             return null;
         }
 
@@ -537,10 +545,10 @@ new #[Title('KPI phòng ban')] class extends Component {
 
         $title = 'Báo cáo KPI Phòng ban';
         $periodLabel = $this->periodLabel($this->periodType, $this->selectedYear, $this->selectedValue);
-        $filename = 'kpi-team-' . $this->selectedValue . '-' . $this->selectedYear . '.' . ($format === 'pdf' ? 'pdf' : 'xlsx');
+        $filename = 'kpi-team-'.$this->selectedValue.'-'.$this->selectedYear.'.'.($format === 'pdf' ? 'pdf' : 'xlsx');
         $writer = $format === 'pdf' ? \Maatwebsite\Excel\Excel::DOMPDF : \Maatwebsite\Excel\Excel::XLSX;
 
-        $this->dispatch('toast', message: 'Bắt đầu xuất file ' . strtoupper($format), type: 'info');
+        $this->dispatch('toast', message: 'Bắt đầu xuất file '.strtoupper($format), type: 'info');
 
         $meta = [
             'generated_at' => now()->format('d/m/Y H:i'),
@@ -554,9 +562,9 @@ new #[Title('KPI phòng ban')] class extends Component {
     public function periodLabel(string $periodType, int $year, int $value): string
     {
         return match ($periodType) {
-            KpiPeriodType::Quarterly->value => 'Quý ' . $value . '/' . $year,
-            KpiPeriodType::Yearly->value => 'Năm ' . $year,
-            default => 'Tháng ' . $value . '/' . $year,
+            KpiPeriodType::Quarterly->value => 'Quý '.$value.'/'.$year,
+            KpiPeriodType::Yearly->value => 'Năm '.$year,
+            default => 'Tháng '.$value.'/'.$year,
         };
     }
 
@@ -1072,14 +1080,14 @@ new #[Title('KPI phòng ban')] class extends Component {
                         @forelse ($reviewTasks as $task)
                             @php
                                 $taskStatus = $task->status;
-                                $taskStatusValue = $taskStatus instanceof \BackedEnum 
-                                    ? $taskStatus->value 
+                                $taskStatusValue = $taskStatus instanceof \BackedEnum
+                                    ? $taskStatus->value
                                     : ($taskStatus->value ?? ($taskStatus ?? ''));
-                                
+
                                 $statusEnum = \App\Enums\TaskStatus::tryFrom($taskStatusValue);
                                 $statusLabel = $statusEnum?->label() ?? ucfirst($taskStatusValue);
                                 $statusClass = $statusEnum?->badgeClass() ?? 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300';
-                                
+
                                 $latestApprovedLog = $task->approvalLogs
                                     ->where('action', 'approved')
                                     ->whereNotNull('star_rating')

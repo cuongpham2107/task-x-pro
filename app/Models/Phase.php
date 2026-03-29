@@ -39,6 +39,7 @@ class Phase extends Model
         'progress',
         'status',
         'is_template',
+        'created_by',
     ];
 
     /**
@@ -64,6 +65,11 @@ class Phase extends Model
     public function tasks(): HasMany
     {
         return $this->hasMany(Task::class);
+    }
+
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
     }
 
     /**

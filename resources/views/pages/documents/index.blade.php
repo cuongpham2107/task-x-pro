@@ -625,13 +625,13 @@ new #[Title('Tài liệu')] class extends Component {
         if ($actor && !$actor->hasAnyRole(['super_admin', 'ceo'])) {
             $query->where(function (Builder $builder) use ($actor) {
                 $builder
-                    ->where('created_by', $actor->id)
+                    ->where('projects.created_by', $actor->id)
                     ->orWhereHas('leaders', function (Builder $q) use ($actor) {
                         $q->where('users.id', $actor->id);
                     })
                     ->orWhereHas('tasks', function (Builder $q) use ($actor) {
-                        $q->where('pic_id', $actor->id)
-                            ->orWhere('created_by', $actor->id)
+                        $q->where('tasks.pic_id', $actor->id)
+                            ->orWhere('tasks.created_by', $actor->id)
                             ->orWhereHas('coPics', function (Builder $coPicQuery) use ($actor) {
                                 $coPicQuery->where('users.id', $actor->id);
                             });

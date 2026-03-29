@@ -152,8 +152,8 @@ new class extends Component
         [$periodStart, $periodEnd] = $this->selectedPeriodDateRange();
 
         $query = Task::query()
-            ->where('pic_id', auth()->id())
-            ->where('status', 'completed')
+            ->where('tasks.pic_id', auth()->id())
+            ->where('tasks.status', 'completed')
             ->whereNotNull('completed_at')
             ->whereBetween('completed_at', [$periodStart, $periodEnd]);
 
@@ -221,8 +221,8 @@ new class extends Component
 
         [$periodStart, $periodEnd] = $this->selectedPeriodDateRange();
         $baseSummaryQuery = Task::query()
-            ->where('pic_id', auth()->id())
-            ->where('status', 'completed')
+            ->where('tasks.pic_id', auth()->id())
+            ->where('tasks.status', 'completed')
             ->whereNotNull('completed_at')
             ->whereBetween('completed_at', [$periodStart, $periodEnd]);
 

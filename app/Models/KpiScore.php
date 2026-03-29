@@ -91,9 +91,9 @@ class KpiScore extends Model
             ->get(['period_type', 'period_year', 'period_value']);
 
         $completedTasks = Task::query()
-            ->where('pic_id', $userId)
-            ->where('status', 'completed')
-            ->whereNotNull('completed_at')
+            ->where('tasks.pic_id', $userId)
+            ->where('tasks.status', 'completed')
+            ->whereNotNull('tasks.completed_at')
             ->get(['completed_at']);
 
         $periodKeys = collect();
@@ -161,10 +161,10 @@ class KpiScore extends Model
         [$periodStart, $periodEnd] = $this->periodDateRange();
 
         $completedTasks = Task::query()
-            ->where('pic_id', $this->user_id)
-            ->where('status', 'completed')
-            ->whereNotNull('completed_at')
-            ->whereBetween('completed_at', [$periodStart, $periodEnd]);
+            ->where('tasks.pic_id', $this->user_id)
+            ->where('tasks.status', 'completed')
+            ->whereNotNull('tasks.completed_at')
+            ->whereBetween('tasks.completed_at', [$periodStart, $periodEnd]);
 
         $totalTasks = (clone $completedTasks)->count();
         $onTimeTasks = (clone $completedTasks)->whereColumn('completed_at', '<=', 'deadline')->count();
@@ -175,7 +175,7 @@ class KpiScore extends Model
             ->whereNotNull('star_rating')
             ->whereBetween('created_at', [$periodStart, $periodEnd])
             ->whereHas('task', function ($query): void {
-                $query->where('pic_id', $this->user_id);
+                $query->where('tasks.pic_id', $this->user_id);
             })
             ->avg('star_rating') ?? 0);
 

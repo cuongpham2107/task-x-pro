@@ -4,6 +4,8 @@ use App\Models\Task;
 use App\Enums\TaskStatus;
 use App\Enums\TaskPriority;
 use Livewire\Component;
+use Livewire\Attributes\On;
+use App\Services\Dashboard\DashboardService;
 
 new class extends Component {
     public array $data = [];
@@ -41,6 +43,33 @@ new class extends Component {
     {
         // TODO: Implement report export logic
         $this->dispatch('toast', message: 'Tính năng xuất báo cáo đang được phát triển', type: 'info');
+    }
+
+    #[On('task-updated')]
+    #[On('task-saved')]
+    public function refreshData(): void
+    {
+        $dashboardService = app(DashboardService::class);
+        $this->data = $dashboardService->getIndexData(auth()->user());
+        $this->activityLogs = ActivityLog::with('user')->latest()->limit(5)->get();
+
+        // Re-calculate weekly stats
+        $this->weeklyStats = collect(range(6, 0))
+            ->map(function (int $daysAgo): array {
+                $date = now()->subDays($daysAgo);
+
+                return [
+                    'label' => $date->isoFormat('dd'),
+                    'completed' => Task::whereDate('updated_at', $date)->where('status', \App\Enums\TaskStatus::Completed->value)->count(),
+                    'created' => Task::whereDate('created_at', $date)->count(),
+                ];
+            })
+            ->all();
+
+        $this->dispatch('charts-updated', [
+            'weeklyStats' => $this->weeklyStats,
+            'projects' => $this->data['projects'],
+        ]);
     }
 };
 ?>
@@ -343,9 +372,10 @@ new class extends Component {
                                         </td>
                                         <td class="px-6 py-4">
                                             @php
-                                                $statusValue = $task->status instanceof \BackedEnum 
-                                                    ? $task->status->value 
-                                                    : ($task->status->value ?? ($task->status ?? ''));
+                                                $statusValue =
+                                                    $task->status instanceof \BackedEnum
+                                                        ? $task->status->value
+                                                        : $task->status->value ?? ($task->status ?? '');
                                                 $statusEnum = \App\Enums\TaskStatus::tryFrom($statusValue);
                                             @endphp
                                             <span
@@ -389,7 +419,24 @@ new class extends Component {
     <livewire:task.form />
 
     <script>
-        document.addEventListener('livewire:navigated', () => {
+        let leaderActivityChart = null;
+        let projectStatusChart = null;
+
+        function initLeaderCharts(eventData = null) {
+            // Use event data if present, otherwise fall back to initial blade data
+            const weeklyStats = eventData?.weeklyStats || @json($weeklyStats);
+            const projects = eventData?.projects || @json($data['projects']);
+
+            // Destroy existing charts to prevent memory leaks and overlapping
+            if (leaderActivityChart) {
+                leaderActivityChart.destroy();
+                leaderActivityChart = null;
+            }
+            if (projectStatusChart) {
+                projectStatusChart.destroy();
+                projectStatusChart = null;
+            }
+
             // Line chart: Task hoàn thành vs tạo mới 7 ngày qua
             const lineCtx = document.getElementById('leaderActivityChart');
             if (lineCtx) {
@@ -397,13 +444,13 @@ new class extends Component {
                 const gridColor = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
                 const labelColor = isDark ? '#94a3b8' : '#64748b';
 
-                new Chart(lineCtx, {
+                leaderActivityChart = new Chart(lineCtx, {
                     type: 'line',
                     data: {
-                        labels: @json(array_column($weeklyStats, 'label')),
+                        labels: weeklyStats.map(s => s.label),
                         datasets: [{
                                 label: 'Hoàn thành',
-                                data: @json(array_column($weeklyStats, 'completed')),
+                                data: weeklyStats.map(s => s.completed),
                                 borderColor: '#3b82f6',
                                 backgroundColor: 'rgba(59,130,246,0.08)',
                                 borderWidth: 2.5,
@@ -415,7 +462,7 @@ new class extends Component {
                             },
                             {
                                 label: 'Tạo mới',
-                                data: @json(array_column($weeklyStats, 'created')),
+                                data: weeklyStats.map(s => s.created),
                                 borderColor: '#e2e8f0',
                                 backgroundColor: 'transparent',
                                 borderWidth: 2,
@@ -482,15 +529,15 @@ new class extends Component {
             // Doughnut chart: Trạng thái dự án
             const ctx = document.getElementById('projectStatusChart');
             if (ctx) {
-                new Chart(ctx, {
+                projectStatusChart = new Chart(ctx, {
                     type: 'doughnut',
                     data: {
                         labels: ['Hoàn thành', 'Đang chạy', 'Tạm dừng'],
                         datasets: [{
                             data: [
-                                {{ $data['projects']['completed'] ?? 0 }},
-                                {{ $data['projects']['running'] ?? 0 }},
-                                {{ $data['projects']['paused'] ?? 0 }}
+                                projects?.completed || 0,
+                                projects?.running || 0,
+                                projects?.paused || 0
                             ],
                             backgroundColor: ['#10b981', '#3b82f6', '#f59e0b'],
                             borderWidth: 0,
@@ -519,6 +566,17 @@ new class extends Component {
                     }
                 });
             }
+        }
+
+        document.addEventListener('livewire:navigated', () => {
+            initLeaderCharts();
+        });
+
+        // Re-initialize after Livewire updates
+        document.addEventListener('charts-updated', (event) => {
+            // Livewire 3/Volt event detail might be an array or the object itself
+            const data = (Array.isArray(event.detail) ? event.detail[0] : event.detail) || null;
+            initLeaderCharts(data);
         });
     </script>
 </div>

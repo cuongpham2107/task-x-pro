@@ -177,8 +177,8 @@ class TaskQueryService
         // 2. Regular users and Leaders (restricted to their projects)
         return $query->where(function (Builder $builder) use ($actor): void {
             $builder
-                ->where('pic_id', $actor->id)
-                ->orWhere('created_by', $actor->id)
+                ->where('tasks.pic_id', $actor->id)
+                ->orWhere('tasks.created_by', $actor->id)
                 ->orWhereHas('coPics', function (Builder $coPicQuery) use ($actor): void {
                     $coPicQuery->where('users.id', $actor->id);
                 })
@@ -198,15 +198,15 @@ class TaskQueryService
         if (! $actor->hasAnyRole(['ceo', 'leader', 'super_admin'])) {
             $query->where(function (Builder $builder) use ($actor): void {
                 $builder
-                    ->where('created_by', $actor->id)
+                    ->where('projects.created_by', $actor->id)
                     ->orWhereHas('projectLeaders', function (Builder $leaderQuery) use ($actor): void {
                         $leaderQuery->where('user_id', $actor->id);
                     })
                     ->orWhereHas('phases.tasks', function (Builder $taskQuery) use ($actor): void {
                         $taskQuery->where(function (Builder $participantQuery) use ($actor): void {
                             $participantQuery
-                                ->where('pic_id', $actor->id)
-                                ->orWhere('created_by', $actor->id)
+                                ->where('tasks.pic_id', $actor->id)
+                                ->orWhere('tasks.created_by', $actor->id)
                                 ->orWhereHas('coPics', function (Builder $coPicQuery) use ($actor): void {
                                     $coPicQuery->where('users.id', $actor->id);
                                 });
@@ -234,17 +234,17 @@ class TaskQueryService
 
         $status = $filters['status'] ?? null;
         if (is_string($status) && $status !== '') {
-            $query->where('status', $status);
+            $query->where('tasks.status', $status);
         }
 
         $type = $filters['type'] ?? null;
         if (is_string($type) && $type !== '') {
-            $query->where('type', $type);
+            $query->where('tasks.type', $type);
         }
 
         $priority = $filters['priority'] ?? null;
         if (is_string($priority) && $priority !== '') {
-            $query->where('priority', $priority);
+            $query->where('tasks.priority', $priority);
         }
 
         $projectId = $filters['project_id'] ?? null;
@@ -256,45 +256,33 @@ class TaskQueryService
 
         $phaseId = $filters['phase_id'] ?? null;
         if ($phaseId !== null && $phaseId !== '') {
-            $query->where('phase_id', (int) $phaseId);
+            $query->where('tasks.phase_id', (int) $phaseId);
         }
 
         $picId = $filters['pic_id'] ?? null;
         if ($picId !== null && $picId !== '') {
-            $query->where('pic_id', (int) $picId);
+            $query->where('tasks.pic_id', (int) $picId);
         }
 
         $deadlineFrom = $filters['deadline_from'] ?? null;
         if (is_string($deadlineFrom) && $deadlineFrom !== '') {
-            $query->whereDate('deadline', '>=', $deadlineFrom);
+            $query->whereDate('tasks.deadline', '>=', $deadlineFrom);
         }
 
         $deadlineTo = $filters['deadline_to'] ?? null;
         if (is_string($deadlineTo) && $deadlineTo !== '') {
-            $query->whereDate('deadline', '<=', $deadlineTo);
+            $query->whereDate('tasks.deadline', '<=', $deadlineTo);
         }
 
         $myTasks = $filters['my_tasks'] ?? false;
         if ($myTasks) {
             $user = auth()->user();
             $query->where(function (Builder $builder) use ($user): void {
-                // PIC or Co-PIC: directly assigned tasks
-                $builder->where('pic_id', $user->id)
+                // Strictly PIC or Co-PIC: directly assigned tasks for execution
+                $builder->where('tasks.pic_id', $user->id)
                     ->orWhereHas('coPics', function (Builder $q) use ($user): void {
                         $q->where('users.id', $user->id);
                     });
-
-                // CEO: also sees tasks with 2-level approval workflow (they are level-2 approver)
-                if ($user->hasRole('ceo')) {
-                    $builder->orWhere('workflow_type', TaskWorkflowType::Double->value);
-                }
-
-                // Leader: also sees tasks in projects they manage
-                if ($user->hasRole('leader')) {
-                    $builder->orWhereHas('phase.project.leaders', function (Builder $q) use ($user): void {
-                        $q->where('users.id', $user->id);
-                    });
-                }
             });
         }
     }

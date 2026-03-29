@@ -146,12 +146,28 @@
     document.addEventListener('livewire:navigated', initCharts);
     document.addEventListener('DOMContentLoaded', initCharts);
     document.addEventListener('update-top-performers-chart', (event) => {
-        window.__dashboardTopPerformersData = event.detail.data;
+        const data = (Array.isArray(event.detail) ? event.detail[0] : event.detail);
+        window.__dashboardTopPerformersData = data.data;
         if (window.topPerformersChartInstance) {
-            const newData = event.detail.data;
+            const newData = data.data;
             window.topPerformersChartInstance.data.labels = newData.map(p => p.user_name);
             window.topPerformersChartInstance.data.datasets[0].data = newData.map(p => p.final_score);
             window.topPerformersChartInstance.update();
+        }
+    });
+
+    document.addEventListener('charts-updated', (event) => {
+        const data = (Array.isArray(event.detail) ? event.detail[0] : event.detail) || null;
+        if (data) {
+            if (data.top_performers) {
+                window.__dashboardTopPerformersData = data.top_performers;
+            }
+            if (data.phases) {
+                window.__dashboardPhaseTotal = data.phases.total;
+                window.__dashboardPhaseActive = data.phases.active;
+                window.__dashboardPhaseCompleted = data.phases.completed;
+            }
+            initCharts();
         }
     });
 })();

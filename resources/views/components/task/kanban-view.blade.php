@@ -55,6 +55,7 @@ new class extends Component
             ->with([
                 'pic',
                 'coPics',
+                'phase',
                 'dependencyTask:id,name,status',
                 'approvalLogs' => function ($query): void {
                     $query
@@ -434,18 +435,32 @@ new class extends Component
                                 @php
                                     $actor = auth()->user();
                                     $isAssignee = $actor && $actor->id === $task->pic_id;
+                                    $taskPhase = $task->phase;
+                                    $isPhaseStarted = ! $taskPhase || ! $taskPhase->start_date || now()->greaterThanOrEqualTo($taskPhase->start_date->startOfDay());
+
                                     $canStart =
                                         $status === TaskStatus::Pending &&
-                                        !$hasDependencyBlock &&
+                                        ! $hasDependencyBlock &&
                                         ($actor?->hasRole('super_admin') || $isAssignee);
                                 @endphp
 
                                 @if ($canStart)
-                                    <button wire:click.stop="startTask({{ $task->id }})"
-                                        class="hover:bg-primary/10 flex size-6 items-center justify-center rounded-full text-primary transition-all"
-                                        title="Bắt đầu ngay">
-                                        <span class="material-symbols-outlined text-[18px]">play_arrow</span>
-                                    </button>
+                                    <div class="group relative flex items-center justify-center">
+                                        <button wire:click.stop="startTask({{ $task->id }})" @disabled(! $isPhaseStarted)
+                                            class="hover:bg-primary/10 flex size-6 items-center justify-center rounded-full text-primary transition-all disabled:cursor-not-allowed disabled:opacity-30"
+                                            title="{{ $isPhaseStarted ? 'Bắt đầu ngay' : '' }}">
+                                            <span class="material-symbols-outlined text-[18px]">play_arrow</span>
+                                        </button>
+                                        @if (! $isPhaseStarted && $taskPhase?->start_date)
+                                            <div
+                                                class="absolute bottom-full right-0 z-50 mb-2 hidden w-32 rounded bg-slate-900 px-2 py-1 text-[10px] text-white group-hover:block">
+                                                Giai đoạn chưa bắt đầu ({{ $taskPhase->start_date->format('d/m') }})
+                                                <div
+                                                    class="absolute right-2 top-full h-0 w-0 border-4 border-transparent border-t-slate-900">
+                                                </div>
+                                            </div>
+                                        @endif
+                                    </div>
                                 @endif
 
                                 @if ($canDrag)

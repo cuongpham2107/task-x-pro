@@ -32,15 +32,21 @@ class PhasePolicy
 
     public function update(User $user, Phase $phase): bool
     {
-        if ($user->hasAnyRole(['super_admin', 'ceo'])) {
+        if ($user->hasRole('super_admin')) {
             return true;
         }
 
-        if (! $user->hasRole('leader')) {
-            return false;
+        $isCreator = (int) $phase->created_by === (int) $user->id;
+
+        if ($isCreator) {
+            return true;
         }
 
-        return true;
+        if ($user->hasRole('leader')) {
+            return true;
+        }
+
+        return false;
     }
 
     public function delete(User $user, Phase $phase): bool

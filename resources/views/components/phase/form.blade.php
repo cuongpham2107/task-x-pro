@@ -20,19 +20,14 @@ new class extends Component
 
     public ?int $editingPhaseId = null;
 
-    #[Validate('required|string|max:255')]
     public string $name = '';
 
-    #[Validate('required|numeric|min:0|max:100')]
     public string $weight = '';
 
-    #[Validate('nullable|date')]
     public string $startDate = '';
 
-    #[Validate('nullable|date|after_or_equal:startDate')]
     public string $endDate = '';
 
-    #[Validate('nullable|string|max:5000')]
     public string $description = '';
 
     public function mount(Project $project): void
@@ -79,8 +74,37 @@ new class extends Component
         $this->resetValidation();
     }
 
+    public function rules(): array
+    {
+        $projectStart = $this->project->start_date ? $this->project->start_date->toDateString() : null;
+        $projectEnd = $this->project->end_date ? $this->project->end_date->toDateString() : null;
+
+        $rules = [
+            'name' => 'required|string|max:255',
+            'weight' => 'required|numeric|min:0|max:100',
+            'startDate' => ['nullable', 'date'],
+            'endDate' => ['nullable', 'date', 'after_or_equal:startDate'],
+            'description' => 'nullable|string|max:5000',
+        ];
+
+        if ($projectStart) {
+            $rules['startDate'][] = "after_or_equal:{$projectStart}";
+            $rules['endDate'][] = "after_or_equal:{$projectStart}";
+        }
+
+        if ($projectEnd) {
+            $rules['startDate'][] = "before_or_equal:{$projectEnd}";
+            $rules['endDate'][] = "before_or_equal:{$projectEnd}";
+        }
+
+        return $rules;
+    }
+
     protected function messages(): array
     {
+        $projectStartLabel = $this->project->start_date ? $this->project->start_date->format('d/m/Y') : 'N/A';
+        $projectEndLabel = $this->project->end_date ? $this->project->end_date->format('d/m/Y') : 'N/A';
+
         return [
             'name.required' => 'Tên giai đoạn là bắt buộc.',
             'name.max' => 'Tên giai đoạn không được vượt quá 255 ký tự.',
@@ -88,7 +112,10 @@ new class extends Component
             'weight.numeric' => 'Trọng số phải là số.',
             'weight.min' => 'Trọng số không được nhỏ hơn 0.',
             'weight.max' => 'Trọng số không được lớn hơn 100.',
-            'endDate.after_or_equal' => 'Ngày kết thúc phải sau hoặc bằng ngày bắt đầu.',
+            'startDate.after_or_equal' => "Ngày bắt đầu giai đoạn phải sau hoặc bằng ngày bắt đầu dự án ({$projectStartLabel}).",
+            'startDate.before_or_equal' => "Ngày bắt đầu giai đoạn phải trước hoặc bằng ngày kết thúc dự án ({$projectEndLabel}).",
+            'endDate.after_or_equal' => 'Ngày kết thúc phải sau hoặc bằng ngày bắt đầu giai đoạn.',
+            'endDate.before_or_equal' => "Ngày kết thúc giai đoạn phải trước hoặc bằng ngày kết thúc dự án ({$projectEndLabel}).",
         ];
     }
 

@@ -15,7 +15,7 @@ class PhaseMutationService
      */
     public function create(User $actor, Project $project, array $attributes): Phase
     {
-        return DB::transaction(function () use ($project, $attributes) {
+        return DB::transaction(function () use ($project, $attributes, $actor) {
             // Validate total weight = 100 before creating (BR-008)
             $this->assertValidWeightTotal($project, $attributes['weight'] ?? 0);
 
@@ -23,6 +23,7 @@ class PhaseMutationService
             $lastOrderIndex = $project->phases()->max('order_index') ?? -1;
             $attributes['order_index'] = $lastOrderIndex + 1;
             $attributes['project_id'] = $project->id;
+            $attributes['created_by'] = $actor->id;
 
             return Phase::create($attributes);
         });

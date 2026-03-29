@@ -146,10 +146,10 @@ class TaskService
             if (
                 $isStatusChanged
                 && $targetStatus === TaskStatus::WaitingApproval->value
-                && (int) ($attributes['progress'] ?? $task->progress) < 90
+                && (int) ($attributes['progress'] ?? $task->progress) < 100
             ) {
                 throw ValidationException::withMessages([
-                    'progress' => 'Tiến độ công việc phải đạt ít nhất 90% trước khi gửi duyệt.',
+                    'progress' => 'Tiến độ công việc phải đạt 100% trước khi gửi duyệt.',
                 ]);
             }
 
@@ -224,11 +224,24 @@ class TaskService
             $targetStatus = $this->normalizeStatus($payload['status'] ?? $task->status);
             if (
                 $isStatusChanged
+                && $targetStatus === TaskStatus::InProgress->value
+                && $phase
+                && $phase->start_date
+                && now()->lt($phase->start_date->startOfDay())
+            ) {
+                $startDate = $phase->start_date->format('d/m/Y');
+                throw ValidationException::withMessages([
+                    'status' => "Giai đoạn của công việc này chỉ bắt đầu từ ngày {$startDate}. Bạn chưa thể thực hiện công việc này.",
+                ]);
+            }
+
+            if (
+                $isStatusChanged
                 && $targetStatus === TaskStatus::WaitingApproval->value
-                && (int) ($payload['progress'] ?? $task->progress) < 90
+                && (int) ($payload['progress'] ?? $task->progress) < 100
             ) {
                 throw ValidationException::withMessages([
-                    'progress' => 'Tiến độ công việc phải đạt ít nhất 90% trước khi gửi duyệt.',
+                    'progress' => 'Tiến độ công việc phải đạt 100% trước khi gửi duyệt.',
                 ]);
             }
 
@@ -303,6 +316,13 @@ class TaskService
         $dependencyTaskId = $task->dependency_task_id !== null ? (int) $task->dependency_task_id : null;
         $this->payloadService->ensureDependencyReady($dependencyTaskId, TaskStatus::InProgress->value, $task->id);
 
+        if ($task->phase && $task->phase->start_date && now()->lt($task->phase->start_date->startOfDay())) {
+            $startDate = $task->phase->start_date->format('d/m/Y');
+            throw ValidationException::withMessages([
+                'status' => "Giai đoạn của công việc này chỉ bắt đầu từ ngày {$startDate}. Bạn chưa thể bắt đầu công việc này.",
+            ]);
+        }
+
         $task->forceFill([
             'status' => TaskStatus::InProgress->value,
             'started_at' => $task->started_at ?? now(),
@@ -331,9 +351,9 @@ class TaskService
             ]);
         }
 
-        if ((int) $task->progress < 90) {
+        if ((int) $task->progress < 100) {
             throw ValidationException::withMessages([
-                'progress' => 'Tiến độ công việc phải đạt ít nhất 90% trước khi gửi duyệt.',
+                'progress' => 'Tiến độ công việc phải đạt 100% trước khi gửi duyệt.',
             ]);
         }
 

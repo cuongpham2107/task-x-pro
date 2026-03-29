@@ -1,5 +1,6 @@
 <?php
 use Livewire\Component;
+use Livewire\Attributes\On;
 use App\Enums\TaskStatus;
 use App\Enums\TaskPriority;
 use App\Models\ActivityLog;
@@ -41,6 +42,20 @@ new class extends Component {
     {
         // TODO: Implement report export logic
         $this->dispatch('toast', message: 'Tính năng xuất báo cáo CEO đang được phát triển', type: 'info');
+    }
+
+    #[On('task-updated')]
+    #[On('task-saved')]
+    public function refreshData(): void
+    {
+        $dashboardService = app(DashboardService::class);
+        $this->data = $dashboardService->getIndexData(auth()->user());
+        $this->activityLogs = ActivityLog::with('user')->latest()->limit(5)->get();
+
+        $this->dispatch('charts-updated', [
+            'top_performers' => array_slice($this->data['top_performers'], 0, 5),
+            'phases' => $this->data['phases'],
+        ]);
     }
 };
 ?>

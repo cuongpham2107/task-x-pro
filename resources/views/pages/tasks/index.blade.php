@@ -131,7 +131,7 @@ new class extends Component {
     public function members()
     {
         $leaderIds = $this->project->leaders->pluck('id');
-        $picIds = Task::where('phase_id', $this->phase->id)->pluck('pic_id');
+        $picIds = Task::where('tasks.phase_id', $this->phase->id)->pluck('tasks.pic_id');
         $coPicIds = \DB::table('task_co_pics')
             ->whereIn('task_id', Task::where('phase_id', $this->phase->id)->pluck('id'))
             ->pluck('user_id');

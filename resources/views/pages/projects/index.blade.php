@@ -85,6 +85,18 @@ new #[Title('Dự án')] class extends Component {
         $this->dispatch('project-edit-requested', projectId: $project->id);
     }
 
+    public function startProject(int $projectId): void
+    {
+        $project = Project::query()->findOrFail($projectId);
+
+        Gate::forUser(auth()->user())->authorize('update', $project);
+
+        $project->update(['status' => ProjectStatus::Running->value]);
+
+        $this->refreshAfterProjectSaved();
+        $this->dispatch('toast', message: 'Dự án đã được bắt đầu thành công!', type: 'success');
+    }
+
     public function confirmDeleteProject(int $projectId): void
     {
         $project = Project::query()->findOrFail($projectId);

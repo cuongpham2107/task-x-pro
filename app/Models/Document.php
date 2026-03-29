@@ -81,8 +81,8 @@ class Document extends Model
                 ->orWhere(function (Builder $qt) use ($user): void {
                     $qt->whereNotNull('task_id')
                         ->whereHas('task', function (Builder $taskQuery) use ($user): void {
-                            $taskQuery->where('pic_id', $user->id)
-                                ->orWhere('created_by', $user->id)
+                            $taskQuery->where('tasks.pic_id', $user->id)
+                                ->orWhere('tasks.created_by', $user->id)
                                 ->orWhereHas('coPics', function (Builder $coPicQuery) use ($user): void {
                                     $coPicQuery->where('users.id', $user->id);
                                 });
@@ -91,7 +91,7 @@ class Document extends Model
                 ->orWhere(function (Builder $qp) use ($user): void {
                     $qp->whereNotNull('project_id')
                         ->whereHas('project', function (Builder $projectQuery) use ($user): void {
-                            $projectQuery->where('created_by', $user->id)
+                            $projectQuery->where('projects.created_by', $user->id)
                                 ->orWhereHas('projectLeaders', function (Builder $leaderQuery) use ($user): void {
                                     $leaderQuery->where('user_id', $user->id);
                                 });

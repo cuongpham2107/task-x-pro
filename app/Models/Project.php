@@ -118,10 +118,21 @@ class Project extends Model
 
         $progress = (int) round(max(0, min(100, $weightedProgress)));
 
-        if ($this->progress !== $progress) {
-            $this->forceFill([
-                'progress' => $progress,
-            ])->saveQuietly();
+        // Sync project status based on phase statuses (Running status propagation)
+        $hasActiveOrCompletedPhase = $this->phases()
+            ->whereIn('status', ['active', 'completed'])
+            ->exists();
+
+        $statusValue = $this->status instanceof ProjectStatus ? $this->status : ProjectStatus::tryFrom((string) $this->status);
+
+        $updates = ['progress' => $progress];
+
+        if ($hasActiveOrCompletedPhase && $statusValue === ProjectStatus::Init) {
+            $updates['status'] = ProjectStatus::Running->value;
+        }
+
+        if ($this->progress !== $progress || (isset($updates['status']) && $this->status !== $updates['status'])) {
+            $this->forceFill($updates)->saveQuietly();
         }
     }
 }

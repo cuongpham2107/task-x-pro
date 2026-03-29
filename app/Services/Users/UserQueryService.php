@@ -72,7 +72,7 @@ class UserQueryService
             ->where(function ($q) use ($userId) {
                 $q->whereHas('leaders', fn ($q) => $q->where('users.id', $userId))
                     ->orWhereHas('tasks', function ($q) use ($userId) {
-                        $q->where('pic_id', $userId)
+                        $q->where('tasks.pic_id', $userId)
                             ->orWhereHas('coPics', fn ($q) => $q->where('users.id', $userId));
                     });
             })
@@ -88,7 +88,7 @@ class UserQueryService
     {
         return \App\Models\Task::query()
             ->where(function ($q) use ($userId) {
-                $q->where('pic_id', $userId)
+                $q->where('tasks.pic_id', $userId)
                     ->orWhereHas('coPics', fn ($q) => $q->where('users.id', $userId));
             })
             ->with(['phase.project'])
@@ -112,7 +112,7 @@ class UserQueryService
             ->get(['id', 'name', 'status']);
 
         $roles = \Spatie\Permission\Models\Role::query()
-            ->where(fn($q) => $q->where('name', '!=', 'super_admin'))
+            ->where(fn ($q) => $q->where('name', '!=', 'super_admin'))
             ->orderBy('name')
             ->get(['id', 'name']);
 

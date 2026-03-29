@@ -6,7 +6,9 @@ use App\Models\Task;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Livewire\Component;
+use Livewire\Attributes\On;
 use Livewire\WithPagination;
+use App\Services\Dashboard\DashboardService;
 
 new class extends Component
 {
@@ -56,7 +58,7 @@ new class extends Component
         $userId = auth()->id();
         $taskDates = Task::query()
             ->where(function ($q) use ($userId) {
-                $q->where('pic_id', $userId)->orWhereHas('coPics', function ($q2) use ($userId) {
+                $q->where('tasks.pic_id', $userId)->orWhereHas('coPics', function ($q2) use ($userId) {
                     $q2->where('user_id', $userId);
                 });
             })
@@ -92,6 +94,17 @@ new class extends Component
     public function setFilter(string $filter): void
     {
         $this->filter = $filter;
+        $this->selectedDate = null;
+        $this->resetPage('recentTasksPage');
+    }
+
+    public function selectDate(string $date): void
+    {
+        if ($this->selectedDate === $date) {
+            $this->selectedDate = null;
+        } else {
+            $this->selectedDate = $date;
+        }
         $this->resetPage('recentTasksPage');
     }
 
@@ -103,11 +116,14 @@ new class extends Component
             ->where('status', '!=', TaskStatus::Completed->value)
             ->where(function (Builder $query) use ($userId): void {
                 $query
-                    ->where('pic_id', $userId)
-                    ->orWhere('created_by', $userId)
+                    ->where('tasks.pic_id', $userId)
+                    ->orWhere('tasks.created_by', $userId)
                     ->orWhereHas('coPics', function (Builder $coPicQuery) use ($userId): void {
                         $coPicQuery->where('users.id', $userId);
                     });
+            })
+            ->when($this->selectedDate, function (Builder $query): void {
+                $query->whereDate('deadline', $this->selectedDate);
             })
             ->when($this->filter === 'high_priority', function (Builder $query): void {
                 $query->whereIn('priority', [TaskPriority::High->value, TaskPriority::Urgent->value]);
@@ -121,6 +137,15 @@ new class extends Component
             ->withCount('comments')
             ->orderByDesc('updated_at')
             ->paginate($this->perPage, ['*'], 'recentTasksPage');
+    }
+
+    #[On('task-updated')]
+    #[On('task-saved')]
+    public function refreshData(): void
+    {
+        $dashboardService = app(DashboardService::class);
+        $this->data = $dashboardService->getIndexData(auth()->user());
+        $this->loadCalendar();
     }
 };
 ?>
@@ -191,7 +216,26 @@ new class extends Component
             x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0"
             style="display: none;">
             <div class="flex items-center justify-between">
-                <h2 class="text-lg font-bold tracking-tight text-slate-900 dark:text-white">Công việc gần đây</h2>
+                <div class="flex items-center gap-3">
+                    <h2 class="text-lg font-bold tracking-tight text-slate-900 dark:text-white">
+                        @if ($selectedDate)
+                            @if (Carbon::parse($selectedDate)->isToday())
+                                Công việc ngày hôm nay
+                            @else
+                                Công việc ngày {{ Carbon::parse($selectedDate)->format('d/m/Y') }}
+                            @endif
+                        @else
+                            Công việc gần đây
+                        @endif
+                    </h2>
+                    @if ($selectedDate)
+                        <button wire:click="$set('selectedDate', null)"
+                            class="flex h-5 w-5 items-center justify-center rounded-full bg-slate-100 text-slate-400 transition-colors hover:bg-slate-200 hover:text-slate-600 dark:bg-slate-800 dark:text-slate-500"
+                            title="Xóa lọc ngày">
+                            <span class="material-symbols-outlined text-[14px]">close</span>
+                        </button>
+                    @endif
+                </div>
                 <div class="flex gap-2">
                     <x-ui.button size="xs" variant="{{ $this->filter === 'all' ? 'outline' : 'ghost' }}"
                         wire:click="setFilter('all')">
@@ -406,8 +450,11 @@ new class extends Component
                 <!-- Days -->
                 <div class="grid grid-cols-7 gap-1 text-center">
                     @foreach ($this->calendar as $date)
-                        <div
-                            class="{{ $date['is_current_month'] ? 'text-slate-700 dark:text-slate-300' : 'text-slate-300 dark:text-slate-600' }} {{ $date['is_today'] ? 'bg-primary text-white font-bold' : 'hover:bg-slate-50 dark:hover:bg-slate-800' }} relative flex aspect-square cursor-pointer flex-col items-center justify-center rounded-lg text-xs transition-colors">
+                        <div wire:click="selectDate('{{ $date['date'] }}')"
+                            class="{{ $date['is_current_month'] ? 'text-slate-700 dark:text-slate-300' : 'text-slate-300 dark:text-slate-600' }} 
+                                   {{ $selectedDate === $date['date'] ? 'ring-2 ring-primary ring-offset-1 dark:ring-offset-slate-900 bg-primary/10 font-bold' : '' }}
+                                   {{ $date['is_today'] ? 'bg-primary text-white font-bold' : 'hover:bg-slate-50 dark:hover:bg-slate-800' }} 
+                                   relative flex aspect-square cursor-pointer flex-col items-center justify-center rounded-lg text-xs transition-colors">
                             <span>{{ $date['day'] }}</span>
                             @if ($date['has_task'])
                                 <span

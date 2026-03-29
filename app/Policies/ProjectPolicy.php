@@ -35,8 +35,8 @@ class ProjectPolicy
             ->whereHas('tasks', function (Builder $query) use ($user): void {
                 $query->where(function (Builder $taskQuery) use ($user): void {
                     $taskQuery
-                        ->where('pic_id', $user->id)
-                        ->orWhere('created_by', $user->id)
+                        ->where('tasks.pic_id', $user->id)
+                        ->orWhere('tasks.created_by', $user->id)
                         ->orWhereHas('coPics', function (Builder $coPicQuery) use ($user): void {
                             $coPicQuery->where('users.id', $user->id);
                         });

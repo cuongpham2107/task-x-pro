@@ -155,6 +155,11 @@
                         <x-ui.icon-button icon="visibility" size="sm" tooltip="Xem chi tiết"
                             href="{{ route('projects.phases.index', $project) }}" />
                         @can('update', $project)
+                            @if (($statusEnum?->value ?? '') === 'init')
+                                <x-ui.icon-button icon="play_arrow" size="sm" color="blue" tooltip="Bắt đầu dự án"
+                                    wire:click.stop="startProject({{ $project->id }})" />
+                            @endif
+
                             <x-ui.icon-button icon="edit" size="sm" tooltip="Sửa"
                                 wire:click.stop="openEditProjectModal({{ $project->id }})" />
                         @endcan

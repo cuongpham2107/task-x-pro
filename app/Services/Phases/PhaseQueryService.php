@@ -28,8 +28,8 @@ class PhaseQueryService
             if (! $isProjectLeader && $project->created_by !== $actor->id) {
                 // User can only see phases where they have tasks assigned
                 $query->whereHas('tasks', function ($q) use ($actor) {
-                    $q->where('pic_id', $actor->id)
-                        ->orWhere('created_by', $actor->id)
+                    $q->where('tasks.pic_id', $actor->id)
+                        ->orWhere('tasks.created_by', $actor->id)
                         ->orWhereHas('coPics', function ($cq) use ($actor) {
                             $cq->where('users.id', $actor->id);
                         });
