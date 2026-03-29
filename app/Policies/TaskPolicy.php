@@ -191,6 +191,10 @@ class TaskPolicy
 
     private function isResponsibleProjectLeader(User $user, Task $task): bool
     {
+        if (! $task->phase || ! $task->phase->project) {
+            return false;
+        }
+
         return $task->phase->project->projectLeaders()->where('user_id', $user->id)->exists();
     }
 

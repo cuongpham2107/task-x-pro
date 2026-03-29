@@ -223,15 +223,17 @@ new #[Title('Công việc')] class extends Component {
         </div>
 
         <div class="flex w-full items-center gap-2 overflow-x-auto pb-2 md:w-auto md:overflow-visible md:pb-0">
-            <div class="flex shrink-0 items-center gap-2 pl-2">
-                <label class="relative inline-flex cursor-pointer items-center pr-2">
-                    <input type="checkbox" wire:model.live="filterMyTasks" class="peer sr-only">
-                    <div
-                        class="peer-checked:bg-primary peer-focus:ring-primary/20 peer h-5 w-9 rounded-full bg-slate-200 after:absolute after:left-[2px] after:top-[2px] after:h-4 after:w-4 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-2 dark:bg-slate-700">
-                    </div>
-                    <span class="ml-2 text-xs font-semibold text-slate-700 dark:text-slate-300">Việc của tôi</span>
-                </label>
-            </div>
+            @unless (auth()->user()->hasRole('pic'))
+                <div class="flex shrink-0 items-center gap-2 pl-2">
+                    <label class="relative inline-flex cursor-pointer items-center pr-2">
+                        <input type="checkbox" wire:model.live="filterMyTasks" class="peer sr-only">
+                        <div
+                            class="peer-checked:bg-primary peer-focus:ring-primary/20 peer h-5 w-9 rounded-full bg-slate-200 after:absolute after:left-[2px] after:top-[2px] after:h-4 after:w-4 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-2 dark:bg-slate-700">
+                        </div>
+                        <span class="ml-2 text-xs font-semibold text-slate-700 dark:text-slate-300">Việc của tôi</span>
+                    </label>
+                </div>
+            @endunless
             <div class="shrink-0">
                 <x-ui.filter-select model="filterProjectId" :value="$filterProjectId" label="Dự án" icon="folder"
                     all-label="Tất cả dự án" width="w-44" drop-width="w-64" :options="$this->projectFilterOptions" />
