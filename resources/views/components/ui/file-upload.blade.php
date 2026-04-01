@@ -160,12 +160,21 @@
             <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Tệp mới chuẩn bị tải lên</p>
             @foreach ($newFiles as $index => $file)
                 @if ($file !== null)
+                    @php
+                        try {
+                            $fileName = $file->getClientOriginalName();
+                            $fileSize = $file->getSize();
+                        } catch (\Throwable $e) {
+                            $fileName = 'Unknown';
+                            $fileSize = 0;
+                        }
+                    @endphp
                     <div class="border-primary/20 bg-primary/5 flex items-center gap-3 rounded-lg border px-3 py-2">
                         <span class="material-symbols-outlined text-primary shrink-0 text-lg">upload_file</span>
                         <div class="min-w-0 flex-1">
                             <p class="truncate text-sm font-medium text-slate-800 dark:text-slate-200">
-                                {{ $file->getClientOriginalName() }}</p>
-                            <p class="text-xs text-slate-400">{{ number_format($file->getSize() / 1024, 1) }} KB</p>
+                                {{ $fileName }}</p>
+                            <p class="text-xs text-slate-400">{{ number_format($fileSize / 1024, 1) }} KB</p>
                         </div>
                         <button class="shrink-0 text-slate-400 transition-colors hover:text-red-500" type="button"
                             wire:click="$set('{{ $name }}.{{ $index }}', null)">

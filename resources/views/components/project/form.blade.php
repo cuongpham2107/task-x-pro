@@ -210,8 +210,13 @@ new class extends Component {
                 'budget' => $this->budget !== '' ? $this->budget : null,
             ];
 
-            // Build phase payloads from Phases service when user opted to use templates
-            $phasePayloads = $this->is_phase ? null : [];
+            // Build phase payloads: null means don't touch phases (default for edit)
+            $phasePayloads = null;
+
+            if ($this->mode === 'create') {
+                $phasePayloads = $this->is_phase ? null : [];
+            }
+
             if ($this->is_phase) {
                 $phaseQueryService = app(\App\Services\Phases\PhaseQueryService::class);
                 $payloads = $phaseQueryService->payloadsFromTemplates($this->type);

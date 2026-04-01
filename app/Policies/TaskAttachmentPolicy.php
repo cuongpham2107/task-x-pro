@@ -12,8 +12,8 @@ class TaskAttachmentPolicy
      */
     public function delete(User $user, TaskAttachment $attachment): bool
     {
-        // Basic permission check
-        if (! $user->can('task.delete')) {
+        // Basic permission check - PICs have task.update, Leaders have task.delete
+        if (! $user->can('task.update') && ! $user->can('task.delete')) {
             return false;
         }
 

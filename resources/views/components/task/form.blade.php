@@ -12,7 +12,6 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
-use Livewire\Attributes\Validate;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
@@ -59,18 +58,31 @@ new class extends Component
     public bool $isTaskStarted = false;
 
     public string $name = '';
+
     public string $type = 'technical';
+
     public string $status = 'pending';
+
     public string $priority = 'medium';
+
     public string $workflow_type = 'single';
+
     public string $deadline = '';
+
     public string $description = '';
+
     public string $issue_note = '';
+
     public string $recommendation = '';
+
     public string $deliverable_url = '';
+
     public int $progress = 0;
+
     public ?int $pic_id = null;
+
     public ?int $dependency_task_id = null;
+
     public string $newComment = '';
 
     public array $co_pic_ids = [];
@@ -268,6 +280,8 @@ new class extends Component
 
     private function loadTaskDataIntoForm(): void
     {
+        $this->reset(['files']);
+
         if (! $this->editing_task_id) {
             return;
         }
@@ -539,6 +553,7 @@ new class extends Component
             } else {
                 // Keep modal open for edits, but refresh ALL data from DB to ensure sync
                 $this->loadTaskDataIntoForm();
+                $this->files = []; // Ensure files are cleared after moving to permanent storage
             }
 
             $this->dispatch('toast', message: $toastMessage, type: 'success');
