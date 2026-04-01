@@ -1,11 +1,11 @@
 <header
     class="sticky top-0 z-50 flex items-center justify-between whitespace-nowrap border-b border-solid border-slate-200 bg-white px-4 py-3 lg:px-8 dark:border-slate-800 dark:bg-slate-900">
-    <div class="flex items-center gap-4 lg:gap-8">
+    <div class="flex items-center gap-4">
         <button @click="sidebarOpen = true"
             class="rounded-lg p-1 text-slate-600 transition-colors hover:bg-slate-100 lg:hidden dark:text-slate-400 dark:hover:bg-slate-800">
             <span class="material-symbols-outlined text-2xl">menu</span>
         </button>
-        <a href="{{route('dashboard.index')}}" class="text-primary hidden items-center gap-3 lg:flex">
+        <a href="{{ route('dashboard.index') }}" class="text-primary hidden items-center gap-3 lg:flex">
             <div class="bg-primary/10 ring-primary/20 flex size-9 items-center justify-center rounded-lg p-1.5 ring-1">
                 <img src="{{ asset('images/logo.png') }}" alt="ASG logo" class="size-full object-contain">
             </div>
@@ -13,7 +13,7 @@
                 {{ config('app.name') }}
             </h2>
         </a>
-        <div class="relative hidden w-80 2xl:flex" x-data="{
+        <div class="relative hidden w-72 2xl:flex" x-data="{
             query: '',
             open: false,
             loading: false,
@@ -154,8 +154,8 @@
 
         </div>
     </div>
-    <div class="flex flex-1 items-center justify-end gap-4">
-        <nav class="hidden items-center gap-4 xl:flex">
+    <div class="flex flex-1 items-center justify-end gap-2">
+        <nav class="hidden items-center gap-2 xl:flex">
             @php
                 $navLink = fn(string $routePattern) => request()->routeIs($routePattern)
                     ? 'text-primary text-sm font-semibold leading-normal hover:text-primary/80'
@@ -195,8 +195,8 @@
                 </a>
             @endcan
             @can('viewAny', App\Models\Task::class)
-                <a class="{{ $navLink('tasks.*') }} inline-flex items-center gap-1.5"
-                    href="{{ route('tasks.index') }}" wire:navigate>
+                <a class="{{ $navLink('tasks.*') }} inline-flex items-center gap-1.5" href="{{ route('tasks.index') }}"
+                    wire:navigate>
                     <span class="material-symbols-outlined text-[18px] leading-none">document_scanner</span>
                     Công việc
                 </a>
@@ -224,7 +224,7 @@
             @if ($canViewDepartments || $canViewUsers)
                 <div class="relative flex items-center" x-data="{ open: false }" @click.outside="open = false">
                     <button type="button" @click="open = !open"
-                        class="{{ (request()->routeIs('departments.*') || request()->routeIs('users.*'))
+                        class="{{ request()->routeIs('departments.*') || request()->routeIs('users.*')
                             ? 'text-primary text-sm font-semibold leading-normal hover:text-primary/80'
                             : 'text-slate-600 dark:text-slate-400 text-sm font-medium leading-normal hover:text-primary transition-colors' }} inline-flex items-center gap-1">
                         <span class="material-symbols-outlined text-[18px] leading-none">category</span>

@@ -77,7 +77,7 @@ new class extends Component {
 <div x-data="{ ready: false }" x-init="setTimeout(() => ready = true, 100)">
     <main class="flex flex-1 overflow-hidden">
         <!-- Content Area -->
-        <div class="dark:bg-background-dark flex-1 overflow-y-auto bg-slate-50 p-6 lg:p-8">
+        <div class="dark:bg-background-dark flex-1 overflow-y-auto p-6 lg:p-8">
             <div class="mx-auto space-y-8" x-show="ready" x-transition:enter="transition ease-out duration-500"
                 x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0"
                 style="display: none;">
