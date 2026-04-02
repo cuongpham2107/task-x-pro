@@ -5,7 +5,7 @@
             class="rounded-lg p-1 text-slate-600 transition-colors hover:bg-slate-100 xl:hidden dark:text-slate-400 dark:hover:bg-slate-800">
             <span class="material-symbols-outlined text-2xl">menu</span>
         </button>
-        <a href="{{ route('dashboard.index') }}" class="text-primary hidden items-center gap-3 lg:flex">
+        <a href="{{ route('dashboard.index') }}" class="text-primary flex items-center gap-3">
             <div class="bg-primary/10 ring-primary/20 flex size-9 items-center justify-center rounded-lg p-1.5 ring-1">
                 <img src="{{ asset('images/logo.png') }}" alt="ASG logo" class="size-full object-contain">
             </div>
