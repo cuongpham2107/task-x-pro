@@ -244,10 +244,12 @@ new #[Title('Công việc')] class extends Component {
                     all-label="Tất cả giai đoạn" width="w-44" drop-width="w-64" :options="$this->phaseFilterOptions" />
             </div>
 
-            <div class="shrink-0">
-                <x-ui.filter-select model="filterPicId" :value="$filterPicId" label="PIC" icon="person"
-                    all-label="Tất cả PIC" width="w-44" drop-width="w-64" :options="$this->picFilterOptions" />
-            </div>
+            @unless (auth()->user()->hasRole('pic'))
+                <div class="shrink-0">
+                    <x-ui.filter-select model="filterPicId" :value="$filterPicId" label="PIC" icon="person"
+                        all-label="Tất cả PIC" width="w-44" drop-width="w-64" :options="$this->picFilterOptions" />
+                </div>
+            @endunless
 
             <div class="shrink-0">
                 <x-ui.filter-select model="filterStatus" :value="$filterStatus" label="Trạng thái" icon="circle"
