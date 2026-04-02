@@ -130,14 +130,14 @@
                         Hệ thống
                     </p>
                     @if ($canViewSlaConfig)
-                        <a class="{{ request()->routeIs('sla-configs.*') ? 'bg-primary/10 text-primary font-bold' : 'text-slate-600 dark:text-slate-400 font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors' }} flex items-center gap-4 rounded-xl px-4 py-3"
+                        <a class="{{ $navLink('sla-configs.*') }} flex items-center gap-4 rounded-xl px-4 py-3"
                             href="{{ route('sla-configs.index') }}" wire:navigate @click="sidebarOpen = false">
                             <span class="material-symbols-outlined">schedule</span>
                             <span class="text-base">Cấu hình SLA</span>
                         </a>
                     @endif
                     @if ($canViewPhaseTemplate)
-                        <a class="{{ request()->routeIs('phase-templates.*') ? 'bg-primary/10 text-primary font-bold' : 'text-slate-600 dark:text-slate-400 font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors' }} flex items-center gap-4 rounded-xl px-4 py-3"
+                        <a class="{{ $navLink('phase-templates.*') }} flex items-center gap-4 rounded-xl px-4 py-3"
                             href="{{ route('phase-templates.index') }}" wire:navigate @click="sidebarOpen = false">
                             <span class="material-symbols-outlined">schema</span>
                             <span class="text-base">Mẫu phase</span>
@@ -145,7 +145,7 @@
                     @endif
 
                     @if ($canViewActivityLog)
-                        <a class="{{ request()->routeIs('activity-logs.*') ? 'bg-primary/10 text-primary font-bold' : 'text-slate-600 dark:text-slate-400 font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors' }} flex items-center gap-4 rounded-xl px-4 py-3"
+                        <a class="{{ $navLink('activity-logs.*') }} flex items-center gap-4 rounded-xl px-4 py-3"
                             href="{{ route('activity-logs.index') }}" wire:navigate @click="sidebarOpen = false">
                             <span class="material-symbols-outlined">history</span>
                             <span class="text-base">Nhật ký</span>
@@ -153,7 +153,7 @@
                     @endif
 
                     @if ($canViewRole)
-                        <a class="{{ request()->routeIs('roles.*') ? 'bg-primary/10 text-primary font-bold' : 'text-slate-600 dark:text-slate-400 font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors' }} flex items-center gap-4 rounded-xl px-4 py-3"
+                        <a class="{{ $navLink('roles.*') }} flex items-center gap-4 rounded-xl px-4 py-3"
                             href="{{ route('roles.index') }}" wire:navigate @click="sidebarOpen = false">
                             <span class="material-symbols-outlined">shield_person</span>
                             <span class="text-base">Phân quyền</span>
@@ -169,7 +169,7 @@
             <div class="mt-auto border-t border-slate-100 p-4 dark:border-slate-800">
                 <div class="space-y-1.5">
                     <a href="{{ route('users.show', auth()->id()) }}" wire:navigate @click="sidebarOpen = false"
-                        class="flex items-center gap-4 rounded-xl px-4 py-3 text-slate-600 transition-colors hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800">
+                        class="{{ $navLink('users.show') }} flex items-center gap-4 rounded-xl px-4 py-3">
                         <span class="material-symbols-outlined">person</span>
                         <span class="text-base font-medium">Tài khoản của tôi</span>
                     </a>

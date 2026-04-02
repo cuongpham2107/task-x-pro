@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\ProjectStatus;
 use App\Models\Phase;
 use App\Models\Project;
 use App\Services\Phases\PhaseService;
@@ -10,7 +11,8 @@ use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
-new #[Title('Quản lý giai đoạn')] class extends Component {
+new #[Title('Quản lý giai đoạn')] class extends Component
+{
     public Project $project;
 
     public bool $showDeleteModal = false;
@@ -86,7 +88,7 @@ new #[Title('Quản lý giai đoạn')] class extends Component {
             unset($this->phases);
             $this->dispatch('toast', message: 'Giai đoạn đã được xóa thành công!', type: 'success');
         } catch (\Exception $e) {
-            $this->dispatch('toast', message: 'Không thể xóa giai đoạn: ' . $e->getMessage(), type: 'error');
+            $this->dispatch('toast', message: 'Không thể xóa giai đoạn: '.$e->getMessage(), type: 'error');
         }
     }
 
@@ -144,7 +146,7 @@ new #[Title('Quản lý giai đoạn')] class extends Component {
             unset($this->phases);
             $this->dispatch('toast', message: $message, type: 'success');
         } catch (\Exception $e) {
-            $this->dispatch('toast', message: 'Không thể thực hiện hành động: ' . $e->getMessage(), type: 'error');
+            $this->dispatch('toast', message: 'Không thể thực hiện hành động: '.$e->getMessage(), type: 'error');
         }
     }
 
@@ -155,7 +157,7 @@ new #[Title('Quản lý giai đoạn')] class extends Component {
             unset($this->phases);
             $this->dispatch('toast', message: 'Thứ tự giai đoạn đã được cập nhật!', type: 'success');
         } catch (\Exception $e) {
-            $this->dispatch('toast', message: 'Không thể cập nhật thứ tự: ' . $e->getMessage(), type: 'error');
+            $this->dispatch('toast', message: 'Không thể cập nhật thứ tự: '.$e->getMessage(), type: 'error');
         }
     }
 
@@ -182,7 +184,7 @@ new #[Title('Quản lý giai đoạn')] class extends Component {
     public function projectStart(): string
     {
         $phases = $this->phases;
-        $starts = $phases->map(fn($p) => $p->start_date ? Carbon::parse($p->start_date) : null)->filter();
+        $starts = $phases->map(fn ($p) => $p->start_date ? Carbon::parse($p->start_date) : null)->filter();
 
         return $starts->isEmpty() ? '---' : $starts->min()->format('d/m/Y');
     }
@@ -191,7 +193,7 @@ new #[Title('Quản lý giai đoạn')] class extends Component {
     public function projectEnd(): string
     {
         $phases = $this->phases;
-        $ends = $phases->map(fn($p) => $p->end_date ? Carbon::parse($p->end_date) : null)->filter();
+        $ends = $phases->map(fn ($p) => $p->end_date ? Carbon::parse($p->end_date) : null)->filter();
 
         return $ends->isEmpty() ? '---' : $ends->max()->format('d/m/Y');
     }
@@ -220,8 +222,8 @@ new #[Title('Quản lý giai đoạn')] class extends Component {
     {
         $phases = $this->phases;
 
-        $starts = $phases->map(fn($p) => $p->start_date ? Carbon::parse($p->start_date) : null)->filter()->values();
-        $ends = $phases->map(fn($p) => $p->end_date ? Carbon::parse($p->end_date) : null)->filter()->values();
+        $starts = $phases->map(fn ($p) => $p->start_date ? Carbon::parse($p->start_date) : null)->filter()->values();
+        $ends = $phases->map(fn ($p) => $p->end_date ? Carbon::parse($p->end_date) : null)->filter()->values();
 
         if ($starts->isEmpty() || $ends->isEmpty()) {
             return ['hasTimeline' => false, 'items' => []];
@@ -304,7 +306,7 @@ new #[Title('Quản lý giai đoạn')] class extends Component {
         // ── Phase items ────────────────────────────────────────────────────────
         $items = [];
         foreach ($phases as $phase) {
-            if (!$phase->start_date || !$phase->end_date) {
+            if (! $phase->start_date || ! $phase->end_date) {
                 $items[] = [
                     'id' => $phase->id,
                     'name' => $phase->name,
@@ -380,13 +382,14 @@ new #[Title('Quản lý giai đoạn')] class extends Component {
             </div>
 
             @can('update', $project)
-                @if ($project->status === \App\Enums\ProjectStatus::Init)
+                @if ($project->status === ProjectStatus::Init)
                     <x-ui.button icon="play_arrow" size="sm" variant="primary" wire:click="startProject">
                         Bắt đầu dự án
                     </x-ui.button>
                 @endif
 
-                <x-ui.button icon="edit" size="sm" variant="secondary" wire:click="openEditProjectModal({{ $project->id }})">
+                <x-ui.button icon="edit" size="sm" variant="secondary"
+                    wire:click="openEditProjectModal({{ $project->id }})">
                     Chỉnh sửa dự án
                 </x-ui.button>
             @endcan

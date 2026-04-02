@@ -36,6 +36,26 @@ class AuthService
     {
         $column = $driver === 'telegram' ? 'telegram_id' : "{$driver}_id";
 
+        // Handle linking for authenticated users
+        if (Auth::check()) {
+            $user = Auth::user();
+
+            // Check if this social ID is already linked to ANOTHER user
+            $existingUser = User::query()->where($column, $socialUser->getId())
+                ->where('id', '!=', $user->id)
+                ->first();
+
+            if ($existingUser) {
+                throw new \Exception("Tài khoản {$driver} này đã được liên kết với một người dùng khác.");
+            }
+
+            if ($user->{$column} !== $socialUser->getId()) {
+                $user->update([$column => $socialUser->getId()]);
+            }
+
+            return $user;
+        }
+
         $user = User::query()->where($column, $socialUser->getId())
             ->orWhere('email', $socialUser->getEmail())
             ->first();

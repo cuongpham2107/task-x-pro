@@ -9,40 +9,49 @@ use App\Models\SlaConfig;
 use App\Models\Task;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Spatie\Permission\Models\Role;
 
 // Guest-only routes (redirect to dashboard if already authenticated)
 Route::middleware('guest')->group(function () {
     Route::livewire('/auth/login', 'pages::auth.login')->name('login');
-
-    // Social Login Routes
-    Route::get('/auth/{driver}/redirect', function (string $driver) {
-        return \Laravel\Socialite\Facades\Socialite::driver($driver)->redirect();
-    })->name('social.redirect');
-
-    Route::get('/auth/{driver}/callback', function (string $driver, \App\Services\Auth\AuthService $authService) {
-        try {
-            $user = $authService->handleSocialCallback($driver);
-
-            if ($user->status === \App\Enums\UserStatus::Pending || $user->status === 'pending') {
-                return redirect()->route('login', ['pending' => 1])->with('showPendingPopup', true);
-            }
-
-            Auth::login($user, true);
-            session()->regenerate();
-
-            return redirect()->intended(route('dashboard.index'));
-        } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Social login failed: ' . $e->getMessage(), [
-                'driver' => $driver,
-                'exception' => $e
-            ]);
-            return redirect()->route('login')->with('error', 'Đăng nhập không thành công: ' . $e->getMessage());
-        }
-    })->name('social.callback');
 });
+
+// Social Login & Linking Routes (Accessible to both Guest and Auth)
+Route::get('/auth/{driver}/redirect', function (string $driver) {
+    return \Laravel\Socialite\Facades\Socialite::driver($driver)->redirect();
+})->name('social.redirect');
+
+Route::get('/auth/{driver}/callback', function (string $driver, \App\Services\Auth\AuthService $authService) {
+    try {
+        $isLinking = Auth::check();
+        $user = $authService->handleSocialCallback($driver);
+
+        if ($isLinking) {
+            return redirect()->route('users.show', $user->id)->with('success', 'Đã liên kết tài khoản '.$driver.' thành công!');
+        }
+
+        if ($user->status === \App\Enums\UserStatus::Pending || $user->status === 'pending') {
+            return redirect()->route('login', ['pending' => 1])->with('showPendingPopup', true);
+        }
+
+        Auth::login($user, true);
+        session()->regenerate();
+
+        return redirect()->intended(route('dashboard.index'));
+    } catch (\Exception $e) {
+        \Illuminate\Support\Facades\Log::error('Social auth failed: '.$e->getMessage(), [
+            'driver' => $driver,
+            'exception' => $e,
+        ]);
+
+        if (Auth::check()) {
+            return redirect()->route('users.show', Auth::id())->with('error', 'Lỗi liên kết tài khoản: '.$e->getMessage());
+        }
+
+        return redirect()->route('login')->with('error', 'Đăng nhập không thành công: '.$e->getMessage());
+    }
+})->name('social.callback');
 
 // Auth-only routes (redirect to login if not authenticated)
 Route::middleware('auth')->group(function () {

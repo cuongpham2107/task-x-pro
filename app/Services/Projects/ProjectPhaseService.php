@@ -10,9 +10,6 @@ use Illuminate\Validation\ValidationException;
 
 class ProjectPhaseService
 {
-    /**
-     * Tu dong sinh phase theo template cua loai project (BR-001).
-     */
     public function createPhasesFromTemplate(Project $project): void
     {
         $templates = PhaseTemplate::query()
@@ -23,24 +20,66 @@ class ProjectPhaseService
 
         if ($templates->isEmpty()) {
             throw ValidationException::withMessages([
-                'type' => 'Chua cau hinh phase template cho loai project nay.',
+                'type' => 'Chưa cấu hình phase template cho loại project này ('.$project->type->label().').',
             ]);
         }
 
-        $phasePayloads = [];
-        $cursorStart = $project->start_date !== null
-            ? Carbon::parse($project->start_date)->startOfDay()
-            : null;
+        $projectStart = $project->start_date !== null ? Carbon::parse($project->start_date)->startOfDay() : null;
+        $projectEnd = $project->end_date !== null ? Carbon::parse($project->end_date)->startOfDay() : null;
 
-        foreach ($templates as $template) {
+        $durations = [];
+        if ($projectStart && $projectEnd) {
+            // Logic chia tỷ lệ (Scaling)
+            $totalProjectDays = $projectStart->diffInDays($projectEnd) + 1;
+            $totalTemplateDays = $templates->sum('default_duration_days');
+
+            if ($totalTemplateDays > 0) {
+                foreach ($templates as $template) {
+                    $durations[] = (int) floor($template->default_duration_days * $totalProjectDays / $totalTemplateDays);
+                }
+            } else {
+                // Chia đều nếu template không có ngày
+                $count = $templates->count();
+                foreach ($templates as $index) {
+                    $durations[] = (int) floor($totalProjectDays / $count);
+                }
+            }
+
+            // Xử lý phần dư (Remainder) để đảm bảo khớp khít ngày cuối
+            $currentSum = array_sum($durations);
+            $remainder = $totalProjectDays - $currentSum;
+            for ($i = 0; $i < $remainder; $i++) {
+                $durations[$i % count($durations)]++;
+            }
+        }
+
+        $phasePayloads = [];
+        $cursorStart = $projectStart ? $projectStart->copy() : null;
+
+        foreach ($templates as $index => $template) {
             $startDate = $cursorStart?->toDateString();
             $endDate = null;
 
-            if ($cursorStart !== null && $template->default_duration_days !== null) {
-                $durationDays = max(1, (int) $template->default_duration_days);
-                $phaseEnd = $cursorStart->copy()->addDays($durationDays - 1);
-                $endDate = $phaseEnd->toDateString();
-                $cursorStart = $phaseEnd->copy()->addDay()->startOfDay();
+            if ($cursorStart !== null) {
+                if ($projectEnd !== null) {
+                    // Dùng duration đã tính ở trên
+                    $durationDays = max(1, $durations[$index] ?? 1);
+                    $phaseEnd = $cursorStart->copy()->addDays($durationDays - 1);
+
+                    // Đảm bảo phase cuối cùng không bao giờ vượt quá hoặc ngắn hơn project end date
+                    if ($index === $templates->count() - 1) {
+                        $phaseEnd = $projectEnd->copy();
+                    }
+
+                    $endDate = $phaseEnd->toDateString();
+                    $cursorStart = $phaseEnd->copy()->addDay()->startOfDay();
+                } elseif ($template->default_duration_days !== null) {
+                    // Logic cộng dồn cũ nếu không có Project End Date
+                    $durationDays = max(1, (int) $template->default_duration_days);
+                    $phaseEnd = $cursorStart->copy()->addDays($durationDays - 1);
+                    $endDate = $phaseEnd->toDateString();
+                    $cursorStart = $phaseEnd->copy()->addDay()->startOfDay();
+                }
             }
 
             $phasePayloads[] = [

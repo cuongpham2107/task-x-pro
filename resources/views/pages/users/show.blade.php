@@ -1,17 +1,15 @@
 <?php
 
-use Livewire\Component;
 use App\Models\User;
-use App\Models\Project;
-use App\Models\Task;
 use App\Services\Users\UserService;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Title;
-use Livewire\Attributes\Layout;
 use Livewire\Attributes\Validate;
+use Livewire\Component;
 use Livewire\WithFileUploads;
 
-new #[Title('Thông tin cá nhân')] class extends Component {
+new #[Title('Thông tin cá nhân')] class extends Component
+{
     use WithFileUploads;
 
     protected UserService $userService;
@@ -19,6 +17,7 @@ new #[Title('Thông tin cá nhân')] class extends Component {
     public User $user;
 
     public bool $showEditModal = false;
+
     public bool $showPasswordModal = false;
 
     #[Validate(['required', 'string', 'max:255'])]
@@ -64,7 +63,7 @@ new #[Title('Thông tin cá nhân')] class extends Component {
         // If viewing own profile or admin/manager, allow. Otherwise 403.
         // For now we assume the route middleware handles 'view' permission,
         // but we might want to restrict viewing other's detailed profile unless admin.
-        if (auth()->id() !== $user->id && !auth()->user()->can('update', $user)) {
+        if (auth()->id() !== $user->id && ! auth()->user()->can('update', $user)) {
             abort(403);
         }
     }
@@ -81,7 +80,7 @@ new #[Title('Thông tin cá nhân')] class extends Component {
 
     public function openEditModal()
     {
-        if (auth()->id() !== $this->user->id && !auth()->user()->can('update', $this->user)) {
+        if (auth()->id() !== $this->user->id && ! auth()->user()->can('update', $this->user)) {
             abort(403);
         }
 
@@ -100,13 +99,13 @@ new #[Title('Thông tin cá nhân')] class extends Component {
 
     public function saveUser()
     {
-        if (auth()->id() !== $this->user->id && !auth()->user()->can('update', $this->user)) {
+        if (auth()->id() !== $this->user->id && ! auth()->user()->can('update', $this->user)) {
             abort(403);
         }
 
         $this->validate([
             'editName' => 'required',
-            'editEmail' => 'required|email|unique:users,email,' . $this->user->id,
+            'editEmail' => 'required|email|unique:users,email,'.$this->user->id,
             'editPhone' => 'nullable',
             'editTelegramId' => 'nullable',
             'editJobTitle' => 'nullable',
@@ -162,18 +161,6 @@ new #[Title('Thông tin cá nhân')] class extends Component {
 
         $this->showPasswordModal = false;
         $this->dispatch('toast', message: 'Đổi mật khẩu thành công!', type: 'success');
-    }
-
-    public function getTelegramId()
-    {
-        try {
-            $response = Http::get('https://api.telegram.org/bot' . env('TELEGRAM_TOKEN') . '/getUpdates');
-            $result = $response->json()['result'][0]['message']['from']['id'];
-            $this->editTelegramId = $result;
-            $this->dispatch('toast', message: 'Lấy ID Telegram thành công!', type: 'success');
-        } catch (\Exception $e) {
-            $this->dispatch('toast', message: 'Lỗi: ' . $e->getMessage(), type: 'error');
-        }
     }
 };
 ?>
@@ -472,13 +459,16 @@ new #[Title('Thông tin cá nhân')] class extends Component {
 
         <x-ui.input label="Số điện thoại" name="editPhone" wire:model="editPhone" />
 
-        <x-ui.input label="Telegram ID" name="editTelegramId" wire:model="editTelegramId" />
-        <p class="text-xs text-slate-600">Cách lấy id telegram:
-            <a class="text-blue-500 hover:underline" href="https://web.telegram.org/a/#8701320064"
-                target="_blank">Nhấn vào link và gửi 1 tin nhắn cho bot</a> ->
-            <a wire:click.stop="getTelegramId" class="cursor-pointer text-blue-500 hover:underline">Nhấn vào đây để
-                lấy ID Telegram</a>
-        </p>
+        <div class="space-y-2">
+            <x-ui.input label="Telegram ID" name="editTelegramId" wire:model="editTelegramId" readonly />
+            <p class="text-xs text-slate-600">
+                <a href="{{ route('social.redirect', ['driver' => 'telegram']) }}"
+                    class="inline-flex items-center gap-2 rounded-lg bg-blue-50 px-3 py-1.5 font-semibold text-blue-600 transition-colors hover:bg-blue-100">
+                    <span class="material-symbols-outlined text-sm">link</span>
+                    Liên kết Telegram để nhận thông báo
+                </a>
+            </p>
+        </div>
 
         <div class="flex justify-end gap-3 pt-4">
             <button type="button" wire:click="$set('showEditModal', false)"

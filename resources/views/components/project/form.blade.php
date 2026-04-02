@@ -26,10 +26,10 @@ new class extends Component {
     #[Validate('required|string|in:warehouse,customs,trucking,software,gms,tower')]
     public string $type = '';
 
-    #[Validate('nullable|date')]
+    #[Validate('required|date')]
     public ?string $startDate = '';
 
-    #[Validate('nullable|date|after_or_equal:startDate')]
+    #[Validate('required|date|after_or_equal:startDate')]
     public ?string $endDate = '';
 
     #[Validate('nullable|string|max:5000')]
@@ -39,6 +39,32 @@ new class extends Component {
     public ?string $budget = '';
 
     public bool $is_phase = false;
+
+    public function updatedStartDate(): void
+    {
+        if (!$this->is_phase || $this->startDate === '' || $this->startDate === null) {
+            return;
+        }
+
+        $totalDays = $this->templateTotalDays;
+        if ($totalDays <= 0) {
+            return;
+        }
+
+        try {
+            $this->endDate = Carbon::parse($this->startDate)->addDays($totalDays)->toDateString();
+        } catch (\Exception) {
+            // Bỏ qua nếu ngày không hợp lệ
+        }
+    }
+
+    public function updatedIsPhase(): void
+    {
+        // Khi bật is_phase, tính lại endDate nếu đã có startDate
+        if ($this->is_phase && $this->startDate !== '' && $this->startDate !== null) {
+            $this->updatedStartDate();
+        }
+    }
 
     /** @var array<int, int> */
     #[
@@ -118,6 +144,10 @@ new class extends Component {
             'name.max' => 'Tên dự án không được vượt quá 255 ký tự.',
             'type.required' => 'Loại dự án là bắt buộc.',
             'type.in' => 'Loại dự án không hợp lệ.',
+            'startDate.required' => 'Ngày bắt đầu là bắt buộc.',
+            'startDate.date' => 'Ngày bắt đầu không hợp lệ.',
+            'endDate.required' => 'Ngày kết thúc là bắt buộc.',
+            'endDate.date' => 'Ngày kết thúc không hợp lệ.',
             'endDate.after_or_equal' => 'Ngày kết thúc phải sau hoặc bằng ngày bắt đầu.',
             'budget.numeric' => 'Ngân sách phải là số.',
             'budget.min' => 'Ngân sách không được âm.',
@@ -151,6 +181,16 @@ new class extends Component {
         } catch (\Exception $e) {
             $this->dispatch('toast', message: 'Lỗi: ' . $e->getMessage(), type: 'error');
         }
+    }
+
+    #[Computed]
+    public function templateTotalDays(): int
+    {
+        if ($this->type === '') {
+            return 0;
+        }
+
+        return (int) \App\Models\PhaseTemplate::query()->where('project_type', $this->type)->where('is_active', true)->sum('default_duration_days');
     }
 
     #[Computed]
@@ -217,14 +257,6 @@ new class extends Component {
                 $phasePayloads = $this->is_phase ? null : [];
             }
 
-            if ($this->is_phase) {
-                $phaseQueryService = app(\App\Services\Phases\PhaseQueryService::class);
-                $payloads = $phaseQueryService->payloadsFromTemplates($this->type);
-
-                if ($payloads !== []) {
-                    $phasePayloads = $payloads;
-                }
-            }
 
             if ($this->mode === 'edit' && $this->editingProjectId !== null) {
                 $project = $projectService->findForEdit(auth()->user(), $this->editingProjectId);
@@ -299,13 +331,12 @@ new class extends Component {
 
                     {{-- Ngày bắt đầu --}}
                     <div>
-                        <x-ui.datepicker label="Ngày bắt đầu" name="startDate" wire:model="startDate" />
+                        <x-ui.datepicker label="Ngày bắt đầu" name="startDate" wire:model.live="startDate" required />
                     </div>
                     {{-- Ngày kết thúc --}}
                     <div>
-                        <x-ui.datepicker label="Ngày kết thúc (Dự kiến)" name="endDate" wire:model="endDate" />
+                        <x-ui.datepicker label="Ngày kết thúc (Dự kiến)" name="endDate" wire:model="endDate" required />
                     </div>
-                    {{-- Sử dụng mẫu phase hay không --}}
                     {{-- Sử dụng mẫu phase hay không --}}
                     @php
                         $isPhaseOptions = [
@@ -327,6 +358,16 @@ new class extends Component {
                     @endphp
                     <x-ui.radio-group name="is_phase" wire:model.live="is_phase" label="Sử dụng mẫu phase"
                         :options="$isPhaseOptions" :hidden="!empty($editingProjectId)" />
+                    @if ($is_phase && $this->templateTotalDays > 0)
+                        <div
+                            class="col-span-full flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 dark:border-blue-800 dark:bg-blue-950/40">
+                            <span class="material-symbols-outlined mt-0.5 text-lg text-blue-500">info</span>
+                            <p class="text-sm text-blue-700 dark:text-blue-300">
+                                Mẫu giai đoạn cho loại dự án này có tổng thời gian dự kiến khoảng
+                                <strong>{{ $this->templateTotalDays }} ngày</strong>.
+                            </p>
+                        </div>
+                    @endif
 
                     {{-- Leader --}}
                     @if ($leaderOptions->isNotEmpty())

@@ -48,16 +48,19 @@ class TaskQueryService
         $actualSort = in_array($sortBy, $allowedSorts) ? $sortBy : 'deadline';
         $actualDir = strtolower($sortDir) === 'desc' ? 'desc' : 'asc';
 
-        if ($actualSort === 'status') {
-            $query->orderByRaw("CASE
-                WHEN status = 'late' THEN 1
-                WHEN status = 'waiting_approval' THEN 2
-                WHEN status = 'in_progress' THEN 3
-                WHEN status = 'pending' THEN 4
-                WHEN status = 'completed' THEN 5
-                ELSE 6 END {$actualDir}");
-        } else {
-            $query->orderBy($actualSort, $actualDir);
+        $statusDir = ($actualSort === 'status') ? $actualDir : 'asc';
+
+        // Mặc định luôn ưu tiên sắp xếp theo status
+        $query->orderByRaw("CASE
+            WHEN tasks.status = 'late' THEN 1
+            WHEN tasks.status = 'waiting_approval' THEN 2
+            WHEN tasks.status = 'in_progress' THEN 3
+            WHEN tasks.status = 'pending' THEN 4
+            WHEN tasks.status = 'completed' THEN 5
+            ELSE 6 END {$statusDir}");
+
+        if ($actualSort !== 'status') {
+            $query->orderBy('tasks.'.$actualSort, $actualDir);
         }
 
         return $query

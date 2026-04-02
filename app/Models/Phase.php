@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\TaskStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -73,23 +74,29 @@ class Phase extends Model
     }
 
     /**
-     * Tinh lai progress phase theo trung binh progress task.
+     * Tinh lai progress phase dua tren so task da completed / tong so task.
      *
-     * progress phase = AVG(task.progress)
+     * progress phase = (so task completed / tong task) * 100
      */
     public function refreshProgressFromTasks(): void
     {
-        $tasksQuery = $this->tasks();
-        $averageTaskProgress = (float) ($tasksQuery->avg('progress') ?? 0);
-        $progress = (int) round(max(0, min(100, $averageTaskProgress)));
+        $taskCount = (int) $this->tasks()->count();
 
-        $taskCount = (int) $tasksQuery->count();
+        if ($taskCount === 0) {
+            $progress = 0;
+        } else {
+            $completedCount = (int) $this->tasks()
+                ->where('status', TaskStatus::Completed)
+                ->count();
+            $progress = (int) round($completedCount / $taskCount * 100);
+        }
+
         $hasIncompleteTask = $this->tasks()
-            ->where('status', '!=', \App\Enums\TaskStatus::Completed->value)
+            ->where('status', '!=', TaskStatus::Completed)
             ->exists();
 
         $hasStartedTask = $this->tasks()
-            ->where('status', '!=', \App\Enums\TaskStatus::Pending->value)
+            ->where('status', '!=', TaskStatus::Pending)
             ->exists();
 
         $canMarkCompleted = $taskCount > 0 && ! $hasIncompleteTask;

@@ -2,14 +2,15 @@
     class="sticky top-0 z-50 flex items-center justify-between whitespace-nowrap border-b border-solid border-slate-200 bg-white px-4 py-3 lg:px-8 dark:border-slate-800 dark:bg-slate-900">
     <div class="flex items-center gap-4">
         <button @click="sidebarOpen = true"
-            class="rounded-lg p-1 text-slate-600 transition-colors hover:bg-slate-100 lg:hidden dark:text-slate-400 dark:hover:bg-slate-800">
+            class="rounded-lg p-1 text-slate-600 transition-colors hover:bg-slate-100 xl:hidden dark:text-slate-400 dark:hover:bg-slate-800">
             <span class="material-symbols-outlined text-2xl">menu</span>
         </button>
         <a href="{{ route('dashboard.index') }}" class="text-primary hidden items-center gap-3 lg:flex">
             <div class="bg-primary/10 ring-primary/20 flex size-9 items-center justify-center rounded-lg p-1.5 ring-1">
                 <img src="{{ asset('images/logo.png') }}" alt="ASG logo" class="size-full object-contain">
             </div>
-            <h2 class="text-lg font-bold leading-tight tracking-tight text-slate-900 dark:text-slate-100">
+            <h2
+                class="hidden text-lg font-bold leading-tight tracking-tight text-slate-900 sm:block dark:text-slate-100">
                 {{ config('app.name') }}
             </h2>
         </a>
@@ -333,8 +334,7 @@
             </button> -->
         </div>
         @auth
-            <div class="relative hidden border-l border-slate-200 pl-2 lg:block dark:border-slate-800"
-                x-data="{ open: false, timeout: null }">
+            <div class="relative block border-l border-slate-200 pl-2 dark:border-slate-800" x-data="{ open: false, timeout: null }">
                 {{-- Trigger --}}
                 <button @click="open = !open"
                     class="flex cursor-pointer items-center gap-2.5 transition-opacity hover:opacity-80">
