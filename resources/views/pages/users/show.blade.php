@@ -8,8 +8,7 @@ use Livewire\Attributes\Validate;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
-new #[Title('Thông tin cá nhân')] class extends Component
-{
+new #[Title('Thông tin cá nhân')] class extends Component {
     use WithFileUploads;
 
     protected UserService $userService;
@@ -63,7 +62,7 @@ new #[Title('Thông tin cá nhân')] class extends Component
         // If viewing own profile or admin/manager, allow. Otherwise 403.
         // For now we assume the route middleware handles 'view' permission,
         // but we might want to restrict viewing other's detailed profile unless admin.
-        if (auth()->id() !== $user->id && ! auth()->user()->can('update', $user)) {
+        if (auth()->id() !== $user->id && !auth()->user()->can('update', $user)) {
             abort(403);
         }
     }
@@ -80,7 +79,7 @@ new #[Title('Thông tin cá nhân')] class extends Component
 
     public function openEditModal()
     {
-        if (auth()->id() !== $this->user->id && ! auth()->user()->can('update', $this->user)) {
+        if (auth()->id() !== $this->user->id && !auth()->user()->can('update', $this->user)) {
             abort(403);
         }
 
@@ -99,15 +98,15 @@ new #[Title('Thông tin cá nhân')] class extends Component
 
     public function saveUser()
     {
-        if (auth()->id() !== $this->user->id && ! auth()->user()->can('update', $this->user)) {
+        if (auth()->id() !== $this->user->id && !auth()->user()->can('update', $this->user)) {
             abort(403);
         }
 
         $this->validate([
             'editName' => 'required',
-            'editEmail' => 'required|email|unique:users,email,'.$this->user->id,
+            'editEmail' => 'required|email|unique:users,email,' . $this->user->id,
             'editPhone' => 'nullable',
-            'editTelegramId' => 'nullable',
+            'editTelegramId' => 'nullable|unique:users,telegram_id,' . $this->user->id,
             'editJobTitle' => 'nullable',
             'editDepartmentId' => 'nullable',
             'newAvatar' => 'nullable|image|max:2048',
@@ -161,6 +160,16 @@ new #[Title('Thông tin cá nhân')] class extends Component
 
         $this->showPasswordModal = false;
         $this->dispatch('toast', message: 'Đổi mật khẩu thành công!', type: 'success');
+    }
+    public function unlinkTelegram()
+    {
+        if (auth()->id() !== $this->user->id && !auth()->user()->can('update', $this->user)) {
+            abort(403);
+        }
+
+        $this->user->update(['telegram_id' => null]);
+        $this->editTelegramId = '';
+        $this->dispatch('toast', message: 'Đã huỷ liên kết Telegram!', type: 'info');
     }
 };
 ?>
@@ -459,13 +468,26 @@ new #[Title('Thông tin cá nhân')] class extends Component
 
         <x-ui.input label="Số điện thoại" name="editPhone" wire:model="editPhone" />
 
-        <div class="space-y-2">
-            <x-ui.input label="Telegram ID" name="editTelegramId" wire:model="editTelegramId" readonly />
-            <p class="text-xs text-slate-600">
+        <div class="flex items-center gap-2 space-y-2">
+            <div class="flex-1 gap-2">
+                <div class="flex-1">
+                    <x-ui.input label="Telegram ID" name="editTelegramId" wire:model="editTelegramId"
+                        placeholder="Nhập Telegram ID (số)" />
+                </div>
+                @if ($editTelegramId)
+                    <button type="button" wire:click="unlinkTelegram"
+                        wire:confirm="Bạn có chắc chắn muốn hủy liên kết Telegram?"
+                        class="mb-1 flex h-10 items-center justify-center rounded-lg bg-red-50 px-3 text-red-600 transition-colors hover:bg-red-100"
+                        title="Hủy liên kết">
+                        <span class="material-symbols-outlined text-sm">link_off</span>
+                    </button>
+                @endif
+            </div>
+            <p class="mt-4 text-xs text-slate-600">
                 <a href="{{ route('social.redirect', ['driver' => 'telegram']) }}"
                     class="inline-flex items-center gap-2 rounded-lg bg-blue-50 px-3 py-1.5 font-semibold text-blue-600 transition-colors hover:bg-blue-100">
                     <span class="material-symbols-outlined text-sm">link</span>
-                    Liên kết Telegram để nhận thông báo
+                    {{ $editTelegramId ? 'Thay đổi Telegram' : 'Liên kết Telegram để nhận thông báo' }}
                 </a>
             </p>
         </div>

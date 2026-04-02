@@ -10,8 +10,7 @@ use Livewire\Attributes\On;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     public ?Project $project = null;
 
     public bool $showFormModal = false;
@@ -82,8 +81,8 @@ new class extends Component
         $rules = [
             'name' => 'required|string|max:255',
             'weight' => 'required|numeric|min:0|max:100',
-            'startDate' => ['nullable', 'date'],
-            'endDate' => ['nullable', 'date', 'after_or_equal:startDate'],
+            'startDate' => ['required', 'date'],
+            'endDate' => ['required', 'date', 'after_or_equal:startDate'],
             'description' => 'nullable|string|max:5000',
         ];
 
@@ -109,6 +108,8 @@ new class extends Component
             'name.required' => 'Tên giai đoạn là bắt buộc.',
             'name.max' => 'Tên giai đoạn không được vượt quá 255 ký tự.',
             'weight.required' => 'Trọng số là bắt buộc.',
+            'startDate.required' => 'Ngày bắt đầu là bắt buộc.',
+            'endDate.required' => 'Ngày kết thúc là bắt buộc.',
             'weight.numeric' => 'Trọng số phải là số.',
             'weight.min' => 'Trọng số không được nhỏ hơn 0.',
             'weight.max' => 'Trọng số không được lớn hơn 100.',
@@ -151,9 +152,9 @@ new class extends Component
             $this->dispatch('phase-saved');
         } catch (ValidationException $e) {
             $this->setErrorBag($e->validator->errors());
-            $this->dispatch('toast', message: 'Có lỗi xảy ra: '.$e->getMessage(), type: 'error');
+            $this->dispatch('toast', message: 'Có lỗi xảy ra: ' . $e->getMessage(), type: 'error');
         } catch (\Exception $e) {
-            $this->dispatch('toast', message: 'Có lỗi xảy ra: '.$e->getMessage(), type: 'error');
+            $this->dispatch('toast', message: 'Có lỗi xảy ra: ' . $e->getMessage(), type: 'error');
         }
     }
 };
@@ -191,13 +192,13 @@ new class extends Component
 
                 {{-- Ngày bắt đầu --}}
                 <div>
-                    <x-ui.datepicker label="Ngày bắt đầu" wire:model="startDate" />
+                    <x-ui.datepicker label="Ngày bắt đầu" wire:model="startDate" required />
                     <x-ui.field-error field="startDate" />
                 </div>
 
                 {{-- Ngày kết thúc --}}
                 <div>
-                    <x-ui.datepicker label="Ngày kết thúc (Dự kiến)" wire:model="endDate" />
+                    <x-ui.datepicker label="Ngày kết thúc (Dự kiến)" wire:model="endDate" required />
                     <x-ui.field-error field="endDate" />
                 </div>
 

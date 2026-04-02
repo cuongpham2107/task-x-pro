@@ -38,6 +38,7 @@ class AuthService
 
         // Handle linking for authenticated users
         if (Auth::check()) {
+            /** @var User $user */
             $user = Auth::user();
 
             // Check if this social ID is already linked to ANOTHER user
@@ -46,7 +47,7 @@ class AuthService
                 ->first();
 
             if ($existingUser) {
-                throw new \Exception("Tài khoản {$driver} này đã được liên kết với một người dùng khác.");
+                throw new \Exception("Tài khoản {$driver} này đã được liên kết với một người dùng khác. Nếu đây là tài khoản của bạn, vui lòng liên hệ Admin để được hỗ trợ gộp tài khoản.");
             }
 
             if ($user->{$column} !== $socialUser->getId()) {
