@@ -686,7 +686,7 @@ new #[Title('KPI phòng ban')] class extends Component
         <div class="grid grid-cols-2 gap-3 md:grid-cols-4">
             <div class="rounded-lg bg-white p-3 shadow-sm dark:bg-slate-900/80">
                 <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Tổng bản ghi</p>
-                <p class="mt-1 text-2xl font-black text-slate-900 dark:text-white">{{ $approvalSummary['total'] }}</p>
+                <p class="mt-1 text-2xl font-black text-slate-600 dark:text-white">{{ $approvalSummary['total'] }}</p>
             </div>
             <div class="rounded-lg bg-white p-3 shadow-sm dark:bg-slate-900/80">
                 <p class="text-[11px] font-semibold uppercase tracking-wide text-amber-600">Chờ duyệt</p>
@@ -814,14 +814,14 @@ new #[Title('KPI phòng ban')] class extends Component
                                         @endif
                                     </div>
                                     <div>
-                                        <p class="font-bold text-slate-900 dark:text-white">
+                                        <p class="font-bold text-slate-600 dark:text-white">
                                             {{ $user?->name ?? 'Unknown' }}</p>
                                         <p class="text-xs text-slate-500">{{ $user?->job_title ?? 'N/A' }}</p>
                                     </div>
                                 </div>
                             </td>
                             <td class="px-4 py-5 text-center">
-                                <p class="font-bold text-slate-900 dark:text-white">{{ $score->total_tasks }}</p>
+                                <p class="font-bold text-slate-600 dark:text-white">{{ $score->total_tasks }}</p>
                                 <p class="text-[10px] text-slate-400">Tasks</p>
                             </td>
                             <td class="px-4 py-5 text-center">
@@ -844,7 +844,7 @@ new #[Title('KPI phòng ban')] class extends Component
                             <td class="px-4 py-5 text-center">
                                 <div class="flex items-center justify-center gap-1">
                                     <span
-                                        class="font-bold text-slate-900 dark:text-white">{{ number_format($score->avg_star, 1) }}</span>
+                                        class="font-bold text-slate-600 dark:text-white">{{ number_format($score->avg_star, 1) }}</span>
                                     <span class="material-symbols-outlined text-primary fill-[1] text-sm">star</span>
                                 </div>
                             </td>
@@ -942,7 +942,7 @@ new #[Title('KPI phòng ban')] class extends Component
             <p class="mb-1 text-sm font-medium text-slate-500">Tỷ lệ đúng hạn tổng</p>
             <div class="flex items-end gap-2">
                 <span
-                    class="text-4xl font-black text-slate-900 dark:text-white">{{ number_format($summary['avg_on_time_rate'], 1) }}%</span>
+                    class="text-4xl font-black text-slate-600 dark:text-white">{{ number_format($summary['avg_on_time_rate'], 1) }}%</span>
             </div>
             <div class="mt-4 flex gap-1">
                 @php $onTimeBlocks = floor($summary['avg_on_time_rate'] / 25); @endphp
@@ -958,7 +958,7 @@ new #[Title('KPI phòng ban')] class extends Component
             <p class="mb-1 text-sm font-medium text-slate-500">Tổng số công việc hoàn thành</p>
             <div class="flex items-end gap-2">
                 <span
-                    class="text-4xl font-black text-slate-900 dark:text-white">{{ number_format($summary['total_tasks']) }}</span>
+                    class="text-4xl font-black text-slate-600 dark:text-white">{{ number_format($summary['total_tasks']) }}</span>
             </div>
             <p class="mt-4 text-xs italic text-slate-400">Trong kỳ báo cáo này</p>
         </div>
@@ -967,7 +967,7 @@ new #[Title('KPI phòng ban')] class extends Component
             <p class="mb-1 text-sm font-medium text-slate-500">Đánh giá sao trung bình</p>
             <div class="flex items-center gap-2">
                 <span
-                    class="text-4xl font-black text-slate-900 dark:text-white">{{ number_format($summary['avg_star'], 1) }}</span>
+                    class="text-4xl font-black text-slate-600 dark:text-white">{{ number_format($summary['avg_star'], 1) }}</span>
                 <div class="text-primary flex">
                     @for ($i = 1; $i <= 5; $i++)
                         @if ($i <= round($summary['avg_star']))
@@ -1001,14 +1001,14 @@ new #[Title('KPI phòng ban')] class extends Component
                 <div class="flex flex-wrap items-start justify-between gap-3">
                     <div>
                         <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Nhân sự</p>
-                        <h4 class="text-lg font-bold text-slate-900 dark:text-white">
+                        <h4 class="text-lg font-bold text-slate-600 dark:text-white">
                             {{ $reviewScore->user?->name ?? $reviewUserName }}</h4>
                         <p class="text-xs text-slate-500">{{ $reviewScore->user?->job_title ?? 'N/A' }}</p>
                     </div>
                     <div class="flex flex-col items-end gap-3 text-right">
                         <div>
                             <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Kỳ đánh giá</p>
-                            <p class="text-sm font-bold text-slate-900 dark:text-white">{{ $this->reviewPeriodLabel }}
+                            <p class="text-sm font-bold text-slate-600 dark:text-white">{{ $this->reviewPeriodLabel }}
                             </p>
                             <p class="mt-1 text-xs text-slate-500">Final score hiện tại:
                                 <span
@@ -1033,7 +1033,7 @@ new #[Title('KPI phòng ban')] class extends Component
             <div class="mb-4 grid grid-cols-2 gap-3 md:grid-cols-5">
                 <div class="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900">
                     <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Tổng task</p>
-                    <p class="mt-1 text-2xl font-black text-slate-900 dark:text-white">{{ $reviewSummary['total'] }}
+                    <p class="mt-1 text-2xl font-black text-slate-600 dark:text-white">{{ $reviewSummary['total'] }}
                     </p>
                 </div>
                 <div class="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900">
@@ -1050,7 +1050,7 @@ new #[Title('KPI phòng ban')] class extends Component
                 </div>
                 <div class="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900">
                     <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Avg tiến độ</p>
-                    <p class="mt-1 text-2xl font-black text-slate-900 dark:text-white">
+                    <p class="mt-1 text-2xl font-black text-slate-600 dark:text-white">
                         {{ number_format((float) $reviewSummary['avg_progress'], 1) }}%</p>
                 </div>
             </div>
@@ -1096,7 +1096,7 @@ new #[Title('KPI phòng ban')] class extends Component
                             @endphp
                             <tr class="align-top hover:bg-slate-50/80 dark:hover:bg-slate-800/40">
                                 <td class="px-4 py-3">
-                                    <p class="font-semibold text-slate-900 dark:text-white">{{ $task->name }}</p>
+                                    <p class="font-semibold text-slate-600 dark:text-white">{{ $task->name }}</p>
                                     @if ($task->description)
                                         <p class="mt-0.5 line-clamp-2 text-xs text-slate-500">{{ $task->description }}
                                         </p>

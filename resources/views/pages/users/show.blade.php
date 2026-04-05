@@ -321,7 +321,7 @@ new #[Title('Thông tin cá nhân')] class extends Component {
                                 </div>
                                 <div class="mt-2 flex justify-between text-[11px] font-bold uppercase text-slate-400">
                                     <span>Tiến độ</span>
-                                    <span class="text-slate-900 dark:text-slate-100">{{ $project->progress }}%</span>
+                                    <span class="text-slate-600 dark:text-slate-100">{{ $project->progress }}%</span>
                                 </div>
                             </div>
                         @empty

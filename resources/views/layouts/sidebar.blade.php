@@ -57,7 +57,7 @@
                         @endif
                     </div>
                     <div class="flex min-w-0 flex-col">
-                        <p class="truncate text-sm font-bold text-slate-900 dark:text-white">{{ auth()->user()->name }}</p>
+                        <p class="truncate text-sm font-bold text-slate-600 dark:text-white">{{ auth()->user()->name }}</p>
                         <p class="truncate text-xs text-slate-500 dark:text-slate-400">{{ auth()->user()->email }}</p>
                     </div>
                 </div>

@@ -58,7 +58,7 @@
             <div class="flex items-center gap-2">
                 <span class="material-symbols-outlined text-lg text-slate-400">{{ $icon }}</span>
                 <span
-                    class="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">{{ $label }}</span>
+                    class="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-white">{{ $label }}</span>
             </div>
             <button type="button" @click="open = false"
                 class="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400">

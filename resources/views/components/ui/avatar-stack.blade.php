@@ -10,6 +10,17 @@
     $shown = $users->take($max);
     $extra = $users->count() - $shown->count();
     $ring = "size-{$size} rounded-full ring-2 ring-white dark:ring-slate-900";
+    $__avatarColorOptions = [
+        'bg-blue-600 text-white',
+        'bg-emerald-600 text-white',
+        'bg-amber-500 text-white',
+        'bg-indigo-600 text-white',
+        'bg-purple-600 text-white',
+        'bg-pink-600 text-white',
+        'bg-rose-600 text-white',
+        'bg-teal-600 text-white',
+        'bg-slate-700 text-white',
+    ];
 @endphp
 
 @if ($users->isEmpty())
@@ -18,6 +29,11 @@
     <div class="flex items-center gap-1.5">
         <div class="flex -space-x-2">
             @foreach ($shown as $user)
+                @php
+                    $key = $user->id ?? $user->email ?? $user->name;
+                    $hash = is_int($key) ? (int) $key : crc32((string) $key);
+                    $avatarColorClass = $__avatarColorOptions[$hash % count($__avatarColorOptions)];
+                @endphp
                 <div class="relative shrink-0" x-data="{
                     show: false,
                     pos: { top: 0, left: 0 },
@@ -36,7 +52,7 @@
                             class="{{ $ring }} object-cover" />
                     @else
                         <div
-                            class="{{ $ring }} bg-primary/20 text-primary flex items-center justify-center text-[11px] font-bold">
+                            class="{{ $ring }} {{ $avatarColorClass }} flex items-center justify-center text-[11px] font-bold">
                             {{ strtoupper(substr($user->name, 0, 1)) }}
                         </div>
                     @endif
@@ -57,7 +73,7 @@
                                             src="{{ $user->avatar_url }}" alt="{{ $user->name }}">
                                     @else
                                         <div
-                                            class="bg-primary/20 text-primary flex size-12 items-center justify-center rounded-full border-2 border-white text-lg font-bold shadow-sm dark:border-slate-700">
+                                            class="{{ $avatarColorClass }} flex size-12 items-center justify-center rounded-full border-2 border-white text-lg font-bold shadow-sm dark:border-slate-700">
                                             {{ strtoupper(substr($user->name, 0, 1)) }}
                                         </div>
                                     @endif
@@ -73,7 +89,7 @@
                                 </div>
 
                                 <div class="space-y-1">
-                                    <h4 class="font-bold text-slate-900 dark:text-white">{{ $user->name }}</h4>
+                                    <h4 class="font-bold text-slate-600 dark:text-white">{{ $user->name }}</h4>
                                     <p class="text-primary text-xs font-medium">
                                         {{ $user->job_title ?? 'Chưa cập nhật chức vụ' }}</p>
                                     <p class="text-[11px] font-normal text-slate-500 dark:text-slate-400">

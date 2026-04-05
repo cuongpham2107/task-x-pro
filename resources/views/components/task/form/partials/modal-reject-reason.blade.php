@@ -19,7 +19,7 @@
             <p
                 class="text-sm text-slate-600 dark:text-slate-300"
             >Công việc: <span
-                    class="font-semibold text-slate-900 dark:text-slate-100"
+                    class="font-semibold text-slate-600 dark:text-slate-100"
                 >{{ trim($name) !== '' ? $name : 'Chưa xác định' }}</span></p>
 
             <div>

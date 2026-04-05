@@ -120,7 +120,7 @@ $isManager = $isLeader && !$isCeo && $status !== 'waiting_approval';
     </div>
 
     {{-- Phụ thuộc công việc --}}
-    <div class="col-span-full space-y-2 text-slate-900" x-data="{
+    <div class="col-span-full space-y-2 text-slate-600" x-data="{
         search: '',
         showDropdown: false,
         disabled: {{ $isRestricted ? 'true' : 'false' }},
@@ -182,7 +182,7 @@ $isManager = $isLeader && !$isCeo && $status !== 'waiting_approval';
                     <template x-if="selectedTask">
                         <div class="flex items-center gap-2 overflow-hidden">
                             <span class="material-symbols-outlined text-primary text-lg">task_alt</span>
-                            <span class="truncate text-sm font-medium text-slate-900 dark:text-white"
+                            <span class="truncate text-sm font-medium text-slate-600 dark:text-white"
                                 x-text="selectedTask.name"></span>
                             <span class="text-2xs shrink-0 rounded-full px-2 py-0.5 font-bold"
                                 :class="statusColor(selectedTask.status)"
@@ -239,7 +239,7 @@ $isManager = $isLeader && !$isCeo && $status !== 'waiting_approval';
                                 <div class="min-w-0 flex-1 text-left">
                                     <p class="truncate text-sm font-medium"
                                         :class="Number(selectedId) === Number(task.id) ? 'text-primary' :
-                                            'text-slate-900 dark:text-white'"
+                                            'text-slate-600 dark:text-white'"
                                         x-text="task.name"></p>
                                 </div>
                                 <span class="text-2xs shrink-0 rounded-full px-2 py-0.5 font-bold"

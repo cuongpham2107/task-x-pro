@@ -10,7 +10,7 @@
                 <img src="{{ asset('images/logo.png') }}" alt="ASG logo" class="size-full object-contain">
             </div>
             <h2
-                class="hidden text-lg font-bold leading-tight tracking-tight text-slate-900 sm:block dark:text-slate-100">
+                class="hidden text-lg font-bold leading-tight tracking-tight text-slate-600 sm:block dark:text-slate-100">
                 {{ config('app.name') }}
             </h2>
         </a>
@@ -63,7 +63,7 @@
                     </div>
                     <input x-model="query" @focus="open = true" @input="open = true; search()"
                         @keydown.escape="open = false"
-                        class="form-input flex h-full w-full min-w-0 flex-1 resize-none overflow-hidden rounded-r-lg border-none bg-slate-100 px-4 pl-2 text-sm font-normal text-slate-900 placeholder:text-slate-500 focus:outline-0 focus:ring-0 dark:bg-slate-800 dark:text-slate-100"
+                        class="form-input flex h-full w-full min-w-0 flex-1 resize-none overflow-hidden rounded-r-lg border-none bg-slate-100 px-4 pl-2 text-sm font-normal text-slate-600 placeholder:text-slate-500 focus:outline-0 focus:ring-0 dark:bg-slate-800 dark:text-slate-100"
                         placeholder="Tìm kiếm dự án, công việc..." />
                 </div>
 
@@ -351,7 +351,7 @@
                     </div>
                     <div class="hidden flex-col text-left leading-tight xl:flex">
                         <span
-                            class="text-sm font-semibold text-slate-900 dark:text-slate-100">{{ auth()->user()->name }}</span>
+                            class="text-sm font-semibold text-slate-600 dark:text-slate-100">{{ auth()->user()->name }}</span>
                         <span class="text-xs text-slate-500 dark:text-slate-400">{{ auth()->user()->email }}</span>
                     </div>
                     <span class="material-symbols-outlined text-lg text-slate-400 transition-transform duration-200"
@@ -368,7 +368,7 @@
 
                     {{-- User info --}}
                     <div class="border-b border-slate-100 px-4 py-3 dark:border-slate-700">
-                        <p class="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
+                        <p class="truncate text-sm font-semibold text-slate-600 dark:text-slate-100">
                             {{ auth()->user()->name }}
                         </p>
                         <p class="truncate text-xs text-slate-500 dark:text-slate-400">{{ auth()->user()->email }}</p>

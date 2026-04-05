@@ -327,7 +327,7 @@ new #[Title('Phân quyền')] class extends Component {
             @forelse ($this->roles as $role)
                 <x-ui.table.row wire:key="role-{{ $role->id }}">
                     <x-ui.table.cell>
-                        <p class="text-sm font-semibold text-slate-900 dark:text-white">{{ $role->name }}</p>
+                        <p class="text-sm font-semibold text-slate-600 dark:text-white">{{ $role->name }}</p>
                         <p class="text-xs text-slate-500">guard: {{ $role->guard_name }}</p>
                     </x-ui.table.cell>
 
@@ -461,7 +461,7 @@ new #[Title('Phân quyền')] class extends Component {
         <div class="space-y-3">
             <p class="text-sm text-slate-600 dark:text-slate-300">Bạn có chắc chắn muốn xóa vai trò này không?</p>
             @if ($pendingDeleteRoleName !== '')
-                <p class="text-sm font-semibold text-slate-900 dark:text-slate-100">Vai trò:
+                <p class="text-sm font-semibold text-slate-600 dark:text-slate-100">Vai trò:
                     {{ $pendingDeleteRoleName }}</p>
             @endif
         </div>

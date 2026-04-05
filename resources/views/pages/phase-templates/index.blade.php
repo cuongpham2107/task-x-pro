@@ -368,7 +368,7 @@ new #[Title('Mẫu phase')] class extends Component
                         </span>
                     </x-ui.table.cell>
                     <x-ui.table.cell>
-                        <p class="text-sm font-semibold text-slate-900 dark:text-white">{{ $template->phase_name }}</p>
+                        <p class="text-sm font-semibold text-slate-600 dark:text-white">{{ $template->phase_name }}</p>
                     </x-ui.table.cell>
                     <x-ui.table.cell>
                         <p class="line-clamp-2 text-sm text-slate-600 dark:text-slate-300">
@@ -481,7 +481,7 @@ new #[Title('Mẫu phase')] class extends Component
                 Bạn có chắc chắn muốn xóa mẫu phase này không?
             </p>
             @if ($pendingDeleteTemplateName !== '')
-                <p class="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                <p class="text-sm font-semibold text-slate-600 dark:text-slate-100">
                     Phase: {{ $pendingDeleteTemplateName }}
                 </p>
             @endif

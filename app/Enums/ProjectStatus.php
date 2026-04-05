@@ -25,6 +25,20 @@ enum ProjectStatus: string
         };
     }
 
+    /**
+     * Material Symbols icon name for UI rendering.
+     */
+    public function icon(): string
+    {
+        return match ($this) {
+            self::Init => 'new_releases',
+            self::Running => 'play_circle',
+            self::Paused => 'pause_circle',
+            self::Completed => 'check_circle',
+            self::Cancelled => 'cancel',
+        };
+    }
+
     public function badgeClass(): string
     {
         return match ($this) {

@@ -23,7 +23,7 @@
     @filamentStyles
 </head>
 
-<body class="bg-background-light dark:bg-background-dark font-display min-h-screen text-slate-900 dark:text-slate-100">
+<body class="bg-background-light dark:bg-background-dark font-display min-h-screen text-slate-600 dark:text-slate-100">
     <div x-data="{ sidebarOpen: false }"
         class="group/design-root relative flex h-auto min-h-screen w-full flex-col overflow-x-hidden">
         <div class="layout-container flex h-full grow flex-col">

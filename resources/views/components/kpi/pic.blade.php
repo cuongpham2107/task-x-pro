@@ -511,7 +511,7 @@ new class extends Component
                         <div>
                             <p class="text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                                 Điểm thực tế kỳ này</p>
-                            <h3 class="mt-2 text-6xl font-black text-slate-900 dark:text-white">
+                            <h3 class="mt-2 text-6xl font-black text-slate-600 dark:text-white">
                                 {{ number_format($actualScore, 1) }}
                                 <span class="text-2xl text-slate-400">/{{ number_format($targetScore, 0) }}</span>
                             </h3>
@@ -568,7 +568,7 @@ new class extends Component
             <div class="rounded-2xl border border-slate-100 bg-white p-8 dark:border-slate-700 dark:bg-slate-800">
                 <div class="mb-8 flex items-center justify-between">
                     <div>
-                        <h3 class="text-lg font-bold text-slate-900 dark:text-white">Chi tiết chỉ số</h3>
+                        <h3 class="text-lg font-bold text-slate-600 dark:text-white">Chi tiết chỉ số</h3>
                         <p class="text-sm text-slate-500">Phân rã các chỉ số thành phần cấu thành điểm số</p>
                     </div>
                     <span class="material-symbols-outlined text-4xl text-slate-300 dark:text-slate-600">info</span>
@@ -582,7 +582,7 @@ new class extends Component
                                 <span class="font-bold text-slate-700 dark:text-slate-300">Đúng hạn (40%)</span>
                             </div>
                             <span
-                                class="font-black text-slate-900 dark:text-white">{{ number_format($onTimeRate, 1) }}/100</span>
+                                class="font-black text-slate-600 dark:text-white">{{ number_format($onTimeRate, 1) }}/100</span>
                         </div>
                         <div class="h-2 w-full rounded-full bg-slate-100 dark:bg-slate-700">
                             <div class="bg-primary h-full rounded-full" style="width: {{ $onTimeRate }}%"></div>
@@ -596,7 +596,7 @@ new class extends Component
                                 <span class="font-bold text-slate-700 dark:text-slate-300">SLA Xử lý (40%)</span>
                             </div>
                             <span
-                                class="font-black text-slate-900 dark:text-white">{{ number_format($slaRate, 1) }}/100</span>
+                                class="font-black text-slate-600 dark:text-white">{{ number_format($slaRate, 1) }}/100</span>
                         </div>
                         <div class="h-2 w-full rounded-full bg-slate-100 dark:bg-slate-700">
                             <div class="h-full rounded-full bg-blue-500" style="width: {{ $slaRate }}%"></div>
@@ -610,7 +610,7 @@ new class extends Component
                                 <span class="font-bold text-slate-700 dark:text-slate-300">Đánh giá sao (20%)</span>
                             </div>
                             <span
-                                class="font-black text-slate-900 dark:text-white">{{ number_format($starScore, 1) }}/100</span>
+                                class="font-black text-slate-600 dark:text-white">{{ number_format($starScore, 1) }}/100</span>
                         </div>
                         <div class="h-2 w-full rounded-full bg-slate-100 dark:bg-slate-700">
                             <div class="h-full rounded-full bg-amber-400" style="width: {{ $starScore }}%"></div>
@@ -629,7 +629,7 @@ new class extends Component
             <!-- Radar Representation Placeholder -->
             <div
                 class="flex flex-col items-center justify-center rounded-2xl border border-slate-100 bg-white p-8 text-center dark:border-slate-700 dark:bg-slate-800">
-                <h3 class="mb-6 self-start text-lg font-bold text-slate-900 dark:text-white">Biểu đồ chỉ số năng lực
+                <h3 class="mb-6 self-start text-lg font-bold text-slate-600 dark:text-white">Biểu đồ chỉ số năng lực
                 </h3>
                 <div class="relative flex size-64 items-center justify-center">
                     @php
@@ -714,7 +714,7 @@ new class extends Component
             <div
                 class="flex flex-col justify-between gap-3 border-b border-slate-100 px-6 py-5 md:flex-row md:items-center dark:border-slate-700">
                 <div>
-                    <h3 class="text-xl font-bold text-slate-900 dark:text-white">Task KPI - SLA - Phê duyệt</h3>
+                    <h3 class="text-xl font-bold text-slate-600 dark:text-white">Task KPI - SLA - Phê duyệt</h3>
                     <p class="text-xs text-slate-500 dark:text-slate-300">
                         Danh sách task trong {{ $this->taskReviewPeriodLabel }} để đối soát trước/sau duyệt KPI.
                     </p>
@@ -759,7 +759,7 @@ new class extends Component
                 </div>
                 <div class="rounded-lg bg-slate-50 p-3 dark:bg-slate-900/50">
                     <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Avg tiến độ</p>
-                    <p class="mt-1 text-xl font-black text-slate-900 dark:text-white">{{ number_format((float) $taskReviewSummary['avg_progress'], 1) }}%</p>
+                    <p class="mt-1 text-xl font-black text-slate-600 dark:text-white">{{ number_format((float) $taskReviewSummary['avg_progress'], 1) }}%</p>
                 </div>
             </div>
 
@@ -784,7 +784,7 @@ new class extends Component
                             @endphp
                             <tr class="transition-colors hover:bg-slate-50 dark:hover:bg-slate-900/30">
                                 <td class="px-6 py-4">
-                                    <p class="font-semibold text-slate-900 dark:text-white">{{ $task->name }}</p>
+                                    <p class="font-semibold text-slate-600 dark:text-white">{{ $task->name }}</p>
                                     @if ($task->description)
                                         <p class="mt-0.5 line-clamp-2 text-xs text-slate-500">{{ $task->description }}</p>
                                     @endif
@@ -856,7 +856,7 @@ new class extends Component
             style="animation-delay: 0.4s">
             <div
                 class="flex flex-col justify-between gap-4 border-b border-slate-100 px-8 py-6 md:flex-row md:items-center dark:border-slate-700">
-                <h3 class="text-xl font-bold text-slate-900 dark:text-white">Lịch sử KPI</h3>
+                <h3 class="text-xl font-bold text-slate-600 dark:text-white">Lịch sử KPI</h3>
                 <div class="flex items-center gap-2 overflow-x-auto pb-2 md:w-auto md:overflow-visible md:pb-0">
                     <div class="flex shrink-0 flex-col gap-1">
                         <label class="ml-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">Kỳ báo
@@ -919,7 +919,7 @@ new class extends Component
                                 </td>
                                 <td class="px-8 py-4">
                                     <span
-                                        class="text-lg font-bold text-slate-900 dark:text-white">{{ number_format($row->actual_score ?? $row->final_score, 1) }}</span>
+                                        class="text-lg font-bold text-slate-600 dark:text-white">{{ number_format($row->actual_score ?? $row->final_score, 1) }}</span>
                                 </td>
                                 <td class="px-8 py-4">
                                     <span

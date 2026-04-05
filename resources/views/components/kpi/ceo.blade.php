@@ -629,7 +629,7 @@ new #[Title('KPI toàn công ty')] class extends Component {
                 @endif
             </div>
             <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Điểm Final Score (Avg)</p>
-            <h3 class="mt-1 text-3xl font-bold text-slate-900 dark:text-white">
+            <h3 class="mt-1 text-3xl font-bold text-slate-600 dark:text-white">
                 {{ number_format($summary['avg_score'], 2) }}</h3>
             <p class="mt-2 text-xs italic text-slate-400">Mã chỉ số: BR-002</p>
         </div>
@@ -649,7 +649,7 @@ new #[Title('KPI toàn công ty')] class extends Component {
                 @endif
             </div>
             <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Tỷ lệ đúng hạn</p>
-            <h3 class="mt-1 text-3xl font-bold text-slate-900 dark:text-white">
+            <h3 class="mt-1 text-3xl font-bold text-slate-600 dark:text-white">
                 {{ number_format($summary['avg_on_time_rate'], 1) }}%</h3>
             <div class="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
                 <div class="h-full bg-teal-500" style="width: {{ min($summary['avg_on_time_rate'], 100) }}%"></div>
@@ -671,7 +671,7 @@ new #[Title('KPI toàn công ty')] class extends Component {
                 @endif
             </div>
             <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Tỷ lệ đạt SLA</p>
-            <h3 class="mt-1 text-3xl font-bold text-slate-900 dark:text-white">
+            <h3 class="mt-1 text-3xl font-bold text-slate-600 dark:text-white">
                 {{ number_format($summary['avg_sla_rate'], 1) }}%</h3>
             <div class="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
                 <div class="h-full bg-orange-500" style="width: {{ min($summary['avg_sla_rate'], 100) }}%"></div>
@@ -694,7 +694,7 @@ new #[Title('KPI toàn công ty')] class extends Component {
             </div>
             <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Đánh giá sao trung bình</p>
             <div class="mt-1 flex items-baseline gap-2">
-                <h3 class="text-3xl font-bold text-slate-900 dark:text-white">
+                <h3 class="text-3xl font-bold text-slate-600 dark:text-white">
                     {{ number_format($summary['avg_star'], 1) }}</h3>
                 <span class="text-slate-400">/ 5.0</span>
             </div>
@@ -713,7 +713,7 @@ new #[Title('KPI toàn công ty')] class extends Component {
         <div class="animate-enter col-span-3 mb-8 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900"
             style="animation-delay: 0.26s">
             <div class="flex items-center justify-between border-b border-slate-100 p-4 dark:border-slate-800">
-                <h3 class="text-lg font-bold text-slate-900 dark:text-white">Hiệu suất theo phòng ban</h3>
+                <h3 class="text-lg font-bold text-slate-600 dark:text-white">Hiệu suất theo phòng ban</h3>
                 <div class="flex items-center gap-4">
                     <button wire:click="exportExcel('xlsx')"
                         class="flex items-center gap-1.5 text-sm font-semibold text-emerald-600 transition-colors hover:text-emerald-700 dark:text-emerald-400">
@@ -749,7 +749,7 @@ new #[Title('KPI toàn công ty')] class extends Component {
                                 $statusMeta = $this->departmentStatusMeta($avgFinal);
                             @endphp
                             <tr class="transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/30">
-                                <td class="px-6 py-4 font-semibold text-slate-900 dark:text-white">
+                                <td class="px-6 py-4 font-semibold text-slate-600 dark:text-white">
                                     {{ $department->name }}
                                     <p class="text-2xs font-normal text-slate-400">{{ $department->code }}</p>
                                 </td>
@@ -817,7 +817,7 @@ new #[Title('KPI toàn công ty')] class extends Component {
                                 </div>
                             </div>
                             <div class="min-w-0 flex-1">
-                                <p class="truncate text-sm font-semibold text-slate-900 dark:text-white">
+                                <p class="truncate text-sm font-semibold text-slate-600 dark:text-white">
                                     {{ $score->user?->name ?? 'N/A' }}</p>
                                 <p class="text-xs text-slate-500">{{ $score->user?->department?->name ?? '—' }}</p>
                             </div>
@@ -847,7 +847,7 @@ new #[Title('KPI toàn công ty')] class extends Component {
         <div
             class="flex flex-col justify-between gap-3 border-b border-slate-100 p-4 md:flex-row md:items-center dark:border-slate-800">
             <div>
-                <h3 class="text-lg font-bold text-slate-900 dark:text-white">Task KPI - SLA - Phê duyệt</h3>
+                <h3 class="text-lg font-bold text-slate-600 dark:text-white">Task KPI - SLA - Phê duyệt</h3>
                 <p class="text-xs text-slate-500 dark:text-slate-300">
                     Toàn bộ công việc trong kỳ để đối soát KPI, SLA và tiến trình phê duyệt.
                 </p>
@@ -889,12 +889,12 @@ new #[Title('KPI toàn công ty')] class extends Component {
             </div>
             <div class="rounded-lg bg-slate-50 p-3 dark:bg-slate-800/50">
                 <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Avg tiến độ</p>
-                <p class="mt-1 text-xl font-black text-slate-900 dark:text-white">
+                <p class="mt-1 text-xl font-black text-slate-600 dark:text-white">
                     {{ number_format((float) $taskApprovalSummary['avg_progress'], 1) }}%</p>
             </div>
             <div class="rounded-lg bg-slate-50 p-3 dark:bg-slate-800/50">
                 <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">KPI Avg (PIC)</p>
-                <p class="mt-1 text-xl font-black text-slate-900 dark:text-white">
+                <p class="mt-1 text-xl font-black text-slate-600 dark:text-white">
                     {{ number_format((float) ($summary['avg_score'] ?? 0), 1) }}</p>
             </div>
         </div>
@@ -923,12 +923,12 @@ new #[Title('KPI toàn công ty')] class extends Component {
                         @endphp
                         <tr class="transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/40">
                             <td class="px-6 py-4">
-                                <p class="font-semibold text-slate-900 dark:text-white">{{ $task->name }}</p>
+                                <p class="font-semibold text-slate-600 dark:text-white">{{ $task->name }}</p>
                                 <p class="mt-0.5 text-xs text-slate-500">{{ $task->phase?->project?->name ?? 'N/A' }}
                                     · {{ $task->phase?->name ?? 'N/A' }}</p>
                             </td>
                             <td class="px-6 py-4 text-xs text-slate-600 dark:text-slate-300">
-                                <p class="font-semibold text-slate-900 dark:text-white">
+                                <p class="font-semibold text-slate-600 dark:text-white">
                                     {{ $task->pic?->name ?? 'N/A' }}</p>
                                 <p class="text-slate-500">{{ $task->pic?->department?->name ?? '—' }}</p>
                             </td>

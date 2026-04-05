@@ -430,7 +430,7 @@ new #[Title('Quản lý giai đoạn')] class extends Component
             class="flex flex-col gap-1 rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
             <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Thời gian bắt đầu và kết thúc dự án</p>
             <div class="flex items-baseline gap-2">
-                <span class="text-2xl font-bold text-slate-900 dark:text-white">{{ $this->projectStart }} -
+                <span class="text-2xl font-bold text-slate-600 dark:text-white">{{ $this->projectStart }} -
                     {{ $this->projectEnd }}</span>
             </div>
         </div>
@@ -438,7 +438,7 @@ new #[Title('Quản lý giai đoạn')] class extends Component
         <div
             class="flex flex-col gap-1 rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
             <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Số lượng giai đoạn</p>
-            <span class="text-2xl font-bold text-slate-900 dark:text-white">{{ $this->phases->count() }} Giai
+            <span class="text-2xl font-bold text-slate-600 dark:text-white">{{ $this->phases->count() }} Giai
                 đoạn</span>
         </div>
 
@@ -447,7 +447,7 @@ new #[Title('Quản lý giai đoạn')] class extends Component
             class="flex flex-col gap-1 rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
             <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Tiến độ dự án hiện tại</p>
             <div class="flex items-center gap-3">
-                <span class="text-2xl font-bold text-slate-900 dark:text-white">{{ $project->progress }}%</span>
+                <span class="text-2xl font-bold text-slate-600 dark:text-white">{{ $project->progress }}%</span>
                 <div class="h-2 flex-1 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
                     <div class="bg-primary h-full transition-all duration-500" style="width: {{ $project->progress }}%">
                     </div>
@@ -519,7 +519,7 @@ new #[Title('Quản lý giai đoạn')] class extends Component
                     @endif
                 </p>
                 @if ($pendingDeletePhaseName !== '')
-                    <p class="text-center text-sm font-semibold text-slate-900 dark:text-slate-100">
+                    <p class="text-center text-sm font-semibold text-slate-600 dark:text-slate-100">
                         Giai đoạn: {{ $pendingDeletePhaseName }}
                     </p>
                 @endif

@@ -56,12 +56,6 @@
                 $priorityEnum = \App\Enums\TaskPriority::tryFrom($task->priority->value ?? ($task->priority ?? ''));
                 $isOverdue =
                     $task->deadline && $statusEnum !== \App\Enums\TaskStatus::Completed && $task->deadline->isPast();
-                $priorityColor = match ($priorityEnum?->value ?? '') {
-                    'urgent' => 'red',
-                    'high' => 'orange',
-                    'medium' => 'amber',
-                    default => 'blue',
-                };
             @endphp
 
             <x-ui.table.row wire:key="task-row-{{ $task->id }}" wire:click.stop="openEditTask({{ $task->id }})"
@@ -87,7 +81,7 @@
                             {{ strtoupper(substr($task->name, 0, 1)) }}
                         </div>
                         <div class="flex flex-col gap-1">
-                            <span class="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                            <span class="text-sm font-semibold text-slate-600 dark:text-slate-100">
                                 {{ $task->name }}
                             </span>
                             @if ($task->description)
@@ -104,13 +98,13 @@
                 </x-ui.table.cell>
 
                 <x-ui.table.cell>
-                    <div class="flex flex-wrap gap-1">
-                        <span class="text-sm font-medium text-slate-900 dark:text-slate-100">
+                    <div class="flex flex-col gap-1">
+                        <span class="text-sm font-medium text-slate-600 dark:text-slate-100">
                             {{ $task->phase?->project?->name ?? '—' }}
                         </span>
-                        <x-ui.badge color="slate" size="xs">
-                            {{ $task->phase?->name ?? '—' }}
-                        </x-ui.badge>
+                         <span class="text-xs font-medium text-slate-600 dark:text-slate-100">
+                           Giai đoạn: {{ $task->phase?->name ?? '—' }}
+                        </span>
                     </div>
                 </x-ui.table.cell>
 
@@ -130,13 +124,14 @@
                 </x-ui.table.cell>
 
                 <x-ui.table.cell>
-                    <x-ui.badge :color="$priorityColor" size="xs">
+                    <x-ui.badge :color="$priorityEnum?->color() ?? 'blue'" size="xs" :icon="$priorityEnum?->icon()">
                         {{ $priorityEnum?->label() ?? '—' }}
                     </x-ui.badge>
                 </x-ui.table.cell>
 
                 <x-ui.table.cell>
                     @if ($task->deadline)
+                        <span class="material-symbols-outlined text-[16px] text-slate-400">event</span>
                         <span
                             class="{{ $isOverdue ? 'text-red-600 font-semibold' : 'text-slate-600 dark:text-slate-400' }} text-sm">
                             {{ $task->deadline->translatedFormat('d/m/Y') }}
@@ -147,7 +142,7 @@
                 </x-ui.table.cell>
 
                 <x-ui.table.cell>
-                    <x-ui.badge :color="$statusEnum?->color() ?? 'slate'" size="xs">
+                    <x-ui.badge :color="$statusEnum?->color() ?? 'slate'" size="xs" :icon="$statusEnum?->icon()">
                         {{ $statusEnum?->label() ?? '—' }}
                     </x-ui.badge>
                 </x-ui.table.cell>

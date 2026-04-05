@@ -80,7 +80,7 @@
                 <template x-if="selectedIcon">
                     <span class="material-symbols-outlined text-primary text-[20px]" x-text="selectedIcon"></span>
                 </template>
-                <span class="truncate" :class="!value ? 'text-slate-400' : 'text-slate-900 dark:text-white'"
+                <span class="truncate" :class="!value ? 'text-slate-400' : 'text-slate-600 dark:text-white'"
                     x-text="selectedLabel"></span>
             </div>
             <span class="material-symbols-outlined text-slate-400 transition-transform duration-200"
@@ -104,7 +104,7 @@
             <div
                 class="flex items-center justify-between border-b border-slate-100 px-4 py-3 md:hidden dark:border-slate-800">
                 <span
-                    class="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">{{ $label ?? 'Chọn tùy chọn' }}</span>
+                    class="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-white">{{ $label ?? 'Chọn tùy chọn' }}</span>
                 <button type="button" @click="open = false" class="text-slate-400">
                     <span class="material-symbols-outlined">close</span>
                 </button>

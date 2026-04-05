@@ -370,7 +370,8 @@ new class extends Component
             <div class="kanban-column w-70 flex shrink-0 flex-col gap-2">
                 {{-- Column header --}}
                 <div class="mb-1 flex items-center gap-2 px-1">
-                    <span class="{{ $status->dotClass() }} h-2.5 w-2.5 rounded-full"></span>
+                    <!-- <span class="{{ $status->dotClass() }} h-2.5 w-2.5 rounded-full"></span> -->
+                    <span class="material-symbols-outlined text-[16px] {{ $status->textColor() }}">{{ $status->icon() }}</span>
                     <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200">{{ $status->label() }}</h3>
                     <span
                         class="{{ $status->badgeClass() }} text-2xs rounded-full px-2 py-0.5 font-bold">{{ $count }}</span>
@@ -453,7 +454,7 @@ new class extends Component
                                         </button>
                                         @if (! $isPhaseStarted && $taskPhase?->start_date)
                                             <div
-                                                class="absolute bottom-full right-0 z-50 mb-2 hidden w-32 rounded bg-slate-900 px-2 py-1 text-[10px] text-white group-hover:block">
+                                                class="absolute bottom-full right-0 z-50 mb-2 hidden w-32 rounded bg-slate-900 px-2 py-1 text-2xs text-white group-hover:block">
                                                 Giai đoạn chưa bắt đầu ({{ $taskPhase->start_date->format('d/m') }})
                                                 <div
                                                     class="absolute right-2 top-full h-0 w-0 border-4 border-transparent border-t-slate-900">
@@ -476,7 +477,7 @@ new class extends Component
                         {{-- Title & Description --}}
                         <div class="space-y-1">
                             <h4
-                                class="{{ $isDone ? 'line-through text-slate-400 font-medium' : 'text-slate-900 dark:text-slate-100 font-bold' }} line-clamp-2 text-[13px] leading-snug">
+                                class="{{ $isDone ? 'line-through text-slate-400 font-medium' : 'text-slate-600 dark:text-slate-100 font-bold' }} line-clamp-2 text-[13px] leading-snug">
                                 {{ $task->name }}
                             </h4>
                             @if ($task->description)
@@ -490,7 +491,7 @@ new class extends Component
                             <div
                                 class="flex items-center gap-2 rounded-lg bg-amber-50/50 px-2.5 py-1.5 ring-1 ring-amber-100/50 dark:bg-amber-900/10 dark:ring-amber-800/30">
                                 <span class="material-symbols-outlined text-sm text-amber-500">lock</span>
-                                <p class="text-[10px] font-medium leading-tight text-amber-700 dark:text-amber-400">
+                                <p class="text-2xs font-medium leading-tight text-amber-700 dark:text-amber-400">
                                     Chặn bởi: <span class="font-bold">{{ $depTask->name }}</span>
                                 </p>
                             </div>
@@ -519,8 +520,7 @@ new class extends Component
                                             <div class="flex items-center justify-between gap-2 overflow-visible">
                                                 <div class="flex items-center gap-1.5 overflow-visible">
                                                     {{-- Reviewer Avatar with Premium Tooltip --}}
-                                                    <x-ui.avatar :user="$approvalLog->reviewer" :label="$approvalLevelLabel" size="6" />
-
+                                                     <x-ui.avatar-stack :users="collect([$approvalLog->reviewer])" :max="1" :size="6" />
                                                     <div class="flex flex-col items-center gap-1">
                                                         @if ($approvalLog->star_rating !== null)
                                                             <div class="flex shrink-0 items-center gap-0.5">
@@ -529,7 +529,7 @@ new class extends Component
                                                         @endif
                                                         @if (!$isApproved && $approvalLog->comment)
                                                             <div class="group/comment relative">
-                                                                <p class="truncate text-[10px] font-bold italic text-red-400 transition-colors hover:text-red-600"
+                                                                <p class="truncate text-2xs font-bold italic text-red-400 transition-colors hover:text-red-600"
                                                                     title="{{ $approvalLog->comment }}">
                                                                     “{{ $approvalLog->comment }}”
                                                                 </p>
@@ -567,7 +567,7 @@ new class extends Component
                                     @php $overdue = $task->deadline->isPast() && !$isDone; @endphp
                                     <div class="flex flex-col items-end">
                                         <span
-                                            class="{{ $overdue ? 'text-red-500 font-bold' : 'text-slate-400' }} flex items-center gap-1 text-[10px]">
+                                            class="{{ $overdue ? 'text-red-500 font-bold' : 'text-slate-400' }} flex items-center gap-1 text-2xs">
                                             <span
                                                 class="material-symbols-outlined {{ $overdue ? 'animate-pulse' : '' }} text-[14px]">calendar_clock</span>
                                             {{ $task->deadline->format('d/m') }}
@@ -577,7 +577,7 @@ new class extends Component
 
                                 @if ($task->completed_at && $isDone)
                                     <span
-                                        class="flex items-center gap-0.5 rounded-md bg-emerald-50 px-1.5 py-0.5 text-[10px] font-bold text-emerald-500 dark:bg-emerald-900/20">
+                                        class="flex items-center gap-0.5 rounded-md bg-emerald-50 px-1.5 py-0.5 text-2xs font-bold text-emerald-500 dark:bg-emerald-900/20">
                                         <span class="material-symbols-outlined text-[14px]">check_circle</span>
                                         {{ $task->completed_at->format('d/m') }}
                                     </span>
@@ -621,7 +621,7 @@ new class extends Component
             $rejectTaskName = $this->rejectModalTaskName();
         @endphp
         <p class="text-sm text-slate-600 dark:text-slate-300">Công việc: <span
-                class="font-semibold text-slate-900 dark:text-slate-100">{{ $rejectTaskName !== '' ? $rejectTaskName : 'Chưa xác định' }}</span>
+                class="font-semibold text-slate-600 dark:text-slate-100">{{ $rejectTaskName !== '' ? $rejectTaskName : 'Chưa xác định' }}</span>
         </p>
 
         <div>
@@ -654,7 +654,7 @@ new class extends Component
             $modalTaskName = $this->completionModalTaskName();
         @endphp
         <p class="text-sm text-slate-600 dark:text-slate-300">Công việc: <span
-                class="font-semibold text-slate-900 dark:text-slate-100">{{ $modalTaskName !== '' ? $modalTaskName : 'Chưa xác định' }}</span>
+                class="font-semibold text-slate-600 dark:text-slate-100">{{ $modalTaskName !== '' ? $modalTaskName : 'Chưa xác định' }}</span>
         </p>
 
         <div class="flex items-center justify-center gap-1">

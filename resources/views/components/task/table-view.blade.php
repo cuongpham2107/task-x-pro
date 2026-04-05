@@ -91,7 +91,7 @@
                         <div class="flex items-center gap-3">
                             <div class="min-w-0">
                                 <div
-                                    class="{{ $isDone ? 'line-through text-slate-400' : 'text-slate-900 dark:text-white' }} truncate font-semibold">
+                                    class="{{ $isDone ? 'line-through text-slate-400' : 'text-slate-600 dark:text-white' }} truncate font-semibold">
                                     {{ $task->name }}
                                 </div>
                                 @if ($task->description)
@@ -140,8 +140,9 @@
                     {{-- Trạng thái --}}
                     <x-ui.table.cell>
                         <div class="flex items-center gap-2">
-                            <span class="{{ $status->dotClass() }} h-2 w-2 shrink-0 rounded-full"></span>
-                            <span class="{{ $status->badgeClass() }} rounded-full px-2 py-0.5 text-xs font-semibold">
+                            <!-- <span class="{{ $status->dotClass() }} h-2 w-2 shrink-0 rounded-full"></span> -->
+                            <span class="{{ $status->badgeClass() }} inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold">
+                                <span class="material-symbols-outlined text-[14px] {{ $status->textColor() }}">{{ $status->icon() }}</span>
                                 {{ $status->label() }}
                             </span>
                         </div>

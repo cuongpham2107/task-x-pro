@@ -166,7 +166,7 @@ new class extends Component
                         class="rounded-full bg-green-100 px-2 py-1 text-xs font-bold text-green-600 dark:bg-green-900/30">+{{ $data['tasks']['due_soon'] }}</span>
                 </div>
                 <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Việc sắp tới hạn</p>
-                <p class="text-3xl font-black text-slate-900 dark:text-white">{{ $data['tasks']['due_soon'] ?? 0 }}</p>
+                <p class="text-3xl font-black text-slate-600 dark:text-white">{{ $data['tasks']['due_soon'] ?? 0 }}</p>
             </div>
             <div
                 class="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
@@ -179,7 +179,7 @@ new class extends Component
                         chạy</span>
                 </div>
                 <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Đang thực hiện</p>
-                <p class="text-3xl font-black text-slate-900 dark:text-white">{{ $data['tasks']['in_progress'] ?? 0 }}
+                <p class="text-3xl font-black text-slate-600 dark:text-white">{{ $data['tasks']['in_progress'] ?? 0 }}
                 </p>
             </div>
             <div
@@ -193,7 +193,7 @@ new class extends Component
                         duyệt</span>
                 </div>
                 <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Chờ phê duyệt</p>
-                <p class="text-3xl font-black text-slate-900 dark:text-white">
+                <p class="text-3xl font-black text-slate-600 dark:text-white">
                     {{ $data['tasks']['waiting_approval'] ?? 0 }}</p>
             </div>
             <div
@@ -217,7 +217,7 @@ new class extends Component
             style="display: none;">
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-3">
-                    <h2 class="text-lg font-bold tracking-tight text-slate-900 dark:text-white">
+                    <h2 class="text-lg font-bold tracking-tight text-slate-600 dark:text-white">
                         @if ($selectedDate)
                             @if (Carbon::parse($selectedDate)->isToday())
                                 Công việc ngày hôm nay
@@ -282,12 +282,12 @@ new class extends Component
                                 @if ($task->phase && $task->phase->project)
                                     <button
                                         wire:click="$dispatch('task-edit-requested', { taskId: {{ $task->id }} })"
-                                        class="group-hover:text-primary block text-left text-sm font-semibold text-slate-900 transition-colors hover:underline sm:text-base dark:text-white">
+                                        class="group-hover:text-primary block text-left text-sm font-semibold text-slate-600 transition-colors hover:underline sm:text-base dark:text-white">
                                         {{ $task->name }}
                                     </button>
                                 @else
                                     <span
-                                        class="group-hover:text-primary text-sm font-semibold text-slate-900 transition-colors sm:text-base dark:text-white">{{ $task->name }}</span>
+                                        class="group-hover:text-primary text-sm font-semibold text-slate-600 transition-colors sm:text-base dark:text-white">{{ $task->name }}</span>
                                 @endif
                                 <div class="mt-1.5 flex flex-wrap items-center gap-2 sm:gap-3">
                                     <span
@@ -428,7 +428,7 @@ new class extends Component
             <div
                 class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
                 <div class="mb-4 flex items-center justify-between">
-                    <span class="text-sm font-bold text-slate-900 dark:text-white">Tháng
+                    <span class="text-sm font-bold text-slate-600 dark:text-white">Tháng
                         {{ Carbon::parse($this->currentMonth)->format('m/Y') }}</span>
                     <div class="flex gap-1">
                         <button wire:click="prevMonth" class="rounded p-1 hover:bg-slate-100 dark:hover:bg-slate-800">
@@ -472,7 +472,7 @@ new class extends Component
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-2">
                         <span class="material-symbols-outlined text-emerald-500">show_chart</span>
-                        <h3 class="text-sm font-bold uppercase tracking-tight text-slate-900 dark:text-white">
+                        <h3 class="text-sm font-bold uppercase tracking-tight text-slate-600 dark:text-white">
                             KPI Cá nhân</h3>
                     </div>
                     <span
@@ -484,7 +484,7 @@ new class extends Component
                         <div class="mb-1 flex justify-between">
                             <span class="text-xs font-medium text-slate-500">Điểm tổng kết</span>
                             <span
-                                class="text-xs font-bold text-slate-900 dark:text-white">{{ $data['kpi']['monthly']['final_score'] ?? 0 }}/100</span>
+                                class="text-xs font-bold text-slate-600 dark:text-white">{{ $data['kpi']['monthly']['final_score'] ?? 0 }}/100</span>
                         </div>
                         <div class="h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
                             <div class="bg-primary h-full"
@@ -495,12 +495,12 @@ new class extends Component
                         <div class="rounded-lg bg-slate-50 p-2 dark:bg-slate-800">
                             <span class="block text-slate-500">Đúng hạn</span>
                             <span
-                                class="block font-bold text-slate-900 dark:text-white">{{ $data['kpi']['monthly']['on_time_rate'] ?? 0 }}%</span>
+                                class="block font-bold text-slate-600 dark:text-white">{{ $data['kpi']['monthly']['on_time_rate'] ?? 0 }}%</span>
                         </div>
                         <div class="rounded-lg bg-slate-50 p-2 dark:bg-slate-800">
                             <span class="block text-slate-500">Chất lượng</span>
                             <span
-                                class="block font-bold text-slate-900 dark:text-white">{{ $data['kpi']['monthly']['avg_star'] ?? 0 }}
+                                class="block font-bold text-slate-600 dark:text-white">{{ $data['kpi']['monthly']['avg_star'] ?? 0 }}
                                 <span class="text-amber-500">★</span></span>
                         </div>
                     </div>

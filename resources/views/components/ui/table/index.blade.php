@@ -20,9 +20,9 @@
             <div class="text-sm text-slate-500 dark:text-slate-400">
                 Hiển thị
                 <span
-                    class="font-semibold text-slate-900 dark:text-slate-100">{{ $paginator->firstItem() }}–{{ $paginator->lastItem() }}</span>
+                    class="font-semibold text-slate-600 dark:text-slate-100">{{ $paginator->firstItem() }}–{{ $paginator->lastItem() }}</span>
                 trên
-                <span class="font-semibold text-slate-900 dark:text-slate-100">{{ $paginator->total() }}</span>
+                <span class="font-semibold text-slate-600 dark:text-slate-100">{{ $paginator->total() }}</span>
                 {{ $paginatorLabel }}
             </div>
             {{ $paginator->links(data: ['scrollTo' => false]) }}

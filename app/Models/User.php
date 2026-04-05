@@ -162,17 +162,38 @@ class User extends Authenticatable
         return $this->hasMany(ActivityLog::class);
     }
 
-    /**
-     * Get the user's avatar URL or a fallback ui-avatar.
-     */
-    protected function avatarUrl(): \Illuminate\Database\Eloquent\Casts\Attribute
-    {
-        return \Illuminate\Database\Eloquent\Casts\Attribute::get(function () {
-            if ($this->avatar && ! str_contains($this->avatar, 'via.placeholder.com')) {
-                return $this->avatar;
-            }
+    // /**
+    //  * Get the user's avatar URL or a fallback ui-avatar.
+    //  */
+    // protected function avatarUrl(): \Illuminate\Database\Eloquent\Casts\Attribute
+    // {
+    //     return \Illuminate\Database\Eloquent\Casts\Attribute::get(function () {
+    //         if ($this->avatar && ! str_contains($this->avatar, 'via.placeholder.com')) {
+    //             return $this->avatar;
+    //         }
 
-            return 'https://ui-avatars.com/api/?name='.urlencode($this->name).'&color=7F9CF5&background=EBF4FF';
-        });
-    }
+    //         // ui-avatars params: background=random, color=<hex|name>, bold=true
+    //         // Note: using a small palette for readable foreground colors; stable per-user.
+    //         $textColors = 'FFFFFF'; // white
+
+    //         $backgroundColors = [
+    //             '111827', // gray-900
+    //             '0F172A', // slate-900
+    //             '1E3A8A', // blue-900
+    //             '065F46', // emerald-800
+    //             '7C2D12', // orange-900
+    //             '6D28D9', // purple-700
+    //             '9D174D', // pink-800
+    //         ];
+
+    //         $key = $this->id ?? $this->email ?? $this->name;
+    //         $hash = is_int($key) ? (int) $key : crc32((string) $key);
+    //         $backgroundColor = $backgroundColors[$hash % count($backgroundColors)];
+
+    //         return 'https://ui-avatars.com/api/?name='.urlencode($this->name)
+    //             .'&background='.$backgroundColor
+    //             .'&color='.$textColors
+    //             .'&bold=true';
+    //     });
+    // }
 }

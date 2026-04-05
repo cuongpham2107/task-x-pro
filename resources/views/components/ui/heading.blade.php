@@ -6,7 +6,7 @@
     {{ $attributes->class(['mb-0']) }}
 >
     <h1
-        class="mb-2 text-xl font-black tracking-tight text-slate-900 sm:text-2xl dark:text-white"
+        class="mb-2 text-xl font-black tracking-tight text-slate-600 sm:text-2xl dark:text-white"
     >{{ $title }}</h1>
     @if ($text)
         <p

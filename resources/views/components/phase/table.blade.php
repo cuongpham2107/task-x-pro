@@ -38,7 +38,7 @@
                     <x-ui.table.cell>
                         <div class="flex flex-col">
                             <span
-                                class="text-sm font-semibold text-slate-900 dark:text-white">{{ $phase->name }}</span>
+                                class="text-sm font-semibold text-slate-600 dark:text-white">{{ $phase->name }}</span>
                             @if ($phase->description)
                                 <span class="max-w-xs truncate text-xs text-slate-500">{{ $phase->description }}</span>
                             @endif

@@ -36,7 +36,7 @@
             class="flex items-center justify-between border-b border-slate-100 px-4 py-3 md:hidden dark:border-slate-800">
             <div class="flex items-center gap-2">
                 <span class="material-symbols-outlined text-lg text-slate-400">sort</span>
-                <span class="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">Sắp xếp
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-white">Sắp xếp
                     theo</span>
             </div>
             <button type="button" @click="open = false"

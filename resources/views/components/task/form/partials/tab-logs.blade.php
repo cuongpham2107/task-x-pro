@@ -1,7 +1,7 @@
 <div class="animate-in fade-in slide-in-from-bottom-2 duration-300">
     <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <div class="mb-6 flex items-center justify-between">
-            <h3 class="flex items-center gap-2 font-bold text-slate-900 dark:text-white">
+            <h3 class="flex items-center gap-2 font-bold text-slate-600 dark:text-white">
                 <span class="material-symbols-outlined text-primary">history_edu</span>
                 Nhật ký hoạt động & Phê duyệt
             </h3>
@@ -36,7 +36,7 @@
 
                         <div class="flex flex-col gap-1">
                             <div class="flex flex-col justify-between md:flex-row md:items-center">
-                                <h3 class="font-bold leading-tight text-slate-900 dark:text-white">
+                                <h3 class="font-bold leading-tight text-slate-600 dark:text-white">
                                     @if ($log->type === 'approval' && $log->action === 'rejected')
                                         <span class="text-red-600 dark:text-red-400">Từ chối phê duyệt</span>
                                     @elseif ($log->type === 'approval' && $log->action === 'approved')

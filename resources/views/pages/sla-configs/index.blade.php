@@ -4,9 +4,9 @@ use App\Enums\SlaProjectType;
 use App\Enums\SlaTaskType;
 use App\Models\SlaConfig;
 use App\Services\SlaConfigs\SlaConfigService;
+use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Title;
@@ -14,9 +14,9 @@ use Livewire\Attributes\Url;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 use Livewire\WithPagination;
-use Carbon\Carbon;
 
-new #[Title('Cấu hình SLA')] class extends Component {
+new #[Title('Cấu hình SLA')] class extends Component
+{
     use WithPagination;
 
     protected SlaConfigService $slaConfigService;
@@ -149,8 +149,6 @@ new #[Title('Cấu hình SLA')] class extends Component {
         $this->resetPage();
     }
 
-
-
     /**
      * @return array<string, string>
      */
@@ -262,7 +260,7 @@ new #[Title('Cấu hình SLA')] class extends Component {
         } catch (ValidationException $e) {
             $this->setErrorBag($e->validator->errors());
         } catch (\Exception $e) {
-            $message = 'Không thể lưu cấu hình SLA: ' . $e->getMessage();
+            $message = 'Không thể lưu cấu hình SLA: '.$e->getMessage();
             session()->flash('error', $message);
             $this->dispatch('toast', message: $message, type: 'error');
         }
@@ -276,7 +274,7 @@ new #[Title('Cấu hình SLA')] class extends Component {
 
         $departmentName = $slaConfig->department?->name ?? 'Toàn công ty';
         $this->pendingDeleteSlaConfigId = $slaConfig->id;
-        $this->pendingDeleteSlaConfigLabel = $departmentName . ' / ' . $this->taskTypeLabelFromValue($slaConfig->task_type) . ' / ' . $this->projectTypeLabelFromValue($slaConfig->project_type);
+        $this->pendingDeleteSlaConfigLabel = $departmentName.' / '.$this->taskTypeLabelFromValue($slaConfig->task_type).' / '.$this->projectTypeLabelFromValue($slaConfig->project_type);
         $this->showDeleteModal = true;
     }
 
@@ -310,7 +308,7 @@ new #[Title('Cấu hình SLA')] class extends Component {
             session()->flash('success', $message);
             $this->dispatch('toast', message: $message, type: 'success');
         } catch (\Exception $e) {
-            $message = 'Không thể xóa cấu hình SLA: ' . $e->getMessage();
+            $message = 'Không thể xóa cấu hình SLA: '.$e->getMessage();
             session()->flash('error', $message);
             $this->dispatch('toast', message: $message, type: 'error');
         }
@@ -358,9 +356,6 @@ new #[Title('Cấu hình SLA')] class extends Component {
         return $this->projectTypeLabels[$normalized] ?? $normalized;
     }
 
-    /**
-     * @return string
-     */
     public function formatDate(?Carbon $date): string
     {
         return $date?->format('d/m/Y') ?? '--';
@@ -392,7 +387,7 @@ new #[Title('Cấu hình SLA')] class extends Component {
     {
         $departmentOptions = $this->departmentOptions
             ->mapWithKeys(function ($department): array {
-                $label = trim((string) $department->code) !== '' ? $department->name . ' (' . $department->code . ')' : $department->name;
+                $label = trim((string) $department->code) !== '' ? $department->name.' ('.$department->code.')' : $department->name;
 
                 return [
                     (string) $department->id => [
@@ -489,7 +484,7 @@ new #[Title('Cấu hình SLA')] class extends Component {
                 @endphp
                 <x-ui.table.row wire:key="sla-config-{{ $slaConfig->id }}">
                     <x-ui.table.cell>
-                        <p class="text-sm font-semibold text-slate-900 dark:text-white">{{ $departmentLabel }}</p>
+                        <p class="text-sm font-semibold text-slate-600 dark:text-white">{{ $departmentLabel }}</p>
                         <p class="text-xs text-slate-500">{{ $departmentSubLabel }}</p>
                     </x-ui.table.cell>
 
@@ -523,10 +518,9 @@ new #[Title('Cấu hình SLA')] class extends Component {
 
                     <x-ui.table.cell>
                         <div class="flex items-center gap-2">
-                            <img src="{{ $slaConfig->creator?->avatar_url }}" alt="{{ $slaConfig->creator?->name }}"
-                                class="h-8 w-8 rounded-full object-cover" />
+                            <x-ui.avatar-stack :users="collect([$slaConfig->creator])" :max="1" :size="8" />
                             <div class="min-w-0">
-                                <p class="truncate text-sm font-medium text-slate-900 dark:text-white">
+                                <p class="truncate text-sm font-medium text-slate-600 dark:text-white">
                                     {{ $slaConfig->creator?->name ?? '--' }}</p>
                                 <p class="truncate text-xs text-slate-500">
                                     {{ $slaConfig->created_at?->format('d/m/Y') ?? '--' }}</p>
@@ -612,7 +606,7 @@ new #[Title('Cấu hình SLA')] class extends Component {
                 Bạn có chắc chắn muốn xóa cấu hình SLA này không?
             </p>
             @if ($pendingDeleteSlaConfigLabel !== '')
-                <p class="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                <p class="text-sm font-semibold text-slate-600 dark:text-slate-100">
                     Cấu hình: {{ $pendingDeleteSlaConfigLabel }}
                 </p>
             @endif

@@ -452,7 +452,7 @@ new #[Title('Người dùng')] class extends Component {
                             <img src="{{ $user->avatar_url }}" alt="{{ $user->name }}"
                                 class="h-9 w-9 rounded-full object-cover" />
                             <div class="min-w-0">
-                                <p class="truncate text-sm font-semibold text-slate-900 dark:text-white">
+                                <p class="truncate text-sm font-semibold text-slate-600 dark:text-white">
                                     {{ $user->name }}</p>
                                 <p class="truncate text-xs text-slate-500">Email: {{ $user->email }}</p>
                                 @if ($user->phone)
@@ -561,7 +561,7 @@ new #[Title('Người dùng')] class extends Component {
         <div class="space-y-3">
             <p class="text-sm text-slate-600 dark:text-slate-300">Bạn có chắc chắn muốn xóa người dùng này không?</p>
             @if ($pendingDeleteUserName !== '')
-                <p class="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                <p class="text-sm font-semibold text-slate-600 dark:text-slate-100">
                     Người dùng: {{ $pendingDeleteUserName }}
                 </p>
             @endif

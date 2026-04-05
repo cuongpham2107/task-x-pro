@@ -15,7 +15,8 @@ use Livewire\Attributes\Validate;
 use Livewire\Component;
 use Livewire\WithPagination;
 
-new #[Title('Phòng ban')] class extends Component {
+new #[Title('Phòng ban')] class extends Component
+{
     use WithPagination;
 
     protected DepartmentService $departmentService;
@@ -223,7 +224,7 @@ new #[Title('Phòng ban')] class extends Component {
             $message = $e->validator->errors()->first() ?: 'Không thể xóa phòng ban.';
             $this->dispatch('toast', message: $message, type: 'error');
         } catch (\Exception $e) {
-            $message = 'Không thể xóa phòng ban: ' . $e->getMessage();
+            $message = 'Không thể xóa phòng ban: '.$e->getMessage();
             session()->flash('error', $message);
             $this->dispatch('toast', message: $message, type: 'error');
         }
@@ -265,7 +266,7 @@ new #[Title('Phòng ban')] class extends Component {
         } catch (ValidationException $e) {
             $this->setErrorBag($e->validator->errors());
         } catch (\Exception $e) {
-            $message = 'Không thể lưu phòng ban: ' . $e->getMessage();
+            $message = 'Không thể lưu phòng ban: '.$e->getMessage();
             session()->flash('error', $message);
             $this->dispatch('toast', message: $message, type: 'error');
         }
@@ -377,14 +378,13 @@ new #[Title('Phòng ban')] class extends Component {
                     </x-ui.table.cell>
 
                     <x-ui.table.cell>
-                        <p class="text-sm font-semibold text-slate-900 dark:text-white">{{ $department->name }}</p>
+                        <p class="text-sm font-semibold text-slate-600 dark:text-white">{{ $department->name }}</p>
                     </x-ui.table.cell>
 
                     <x-ui.table.cell>
                         @if ($department->head)
                             <div class="flex items-center gap-2">
-                                <img src="{{ $department->head->avatar_url }}" alt="{{ $department->head->name }}"
-                                    class="h-8 w-8 rounded-full object-cover" />
+                                    <x-ui.avatar-stack :users="collect([$department->head])" :max="1" :size="8" />
                                 <div class="min-w-0">
                                     <p class="truncate text-sm font-medium text-slate-800 dark:text-slate-200">
                                         {{ $department->head->name }}</p>
@@ -473,9 +473,9 @@ new #[Title('Phòng ban')] class extends Component {
                                 <x-ui.table.row wire:key="user-[{{ $user->id }}]">
                                     <x-ui.table.cell>
                                         <div class="flex items-center gap-2">
-                                            <x-ui.avatar :src="$user->avatar_url" :name="$user->name" size="6" />
+                                             <x-ui.avatar-stack :users="collect([$user])" :max="1" :size="8" />
                                             <span
-                                                class="font-medium text-slate-900 dark:text-white">{{ $user->name }}</span>
+                                                class="font-medium text-slate-600 dark:text-white">{{ $user->name }}</span>
                                         </div>
                                     </x-ui.table.cell>
                                     <x-ui.table.cell>
@@ -530,7 +530,7 @@ new #[Title('Phòng ban')] class extends Component {
         <div class="space-y-3">
             <p class="text-sm text-slate-600 dark:text-slate-300">Bạn có chắc chắn muốn xóa phòng ban này không?</p>
             @if ($pendingDeleteDepartmentName !== '')
-                <p class="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                <p class="text-sm font-semibold text-slate-600 dark:text-slate-100">
                     Phòng ban: {{ $pendingDeleteDepartmentName }}
                 </p>
             @endif

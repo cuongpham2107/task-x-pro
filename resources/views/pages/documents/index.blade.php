@@ -695,7 +695,7 @@ new #[Title('Tài liệu')] class extends Component {
                             </div>
                             <div>
                                 <h3
-                                    class="group-hover:text-primary text-sm font-bold text-slate-900 transition-colors dark:text-white">
+                                    class="group-hover:text-primary text-sm font-bold text-slate-600 transition-colors dark:text-white">
                                     {{ $project->name }}
                                     <span>({{ $project->phases? $project->phases->sum(function ($phase) {return $phase->tasks->sum(function ($task) {return $task->documents->count();});}): 0 }})</span>
                                 </h3>
@@ -1000,7 +1000,7 @@ new #[Title('Tài liệu')] class extends Component {
             <div class="space-y-4">
                 <div class="flex items-center gap-2 border-b border-slate-100 pb-2 dark:border-slate-800">
                     <span class="material-symbols-outlined text-primary">info</span>
-                    <h4 class="text-sm font-bold uppercase tracking-wider text-slate-900 dark:text-white">Thông tin
+                    <h4 class="text-sm font-bold uppercase tracking-wider text-slate-600 dark:text-white">Thông tin
                         chung</h4>
                 </div>
 
@@ -1015,7 +1015,7 @@ new #[Title('Tài liệu')] class extends Component {
                             </label>
                             <div class="relative">
                                 <select wire:model="documentType"
-                                    class="focus:border-primary focus:ring-primary/20 w-full appearance-none rounded-xl border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 shadow-sm transition-colors placeholder:text-slate-400 focus:ring-2 dark:border-slate-700 dark:bg-slate-800 dark:text-white">
+                                    class="focus:border-primary focus:ring-primary/20 w-full appearance-none rounded-xl border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-600 shadow-sm transition-colors placeholder:text-slate-400 focus:ring-2 dark:border-slate-700 dark:bg-slate-800 dark:text-white">
                                     @foreach ($documentTypeLabels as $value => $label)
                                         <option value="{{ $value }}">{{ $label }}</option>
                                     @endforeach
@@ -1034,7 +1034,7 @@ new #[Title('Tài liệu')] class extends Component {
                             </label>
                             <div class="relative">
                                 <select wire:model="documentPermission"
-                                    class="focus:border-primary focus:ring-primary/20 w-full appearance-none rounded-xl border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 shadow-sm transition-colors placeholder:text-slate-400 focus:ring-2 dark:border-slate-700 dark:bg-slate-800 dark:text-white">
+                                    class="focus:border-primary focus:ring-primary/20 w-full appearance-none rounded-xl border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-600 shadow-sm transition-colors placeholder:text-slate-400 focus:ring-2 dark:border-slate-700 dark:bg-slate-800 dark:text-white">
                                     @foreach ($permissionLabels as $value => $label)
                                         <option value="{{ $value }}">{{ $label }}</option>
                                     @endforeach
@@ -1052,7 +1052,7 @@ new #[Title('Tài liệu')] class extends Component {
                         <label class="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">Mô
                             tả</label>
                         <textarea rows="3" wire:model="documentDescription"
-                            class="focus:border-primary focus:ring-primary/20 w-full rounded-xl border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 shadow-sm transition-colors placeholder:text-slate-400 focus:ring-2 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                            class="focus:border-primary focus:ring-primary/20 w-full rounded-xl border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-600 shadow-sm transition-colors placeholder:text-slate-400 focus:ring-2 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                             placeholder="Mô tả chi tiết về tài liệu..."></textarea>
                         <x-ui.field-error field="documentDescription" />
                     </div>
@@ -1063,7 +1063,7 @@ new #[Title('Tài liệu')] class extends Component {
             <div class="space-y-4">
                 <div class="flex items-center gap-2 border-b border-slate-100 pb-2 dark:border-slate-800">
                     <span class="material-symbols-outlined text-blue-500">cloud_sync</span>
-                    <h4 class="text-sm font-bold uppercase tracking-wider text-slate-900 dark:text-white">Liên kết &
+                    <h4 class="text-sm font-bold uppercase tracking-wider text-slate-600 dark:text-white">Liên kết &
                         Phiên bản</h4>
                 </div>
 

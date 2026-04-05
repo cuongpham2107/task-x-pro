@@ -86,7 +86,7 @@
                             </div>
                         </template>
                         <div class="min-w-0">
-                            <p class="truncate text-sm font-medium text-slate-900 dark:text-white"
+                            <p class="truncate text-sm font-medium text-slate-600 dark:text-white"
                                 x-text="selectedUser.name"></p>
                         </div>
                     </div>
@@ -155,7 +155,7 @@
                             <div class="min-w-0 flex-1 text-left">
                                 <p class="truncate text-sm font-bold transition-colors"
                                     :class="Number(selectedId) === Number(user.id) ? 'text-primary' :
-                                        'text-slate-900 dark:text-white'"
+                                        'text-slate-600 dark:text-white'"
                                     x-text="user.name"></p>
                                 <p class="truncate text-xs text-slate-400" x-text="user.email"></p>
                             </div>

@@ -10,7 +10,8 @@ use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
 
-new #[Title('Nhật ký hoạt động')] class extends Component {
+new #[Title('Nhật ký hoạt động')] class extends Component
+{
     use WithPagination;
 
     protected ActivityLogService $activityLogService;
@@ -104,8 +105,8 @@ new #[Title('Nhật ký hoạt động')] class extends Component {
     {
         return $this->userOptions
             ->mapWithKeys(
-                fn($user): array => [
-                    (string) $user->id => $user->name . ' (' . $user->email . ')',
+                fn ($user): array => [
+                    (string) $user->id => $user->name.' ('.$user->email.')',
                 ],
             )
             ->all();
@@ -247,7 +248,7 @@ new #[Title('Nhật ký hoạt động')] class extends Component {
                 @endphp
                 <x-ui.table.row wire:key="activity-log-{{ $log->id }}">
                     <x-ui.table.cell>
-                        <div class="text-sm font-semibold text-slate-900 dark:text-white">
+                        <div class="text-sm font-semibold text-slate-600 dark:text-white">
                             {{ $log->created_at?->format('d/m/Y H:i') }}</div>
                         <div class="text-[11px] text-slate-500">{{ $log->created_at?->diffForHumans() }}</div>
                     </x-ui.table.cell>
@@ -255,10 +256,9 @@ new #[Title('Nhật ký hoạt động')] class extends Component {
                     <x-ui.table.cell>
                         @if ($log->user)
                             <div class="flex items-center gap-2">
-                                <img src="{{ $log->user->avatar_url }}" alt="{{ $log->user->name }}"
-                                    class="h-8 w-8 rounded-full object-cover" />
+                                <x-ui.avatar-stack :users="collect([$log->user])" :max="1" :size="8" />
                                 <div class="min-w-0">
-                                    <p class="truncate text-sm font-medium text-slate-900 dark:text-white">
+                                    <p class="truncate text-sm font-medium text-slate-600 dark:text-white">
                                         {{ $log->user->name }}</p>
                                     <p class="truncate text-xs text-slate-500">{{ $log->user->email }}</p>
                                 </div>

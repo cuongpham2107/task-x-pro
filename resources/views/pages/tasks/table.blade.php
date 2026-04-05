@@ -13,7 +13,8 @@ use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
 
-new #[Title('Công việc')] class extends Component {
+new #[Title('Công việc')] class extends Component
+{
     use WithPagination;
 
     #[Url(as: 'q', except: '')]
@@ -137,7 +138,7 @@ new #[Title('Công việc')] class extends Component {
 
             $this->dispatch('toast', message: 'Công việc đã được xóa!', type: 'success');
         } catch (\Exception $e) {
-            $this->dispatch('toast', message: 'Lỗi khi xóa: ' . $e->getMessage(), type: 'error');
+            $this->dispatch('toast', message: 'Lỗi khi xóa: '.$e->getMessage(), type: 'error');
         }
     }
 
@@ -167,7 +168,7 @@ new #[Title('Công việc')] class extends Component {
     #[Computed]
     public function projectFilterOptions(): array
     {
-        return $this->projectOptions->mapWithKeys(fn($project): array => [(string) $project->id => $project->name])->all();
+        return $this->projectOptions->mapWithKeys(fn ($project): array => [(string) $project->id => $project->name])->all();
     }
 
     /**
@@ -176,7 +177,7 @@ new #[Title('Công việc')] class extends Component {
     #[Computed]
     public function phaseFilterOptions(): array
     {
-        return $this->phaseOptions->mapWithKeys(fn($phase): array => [(string) $phase->id => $phase->name])->all();
+        return $this->phaseOptions->mapWithKeys(fn ($phase): array => [(string) $phase->id => $phase->name])->all();
     }
 
     /**
@@ -185,7 +186,7 @@ new #[Title('Công việc')] class extends Component {
     #[Computed]
     public function picFilterOptions(): array
     {
-        return $this->picOptions->mapWithKeys(fn($user): array => [(string) $user->id => $user->name])->all();
+        return $this->picOptions->mapWithKeys(fn ($user): array => [(string) $user->id => $user->name])->all();
     }
 
     private function loadFilterOptions(): void
@@ -228,7 +229,7 @@ new #[Title('Công việc')] class extends Component {
                     <label class="relative inline-flex cursor-pointer items-center pr-2">
                         <input type="checkbox" wire:model.live="filterMyTasks" class="peer sr-only">
                         <div
-                            class="peer-checked:bg-primary peer-focus:ring-primary/20 peer h-5 w-9 rounded-full bg-slate-200 after:absolute after:left-[2px] after:top-[2px] after:h-4 after:w-4 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-2 dark:bg-slate-700">
+                            class="peer-checked:bg-primary peer-focus:ring-primary/20 peer h-5 w-9 rounded-full bg-slate-200 after:absolute after:left-0.5 after:top-0.5 after:h-4 after:w-4 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-2 dark:bg-slate-700">
                         </div>
                         <span class="ml-2 text-xs font-semibold text-slate-700 dark:text-slate-300">Việc của tôi</span>
                     </label>

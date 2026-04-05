@@ -1,7 +1,6 @@
 <?php
 
 use App\Enums\ProjectStatus;
-use App\Enums\ProjectType;
 use App\Models\Project;
 use App\Services\Projects\ProjectService;
 use Illuminate\Support\Facades\Gate;
@@ -12,7 +11,8 @@ use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
 
-new #[Title('Dự án')] class extends Component {
+new #[Title('Dự án')] class extends Component
+{
     use WithPagination;
 
     protected ProjectService $projectService;
@@ -133,8 +133,8 @@ new #[Title('Dự án')] class extends Component {
             session()->flash('success', 'Dự án đã được xóa thành công!');
             $this->dispatch('toast', message: 'Dự án đã được xóa thành công!', type: 'success');
         } catch (\Exception $e) {
-            session()->flash('error', 'Không thể xóa dự án: ' . $e->getMessage());
-            $this->dispatch('toast', message: 'Không thể xóa dự án: ' . $e->getMessage(), type: 'error');
+            session()->flash('error', 'Không thể xóa dự án: '.$e->getMessage());
+            $this->dispatch('toast', message: 'Không thể xóa dự án: '.$e->getMessage(), type: 'error');
         }
     }
 
@@ -179,7 +179,7 @@ new #[Title('Dự án')] class extends Component {
     </div>
     <!-- Tabs Section -->
     <div
-        class="mb-2 flex flex-col gap-4 border-b border-slate-200 pb-4 md:flex-row md:items-center md:justify-between md:gap-4 md:pb-0 dark:border-slate-800">
+        class="mb-2 flex flex-col gap-2 md:flex-row md:items-center md:justify-between md:gap-2 md:pb-0 dark:border-slate-800">
         {{-- Tabs --}}
         <div class="hidden min-w-0 flex-1 gap-1 overflow-x-auto md:flex">
             @foreach ($this->tabs as $key => $tab)
@@ -248,7 +248,7 @@ new #[Title('Dự án')] class extends Component {
                 Bạn có chắc chắn muốn xóa dự án này không? Dữ liệu sẽ không còn hiển thị trong danh sách đang hoạt động.
             </p>
             @if ($pendingDeleteProjectName !== '')
-                <p class="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                <p class="text-sm font-semibold text-slate-600 dark:text-slate-100">
                     Dự án: {{ $pendingDeleteProjectName }}
                 </p>
             @endif

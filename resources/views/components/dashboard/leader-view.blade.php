@@ -1,13 +1,12 @@
 <?php
 use App\Models\ActivityLog;
 use App\Models\Task;
-use App\Enums\TaskStatus;
-use App\Enums\TaskPriority;
-use Livewire\Component;
-use Livewire\Attributes\On;
 use App\Services\Dashboard\DashboardService;
+use Livewire\Attributes\On;
+use Livewire\Component;
 
-new class extends Component {
+new class extends Component
+{
     public array $data = [];
 
     public $activityLogs = [];
@@ -102,7 +101,7 @@ new class extends Component {
                                 <span class="material-symbols-outlined text-[20px]">folder_shared</span>
                             </span>
                         </div>
-                        <h3 class="text-3xl font-bold text-slate-900 dark:text-white">
+                        <h3 class="text-3xl font-bold text-slate-600 dark:text-white">
                             {{ $data['projects']['total'] ?? 0 }}</h3>
                         <p class="flex items-center gap-1 text-sm font-bold text-emerald-600">
                             <span class="material-symbols-outlined text-[16px]">trending_up</span>
@@ -119,7 +118,7 @@ new class extends Component {
                                 <span class="material-symbols-outlined text-[20px]">pending</span>
                             </span>
                         </div>
-                        <h3 class="text-3xl font-bold text-slate-900 dark:text-white">
+                        <h3 class="text-3xl font-bold text-slate-600 dark:text-white">
                             {{ $data['tasks']['in_progress'] ?? 0 }}</h3>
                         <p class="flex items-center gap-1 text-sm font-bold text-indigo-600">
                             <span class="material-symbols-outlined text-[16px]">sync</span>
@@ -136,7 +135,7 @@ new class extends Component {
                                 <span class="material-symbols-outlined text-[20px]">fact_check</span>
                             </span>
                         </div>
-                        <h3 class="text-3xl font-bold text-slate-900 dark:text-white">
+                        <h3 class="text-3xl font-bold text-slate-600 dark:text-white">
                             {{ $data['tasks']['waiting_approval'] ?? 0 }}</h3>
                         <p class="flex items-center gap-1 text-sm font-bold text-amber-600">
                             <span class="material-symbols-outlined text-[16px]">pending_actions</span>
@@ -153,7 +152,7 @@ new class extends Component {
                                 <span class="material-symbols-outlined text-[20px]">warning</span>
                             </span>
                         </div>
-                        <h3 class="text-3xl font-bold text-slate-900 dark:text-white">{{ $data['tasks']['late'] ?? 0 }}
+                        <h3 class="text-3xl font-bold text-slate-600 dark:text-white">{{ $data['tasks']['late'] ?? 0 }}
                         </h3>
                         <p class="flex items-center gap-1 text-sm font-bold text-rose-600">
                             <span class="material-symbols-outlined text-[16px]">error</span>
@@ -169,7 +168,7 @@ new class extends Component {
                         class="flex flex-col gap-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm lg:col-span-2 dark:border-slate-800 dark:bg-slate-900">
                         <div class="flex items-start justify-between">
                             <div>
-                                <h3 class="text-lg font-bold text-slate-900 dark:text-white">Hiệu suất vận hành Dự án
+                                <h3 class="text-lg font-bold text-slate-600 dark:text-white">Hiệu suất vận hành Dự án
                                 </h3>
                                 <p class="text-sm text-slate-500">Thực tế vs Kế hoạch (Dữ liệu 7 ngày gần nhất)</p>
                             </div>
@@ -181,7 +180,7 @@ new class extends Component {
                                         hoạch</span></div>
                             </div>
                         </div>
-                        <div class="relative mt-4 h-[280px] flex-1">
+                        <div class="relative mt-4 h-70 flex-1">
                             <canvas id="leaderActivityChart"></canvas>
                         </div>
                     </div>
@@ -191,7 +190,7 @@ new class extends Component {
                         <!-- Project Status Doughnut -->
                         <div
                             class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                            <h4 class="mb-4 font-bold text-slate-900 dark:text-white">Trạng thái Dự án</h4>
+                            <h4 class="mb-4 font-bold text-slate-600 dark:text-white">Trạng thái Dự án</h4>
                             <div class="relative h-48">
                                 <canvas id="projectStatusChart"></canvas>
                             </div>
@@ -202,7 +201,7 @@ new class extends Component {
                                         <span class="text-slate-500">Hoàn thành</span>
                                     </div>
                                     <span
-                                        class="font-bold text-slate-900 dark:text-white">{{ $data['projects']['completed'] ?? 0 }}</span>
+                                        class="font-bold text-slate-600 dark:text-white">{{ $data['projects']['completed'] ?? 0 }}</span>
                                 </div>
                                 <div class="flex items-center justify-between text-xs">
                                     <div class="flex items-center gap-2">
@@ -210,7 +209,7 @@ new class extends Component {
                                         <span class="text-slate-500">Đang chạy</span>
                                     </div>
                                     <span
-                                        class="font-bold text-slate-900 dark:text-white">{{ $data['projects']['running'] ?? 0 }}</span>
+                                        class="font-bold text-slate-600 dark:text-white">{{ $data['projects']['running'] ?? 0 }}</span>
                                 </div>
                                 <div class="flex items-center justify-between text-xs">
                                     <div class="flex items-center gap-2">
@@ -218,13 +217,13 @@ new class extends Component {
                                         <span class="text-slate-500">Tạm dừng</span>
                                     </div>
                                     <span
-                                        class="font-bold text-slate-900 dark:text-white">{{ $data['projects']['paused'] ?? 0 }}</span>
+                                        class="font-bold text-slate-600 dark:text-white">{{ $data['projects']['paused'] ?? 0 }}</span>
                                 </div>
                                 <div
                                     class="flex items-center justify-between border-t border-slate-100 pt-2 text-xs dark:border-slate-800">
                                     <span class="font-semibold text-slate-500">Tổng</span>
                                     <span
-                                        class="font-bold text-slate-900 dark:text-white">{{ $data['projects']['total'] ?? 0 }}</span>
+                                        class="font-bold text-slate-600 dark:text-white">{{ $data['projects']['total'] ?? 0 }}</span>
                                 </div>
                             </div>
                         </div>
@@ -233,9 +232,9 @@ new class extends Component {
                         <div
                             class="flex-1 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
                             <div class="border-b border-slate-100 p-6 dark:border-slate-800">
-                                <h4 class="font-bold text-slate-900 dark:text-white">Hoạt động gần đây</h4>
+                                <h4 class="font-bold text-slate-600 dark:text-white">Hoạt động gần đây</h4>
                             </div>
-                            <div class="max-h-[300px] space-y-6 overflow-y-auto p-6">
+                            <div class="max-h-75 space-y-6 overflow-y-auto p-6">
                                 @forelse($activityLogs as $log)
                                     <div
                                         class="before:left-2.75 relative flex gap-4 border-b border-slate-50 pb-4 before:absolute before:bottom-0 before:top-8 before:w-0.5 before:bg-slate-100 last:border-0 last:pb-0 last:before:hidden dark:border-slate-800 dark:before:bg-slate-700">
@@ -244,11 +243,11 @@ new class extends Component {
                                         <div class="flex flex-col gap-1">
                                             <p class="text-xs leading-relaxed dark:text-slate-300">
                                                 <span
-                                                    class="font-bold text-slate-900 dark:text-white">{{ $log->user->name ?? 'System' }}</span>
+                                                    class="font-bold text-slate-600 dark:text-white">{{ $log->user->name ?? 'System' }}</span>
                                                 {{ $log->description ?? ($log->action === 'status_updated' ? 'đã cập nhật trạng thái công việc' : 'đã thực hiện một hành động') }}
                                             </p>
                                             <span
-                                                class="text-[10px] text-slate-400">{{ $log->created_at->diffForHumans() }}</span>
+                                                class="text-2xs text-slate-400">{{ $log->created_at->diffForHumans() }}</span>
                                         </div>
                                     </div>
                                 @empty
@@ -265,7 +264,7 @@ new class extends Component {
                     <div class="flex items-center justify-between border-b border-slate-100 p-6 dark:border-slate-800">
                         <div class="flex items-center gap-3">
                             <span class="material-symbols-outlined text-amber-500">pending_actions</span>
-                            <h2 class="text-lg font-bold text-slate-900 dark:text-white">Công việc chờ duyệt</h2>
+                            <h2 class="text-lg font-bold text-slate-600 dark:text-white">Công việc chờ duyệt</h2>
                         </div>
                         <div class="flex items-center gap-2">
                             <span
@@ -307,7 +306,7 @@ new class extends Component {
                                             <div class="flex flex-col gap-1">
                                                 <button
                                                     wire:click="$dispatch('task-edit-requested', { taskId: {{ $task->id }} })"
-                                                    class="hover:text-primary max-w-[200px] truncate text-left text-sm font-bold text-slate-900 transition-colors dark:text-slate-100">
+                                                    class="hover:text-primary max-w-[200px] truncate text-left text-sm font-bold text-slate-600 transition-colors dark:text-slate-100">
                                                     {{ $task->name }}
                                                 </button>
                                                 <div class="flex items-center gap-2">

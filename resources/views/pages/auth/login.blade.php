@@ -2,14 +2,14 @@
 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
-use Laravel\Socialite\Facades\Socialite;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 
-new #[Layout('layouts.auth')] #[Title('Đăng nhập')] class extends Component {
+new #[Layout('layouts.auth')] #[Title('Đăng nhập')] class extends Component
+{
     #[Validate('required|email', as: 'email')]
     public string $email = '';
 
@@ -43,7 +43,7 @@ new #[Layout('layouts.auth')] #[Title('Đăng nhập')] class extends Component 
     {
         $this->validate();
 
-        if (!$this->authService->login($this->email, $this->password, $this->remember)) {
+        if (! $this->authService->login($this->email, $this->password, $this->remember)) {
             throw ValidationException::withMessages([
                 'email' => 'Thông tin đăng nhập không chính xác.',
             ]);
@@ -66,7 +66,7 @@ new #[Layout('layouts.auth')] #[Title('Đăng nhập')] class extends Component 
 
     public function togglePasswordVisibility(): void
     {
-        $this->showPassword = !$this->showPassword;
+        $this->showPassword = ! $this->showPassword;
     }
 }; ?>
 
@@ -75,7 +75,7 @@ new #[Layout('layouts.auth')] #[Title('Đăng nhập')] class extends Component 
 
     <x-slot:header>
         <div>
-            <h2 class="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">Chào mừng trở lại 👋
+            <h2 class="text-2xl font-extrabold tracking-tight text-slate-600 dark:text-slate-100">Chào mừng trở lại 👋
             </h2>
             <p class="mt-1.5 text-sm leading-relaxed text-slate-500 dark:text-slate-400">
                 Vui lòng nhập thông tin để truy cập hệ thống
@@ -155,7 +155,7 @@ new #[Layout('layouts.auth')] #[Title('Đăng nhập')] class extends Component 
             </div>
 
             <div class="space-y-2">
-                <h3 class="text-xl font-bold text-slate-900 dark:text-slate-100">Đăng ký thành công</h3>
+                <h3 class="text-xl font-bold text-slate-600 dark:text-slate-100">Đăng ký thành công</h3>
                 <p class="text-sm text-slate-500 dark:text-slate-400">
                     Bạn đã đăng ký thành công, đang chờ admin xét duyệt
                 </p>

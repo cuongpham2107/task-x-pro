@@ -25,6 +25,20 @@ enum TaskStatus: string
         };
     }
 
+    /**
+     * Material Symbols icon name for UI rendering.
+     */
+    public function icon(): string
+    {
+        return match ($this) {
+            self::Pending => 'hourglass_empty',
+            self::InProgress => 'pending_actions',
+            self::WaitingApproval => 'approval',
+            self::Completed => 'check_circle',
+            self::Late => 'warning',
+        };
+    }
+
     public function color(): string
     {
         return match ($this) {
@@ -45,6 +59,17 @@ enum TaskStatus: string
             self::WaitingApproval => 'bg-orange-400',
             self::Completed => 'bg-green-500',
             self::Late => 'bg-red-500',
+        };
+    }
+
+    public function textColor(): string
+    {
+        return match ($this) {
+            self::Pending => 'text-slate-600 dark:text-slate-400',
+            self::InProgress => 'text-primary',
+            self::WaitingApproval => 'text-orange-600 dark:text-orange-400',
+            self::Completed => 'text-green-700 dark:text-green-400',
+            self::Late => 'text-red-700 dark:text-red-400',
         };
     }
 

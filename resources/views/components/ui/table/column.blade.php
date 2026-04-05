@@ -10,7 +10,7 @@
         'right' => 'text-right',
         default => '',
     };
-    $colorClass = $muted ? 'text-slate-500' : 'text-slate-900 dark:text-slate-100';
+    $colorClass = $muted ? 'text-slate-500' : 'text-slate-500 dark:text-slate-100';
 @endphp
 
 <th

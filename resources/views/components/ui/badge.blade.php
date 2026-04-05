@@ -21,14 +21,18 @@
         'md' => 'text-sm px-3 py-1',
         default => 'text-xs px-2.5 py-0.5',
     };
+
+    // If a caller provides its own `class` (e.g. from an Enum like ProjectStatus::badgeClass()),
+    // don't force the default `$colorClasses` because Tailwind class order matters.
+    $hasCustomClass = trim((string) ($attributes->get('class') ?? '')) !== '';
 @endphp
      <span {{ $attributes->class([
-    'inline-flex items-center gap-1 rounded-full font-bold uppercase tracking-wider',
-    $colorClasses,
+    'inline-flex items-center gap-1 rounded-lg font-bold uppercase tracking-wider',
+    $hasCustomClass ? null : $colorClasses,
     $sizeClasses,
 ]) }}>
     @if ($icon)
-        <span class="material-symbols-outlined text-[11px]">{{ $icon }}</span>
+        <span class="material-symbols-outlined text-xs">{{ $icon }}</span>
     @endif
     {{ $slot }}
 </span>

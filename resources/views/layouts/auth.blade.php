@@ -9,7 +9,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
-<body class="font-display bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 antialiased">
+<body class="font-display bg-background-light dark:bg-background-dark text-slate-600 dark:text-slate-100 antialiased">
     <div class="flex min-h-screen">
         <!-- Left Side: Background Image & Slogan -->
         <div class="hidden lg:flex lg:w-2/3 flex-col justify-end items-center relative overflow-hidden">
@@ -62,7 +62,7 @@
                         </div>
                         <div class="flex flex-col">
                             <span
-                                class="text-xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 leading-none">{{ config('app.name') }}</span>
+                                class="text-xl font-extrabold tracking-tight text-slate-600 dark:text-slate-100 leading-none">{{ config('app.name') }}</span>
                             <span
                                 class="text-[11px] font-medium text-slate-400 dark:text-slate-500 tracking-widest uppercase mt-4">Project
                                 Manager</span>

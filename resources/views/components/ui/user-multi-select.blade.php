@@ -141,7 +141,7 @@
                                 </template>
 
                                 <div class="min-w-0">
-                                    <p class="truncate text-sm font-medium text-slate-900 dark:text-white"
+                                    <p class="truncate text-sm font-medium text-slate-600 dark:text-white"
                                         x-text="user.name"></p>
                                     <p class="truncate text-xs text-slate-400" x-text="user.email"></p>
                                 </div>

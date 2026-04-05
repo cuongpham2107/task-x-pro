@@ -87,7 +87,7 @@ new class extends Component {
         {{-- Header --}}
         <div class="flex items-center justify-between border-b border-slate-200 p-6 dark:border-slate-800">
             <div class="flex items-center gap-2">
-                <h2 class="text-xl font-bold text-slate-900 dark:text-slate-100">Thông báo</h2>
+                <h2 class="text-xl font-bold text-slate-600 dark:text-slate-100">Thông báo</h2>
                 @if ($unreadCount > 0)
                     <span
                         class="bg-primary text-2xs flex h-5 w-5 items-center justify-center rounded-full font-bold text-white">
@@ -169,7 +169,7 @@ new class extends Component {
                             </div>
                             <div class="flex-1">
                                 <div class="mb-1 flex items-center justify-between">
-                                    <h4 class="text-sm font-bold text-slate-900 dark:text-slate-100">
+                                    <h4 class="text-sm font-bold text-slate-600 dark:text-slate-100">
                                         {{ $notification->title }}</h4>
                                     <span
                                         class="text-[11px] text-slate-400">{{ $notification->created_at->diffForHumans() }}</span>

@@ -74,7 +74,7 @@
                             {{ strtoupper(substr($project->name, 0, 1)) }}
                         </div>
                         <div>
-                            <p class="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                            <p class="text-sm font-semibold text-slate-600 dark:text-slate-100">
                                 {{ $project->name }}</p>
                             <p class="text-xs text-slate-500">Loại: {{ $project->type->label() }}</p>
                         </div>
@@ -96,11 +96,21 @@
                 </x-ui.table.cell>
 
                 <x-ui.table.cell align="start" class="text-xs text-slate-600 dark:text-slate-400">
-                    {{ $project->start_date ? \Carbon\Carbon::parse($project->start_date)->format('d/m/Y') : '—' }}
+                    <div class="flex items-center gap-1.5">
+                        <span class="material-symbols-outlined text-[16px] text-slate-400">calendar_today</span>
+                        <span>
+                            {{ $project->start_date ? \Carbon\Carbon::parse($project->start_date)->format('d/m/Y') : '—' }}
+                        </span>
+                    </div>
                 </x-ui.table.cell>
 
                 <x-ui.table.cell align="start" class="text-xs text-slate-600 dark:text-slate-400">
-                    {{ $project->end_date ? \Carbon\Carbon::parse($project->end_date)->format('d/m/Y') : '—' }}
+                    <div class="flex items-center gap-1.5">
+                        <span class="material-symbols-outlined text-[16px] text-slate-400">event</span>
+                        <span>
+                            {{ $project->end_date ? \Carbon\Carbon::parse($project->end_date)->format('d/m/Y') : '—' }}
+                        </span>
+                    </div>
                 </x-ui.table.cell>
 
                 <x-ui.table.cell>
@@ -129,25 +139,20 @@
                             @endif
 
                         </div>
-                        <p class="w-7 text-right text-xs font-bold text-slate-900 dark:text-slate-100">
+                        <p class="w-7 text-right text-xs font-bold text-slate-600 dark:text-slate-100">
                             {{ $progress }}%
                         </p>
                 </x-ui.table.cell>
 
                 <x-ui.table.cell>
-                    @php
-                        $projectStatusColor = match ($statusEnum?->value ?? '') {
-                            'init' => 'blue',
-                            'running' => 'amber',
-                            'paused' => 'orange',
-                            'completed' => 'green',
-                            'cancelled' => 'red',
-                            default => 'slate',
-                        };
-                    @endphp
-                    <x-ui.badge :color="$projectStatusColor" size="xs">
-                        {{ $statusEnum?->label() ?? '—' }}
-                    </x-ui.badge>
+                    @if ($statusEnum)
+                        <x-ui.badge :class="$statusEnum->badgeClass()" size="xs">
+                            <span class="material-symbols-outlined text-[14px]">{{ $statusEnum->icon() }}</span>
+                            {{ $statusEnum->label() }}
+                        </x-ui.badge>
+                    @else
+                        <span class="text-xs text-slate-400">—</span>
+                    @endif
                 </x-ui.table.cell>
 
                 <x-ui.table.cell align="center" x-on:click.stop>

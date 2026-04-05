@@ -2,7 +2,7 @@
     class="h-128 flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
     <div class="flex items-center justify-between border-b border-slate-100 p-4 dark:border-slate-800">
         <div>
-            <h3 class="flex items-center gap-2 font-bold text-slate-900 dark:text-white">
+            <h3 class="flex items-center gap-2 font-bold text-slate-600 dark:text-white">
                 <span class="material-symbols-outlined text-primary">forum</span>
                 Trao đổi thảo luận
             </h3>

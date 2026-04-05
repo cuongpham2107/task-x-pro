@@ -1,16 +1,17 @@
 <?php
-use Livewire\Component;
-use Livewire\Attributes\On;
-use App\Enums\TaskStatus;
-use App\Enums\TaskPriority;
 use App\Models\ActivityLog;
-use Illuminate\Support\Str;
 use App\Services\Dashboard\DashboardService;
+use Livewire\Attributes\On;
+use Livewire\Component;
 
-new class extends Component {
+new class extends Component
+{
     public array $data = [];
+
     public $activityLogs = [];
+
     public $selectedMonth;
+
     public $selectedYear;
 
     public function mount(array $data)
@@ -94,7 +95,7 @@ new class extends Component {
                             <span class="material-symbols-outlined text-[20px]">rocket_launch</span>
                         </span>
                     </div>
-                    <h3 class="text-3xl font-bold text-slate-900 dark:text-white">
+                    <h3 class="text-3xl font-bold text-slate-600 dark:text-white">
                         {{ $data['projects']['running'] ?? 0 }}</h3>
                     <p class="flex items-center gap-1 text-sm font-bold text-emerald-600">
                         <span class="material-symbols-outlined text-[16px]">trending_up</span>
@@ -110,7 +111,7 @@ new class extends Component {
                             <span class="material-symbols-outlined text-[20px]">event_busy</span>
                         </span>
                     </div>
-                    <h3 class="text-3xl font-bold text-slate-900 dark:text-white">{{ $data['tasks']['late'] ?? 0 }}</h3>
+                    <h3 class="text-3xl font-bold text-slate-600 dark:text-white">{{ $data['tasks']['late'] ?? 0 }}</h3>
                     <p class="flex items-center gap-1 text-sm font-bold text-red-600">
                         <span class="material-symbols-outlined text-[16px]">warning</span> Cần xử lý gấp
                     </p>
@@ -124,7 +125,7 @@ new class extends Component {
                             <span class="material-symbols-outlined text-[20px]">pending_actions</span>
                         </span>
                     </div>
-                    <h3 class="text-3xl font-bold text-slate-900 dark:text-white">
+                    <h3 class="text-3xl font-bold text-slate-600 dark:text-white">
                         {{ $data['tasks']['waiting_approval'] ?? 0 }}</h3>
                     <p class="flex items-center gap-1 text-sm font-bold text-emerald-600">
                         <span class="material-symbols-outlined text-[16px]">trending_up</span> Đang chờ duyệt
@@ -139,7 +140,7 @@ new class extends Component {
                             <span class="material-symbols-outlined text-[20px]">verified</span>
                         </span>
                     </div>
-                    <h3 class="text-3xl font-bold text-slate-900 dark:text-white">
+                    <h3 class="text-3xl font-bold text-slate-600 dark:text-white">
                         {{ $data['projects']['avg_progress'] ?? 0 }}%</h3>
                     <div class="mt-2 h-1.5 w-full rounded-full bg-slate-100 dark:bg-slate-800">
                         <div class="h-1.5 rounded-full bg-emerald-500"
@@ -154,7 +155,7 @@ new class extends Component {
                 <div
                     class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
                     <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                        <h4 class="font-bold text-slate-900 dark:text-white">Top Nhân viên xuất sắc</h4>
+                        <h4 class="font-bold text-slate-600 dark:text-white">Top Nhân viên xuất sắc</h4>
                         <div class="flex gap-2">
                             <select wire:model.live="selectedMonth"
                                 class="focus:border-primary focus:ring-primary rounded-lg border-slate-200 bg-slate-50 text-xs font-bold text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
@@ -176,7 +177,7 @@ new class extends Component {
                 </div>
                 <div
                     class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                    <h4 class="mb-6 font-bold text-slate-900 dark:text-white">Tiến trình Phase tổng hợp</h4>
+                    <h4 class="mb-6 font-bold text-slate-600 dark:text-white">Tiến trình Phase tổng hợp</h4>
                     <div class="flex h-full flex-col items-center justify-between gap-8 py-4 md:flex-row">
                         <div class="h-62.5 relative flex w-full items-center justify-center">
                             <canvas id="phaseProgressChart"></canvas>
@@ -191,7 +192,7 @@ new class extends Component {
                 <div
                     class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm lg:col-span-3 dark:border-slate-800 dark:bg-slate-900">
                     <div class="flex items-center justify-between border-b border-slate-100 p-6 dark:border-slate-800">
-                        <h4 class="font-bold text-slate-900 dark:text-white">Danh sách cần duyệt (2 cấp)</h4>
+                        <h4 class="font-bold text-slate-600 dark:text-white">Danh sách cần duyệt (2 cấp)</h4>
                     </div>
                     <div class="overflow-x-auto">
                         <table class="w-full border-collapse text-left">
@@ -229,7 +230,7 @@ new class extends Component {
                                             <div class="flex flex-col gap-1">
                                                 <button
                                                     wire:click="$dispatch('task-edit-requested', { taskId: {{ $task->id }} })"
-                                                    class="hover:text-primary max-w-[200px] truncate text-left text-sm font-bold text-slate-900 transition-colors dark:text-slate-100">
+                                                    class="hover:text-primary max-w-[200px] truncate text-left text-sm font-bold text-slate-600 transition-colors dark:text-slate-100">
                                                     {{ $task->name }}
                                                 </button>
                                                 <div class="flex items-center gap-2">
@@ -287,7 +288,7 @@ new class extends Component {
                                             </span>
                                         </td>
                                         <td class="px-6 py-4">
-                                            <div class="text-[10px] font-bold text-slate-500">
+                                            <div class="text-2xs font-bold text-slate-500">
                                                 {{ $task->updated_at->diffForHumans() }}
                                             </div>
                                         </td>
@@ -313,22 +314,15 @@ new class extends Component {
                 <div
                     class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
                     <div class="border-b border-slate-100 p-6 dark:border-slate-800">
-                        <h4 class="font-bold text-slate-900 dark:text-white">Hoạt động gần đây</h4>
+                        <h4 class="font-bold text-slate-600 dark:text-white">Hoạt động gần đây</h4>
                     </div>
                     <div class="space-y-6 p-6">
                         @forelse($activityLogs as $log)
                             <div
-                                class="before:left-2.75 relative flex gap-4 before:absolute before:bottom-0 before:top-8 before:w-0.5 before:bg-slate-100 last:before:hidden dark:before:bg-slate-800">
-                                <div
-                                    class="bg-primary z-10 flex size-6 shrink-0 items-center justify-center overflow-hidden rounded-full border-4 border-white dark:border-slate-900">
-                                    @if ($log->user && $log->user->avatar_url)
-                                        <img src="{{ $log->user->avatar_url }}" class="h-full w-full object-cover"
-                                            alt="{{ $log->user->name }}">
-                                    @else
-                                        <span
-                                            class="text-[8px] font-bold text-white">{{ $log->user ? substr($log->user->name, 0, 1) : 'S' }}</span>
-                                    @endif
-                                </div>
+                                class="before:left-2.75 relative flex gap-2 before:absolute before:bottom-0 before:top-8 before:w-0.5 before:bg-slate-100 last:before:hidden dark:before:bg-slate-800">
+                            
+                                <x-ui.avatar-stack :users="collect([$log->user])" :size="6"
+                                    class="z-10 border-4 border-white dark:border-slate-900"/>
                                 <div class="flex flex-col gap-1">
                                     <p class="text-xs leading-relaxed">
                                         <span class="font-bold">{{ $log->user->name ?? 'System' }}</span>
