@@ -23,6 +23,7 @@
 
 <div class="col-span-full space-y-3" x-data="{
     isDragging: false,
+    showError: true,
     disabled: {{ $disabled ? 'true' : 'false' }},
     formatSize(bytes) {
         if (bytes >= 1048576) return (bytes / 1048576).toFixed(1) + ' MB';
@@ -31,7 +32,9 @@
     }
 }" @dragover.prevent="if (!disabled) isDragging = true"
     @dragleave.prevent="if (!disabled) isDragging = false"
-    @drop.prevent="if (!disabled) { isDragging = false; @this.uploadMultiple('{{ $name }}', $event.dataTransfer.files) }">
+    @drop.prevent="if (!disabled) { isDragging = false; showError = false; @this.uploadMultiple('{{ $name }}', $event.dataTransfer.files) }"
+    x-on:livewire-upload-start="showError = false" x-on:livewire-upload-finish="showError = true"
+    x-on:livewire-upload-error="showError = true">
     <span class="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200">
         <span class="material-symbols-outlined text-base text-slate-400">attach_file</span>
         {{ $label }}
@@ -197,7 +200,7 @@
             <p class="text-sm font-medium text-slate-700 dark:text-slate-300">
                 Kéo thả tệp vào đây hoặc <span class="text-primary">nhấp để chọn</span>
             </p>
-            <p class="text-xs text-slate-400">JPG, PNG, PDF, DOCX, ZIP... (tối đa 25MB / tệp)</p>
+            <p class="text-xs text-slate-400">Chỉ chấp nhận: JPG, PNG, PDF (tối đa 100MB / tệp)</p>
             <input class="hidden" type="file" wire:model="{{ $name }}"
                 @if ($multiple) multiple @endif
                 @if ($accept) accept="{{ $accept }}" @endif />
@@ -205,5 +208,24 @@
     </div>
     <div class="text-primary animate-pulse text-xs" wire:loading wire:target="{{ $name }}">
         Đang tải tệp lên máy chủ...
+    </div>
+
+    {{-- Hiển thị lỗi upload --}}
+    <div x-show="showError" x-transition.opacity>
+        @error($name)
+            <div
+                class="animate-in fade-in slide-in-from-top-1 mt-1 flex items-center gap-1.5 text-xs font-medium text-red-500 duration-200">
+                <span class="material-symbols-outlined text-sm">error</span>
+                <span>{{ $message }}</span>
+            </div>
+        @enderror
+
+        @error($name . '.*')
+            <div
+                class="animate-in fade-in slide-in-from-top-1 mt-1 flex items-center gap-1.5 text-xs font-medium text-red-500 duration-200">
+                <span class="material-symbols-outlined text-sm">error</span>
+                <span>{{ $message }}</span>
+            </div>
+        @enderror
     </div>
 </div>
