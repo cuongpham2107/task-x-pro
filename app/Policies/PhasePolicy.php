@@ -32,6 +32,10 @@ class PhasePolicy
 
     public function update(User $user, Phase $phase): bool
     {
+        if ($phase->project?->status === \App\Enums\ProjectStatus::Completed) {
+            return false;
+        }
+
         if ($user->hasRole('super_admin')) {
             return true;
         }

@@ -40,6 +40,10 @@ class TaskPolicy
 
     public function update(User $user, Task $task): bool
     {
+        if ($task->phase?->project?->status === \App\Enums\ProjectStatus::Completed) {
+            return false;
+        }
+
         if (! $user->can('task.update')) {
             return false;
         }
@@ -61,6 +65,10 @@ class TaskPolicy
 
     public function delete(User $user, Task $task): bool
     {
+        if ($task->phase?->project?->status === \App\Enums\ProjectStatus::Completed) {
+            return false;
+        }
+
         if (! $user->can('task.delete')) {
             return false;
         }
@@ -88,6 +96,10 @@ class TaskPolicy
 
     public function assign(User $user, Task $task): bool
     {
+        if ($task->phase?->project?->status === \App\Enums\ProjectStatus::Completed) {
+            return false;
+        }
+
         if (! $user->can('task.assign')) {
             return false;
         }
@@ -105,6 +117,10 @@ class TaskPolicy
 
     public function approve(User $user, Task $task): bool
     {
+        if ($task->phase?->project?->status === \App\Enums\ProjectStatus::Completed) {
+            return false;
+        }
+
         if (! $user->can('task.approve')) {
             return false;
         }

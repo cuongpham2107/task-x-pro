@@ -39,10 +39,16 @@ it('allows ceo to update and delete project', function () {
     $ceo = User::factory()->create();
     $ceo->assignRole('ceo');
 
-    $project = Project::factory()->create();
+    // Case 1: Active project (init) - should allow as creator
+    $project = Project::factory()->create(['created_by' => $ceo->id]);
 
     expect($ceo->can('update', $project))->toBeTrue();
     expect($ceo->can('delete', $project))->toBeTrue();
+
+    // Case 2: Completed project - should NOT allow even as creator
+    $project->update(['status' => \App\Enums\ProjectStatus::Completed]);
+    expect($ceo->can('update', $project))->toBeFalse();
+    expect($ceo->can('delete', $project))->toBeFalse();
 });
 
 it('allows leader to update project', function () {
@@ -52,6 +58,10 @@ it('allows leader to update project', function () {
     $project = Project::factory()->create();
 
     expect($leader->can('update', $project))->toBeTrue();
+
+    // Completed project - should NOT allow even if leader
+    $project->update(['status' => \App\Enums\ProjectStatus::Completed]);
+    expect($leader->can('update', $project))->toBeFalse();
 });
 
 it('allows leader to delete project only when leader is creator', function () {
@@ -68,6 +78,10 @@ it('allows leader to delete project only when leader is creator', function () {
 
     expect($leader->can('delete', $projectCreatedByLeader))->toBeTrue();
     expect($leader->can('delete', $projectCreatedByOther))->toBeFalse();
+
+    // Completed project - should NOT allow delete even if leader & creator
+    $projectCreatedByLeader->update(['status' => \App\Enums\ProjectStatus::Completed]);
+    expect($leader->can('delete', $projectCreatedByLeader))->toBeFalse();
 });
 
 it('allows pic to view but not update or delete project', function () {

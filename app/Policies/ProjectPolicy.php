@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Enums\ProjectStatus;
 use App\Models\Project;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
@@ -56,6 +57,10 @@ class ProjectPolicy
 
     public function update(User $user, Project $project): bool
     {
+        if ($project->status === ProjectStatus::Completed) {
+            return false;
+        }
+
         if (! $user->can('project.update')) {
             return false;
         }
@@ -73,6 +78,10 @@ class ProjectPolicy
 
     public function delete(User $user, Project $project): bool
     {
+        if ($project->status === ProjectStatus::Completed) {
+            return false;
+        }
+
         if (! $user->can('project.delete')) {
             return false;
         }

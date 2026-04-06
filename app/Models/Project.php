@@ -112,6 +112,10 @@ class Project extends Model
      */
     public function refreshProgressFromPhases(): void
     {
+        if ($this->status === ProjectStatus::Completed) {
+            return;
+        }
+
         $weightedProgress = (float) $this->phases()
             ->selectRaw('COALESCE(SUM(progress * weight / 100.0), 0) as weighted_progress')
             ->value('weighted_progress');

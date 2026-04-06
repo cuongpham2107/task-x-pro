@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Phase;
+use App\Models\Project;
 use App\Models\ProjectLeader;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -35,17 +36,25 @@ it('allows ceo to update and delete phase', function () {
     $ceo = User::factory()->create();
     $ceo->assignRole('ceo');
 
-    $phase = Phase::factory()->create();
+    // Case 1: Active project - CEO must also be creator of phase to pass existing policy
+    $project = Project::factory()->create(['created_by' => $ceo->id, 'status' => 'init']);
+    $phase = Phase::factory()->create(['project_id' => $project->id, 'created_by' => $ceo->id]);
 
     expect($ceo->can('update', $phase))->toBeTrue();
     expect($ceo->can('delete', $phase))->toBeTrue();
+
+    // Case 2: Completed project - deny
+    $project->update(['status' => \App\Enums\ProjectStatus::Completed]);
+    expect($ceo->can('update', $phase))->toBeFalse();
+    expect($ceo->can('delete', $phase))->toBeFalse();
 });
 
 it('allows leader in project to update and delete phase', function () {
     $leader = User::factory()->create();
     $leader->assignRole('leader');
 
-    $phase = Phase::factory()->create();
+    $project = Project::factory()->create(['status' => 'init']);
+    $phase = Phase::factory()->create(['project_id' => $project->id]);
 
     ProjectLeader::factory()->create([
         'project_id' => $phase->project_id,
@@ -55,6 +64,11 @@ it('allows leader in project to update and delete phase', function () {
 
     expect($leader->can('update', $phase))->toBeTrue();
     expect($leader->can('delete', $phase))->toBeTrue();
+
+    // Completed project - should NOT allow
+    $project->update(['status' => \App\Enums\ProjectStatus::Completed]);
+    expect($leader->can('update', $phase))->toBeFalse();
+    expect($leader->can('delete', $phase))->toBeFalse();
 });
 
 it('allows leader to update and delete phase even when not assigned to project', function () {
