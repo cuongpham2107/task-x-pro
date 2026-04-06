@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Models\Phase;
 use App\Models\Task;
 use App\Models\User;
 
@@ -29,8 +30,12 @@ class TaskPolicy
         return $this->isExecutionParticipant($user, $task);
     }
 
-    public function create(User $user): bool
+    public function create(User $user, ?Phase $phase = null): bool
     {
+        if ($phase?->project?->status === \App\Enums\ProjectStatus::Completed) {
+            return false;
+        }
+
         if ($user->hasRole('ceo')) {
             return false;
         }

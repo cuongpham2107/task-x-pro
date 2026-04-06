@@ -2,7 +2,9 @@
 
 namespace App\Policies;
 
+use App\Enums\ProjectStatus;
 use App\Models\Phase;
+use App\Models\Project;
 use App\Models\User;
 
 class PhasePolicy
@@ -21,8 +23,12 @@ class PhasePolicy
         return $user->can('view', $phase->project);
     }
 
-    public function create(User $user): bool
+    public function create(User $user, ?Project $project = null): bool
     {
+        if ($project?->status === ProjectStatus::Completed) {
+            return false;
+        }
+
         if ($user->hasRole('ceo')) {
             return false;
         }

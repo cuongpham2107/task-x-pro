@@ -181,11 +181,11 @@ new class extends Component {
             <div class="mr-4">
                 <x-ui.avatar-stack :users="$this->members" :max="5" :size="10" placement="bottom" />
             </div>
-            @if (auth()->user()?->can('create', App\Models\Task::class) && auth()->user()?->can('update', $project))
+            @can('create', [App\Models\Task::class, $phase])
                 <x-ui.button icon="add" size="sm" @click="$dispatch('task-create-requested')">
                     Thêm công việc
                 </x-ui.button>
-            @endif
+            @endcan
         </div>
     </div>
 

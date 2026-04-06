@@ -394,7 +394,7 @@ new #[Title('Quản lý giai đoạn')] class extends Component
                 </x-ui.button>
             @endcan
 
-            @can('create', App\Models\Phase::class)
+            @can('create', [App\Models\Phase::class, $project])
                 <x-ui.button icon="add" size="sm" wire:click="$dispatch('phase-create-requested')">
                     Thêm giai đoạn
                 </x-ui.button>
