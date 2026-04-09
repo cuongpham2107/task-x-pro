@@ -11,7 +11,8 @@ use Livewire\Attributes\On;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 
-new class extends Component {
+new class extends Component
+{
     public bool $showFormModal = false;
 
     public string $mode = 'create';
@@ -42,7 +43,7 @@ new class extends Component {
 
     public function updatedStartDate(): void
     {
-        if (!$this->is_phase || $this->startDate === '' || $this->startDate === null) {
+        if (! $this->is_phase || $this->startDate === '' || $this->startDate === null) {
             return;
         }
 
@@ -115,7 +116,7 @@ new class extends Component {
         $this->endDate = $project->end_date instanceof Carbon ? $project->end_date->toDateString() : '';
         $this->objective = (string) ($project->objective ?? '');
         $this->budget = $project->budget !== null ? (string) $project->budget : '';
-        $this->leaderIds = $project->leaders()->pluck('users.id')->map(fn($id) => (int) $id)->values()->all();
+        $this->leaderIds = $project->leaders()->pluck('users.id')->map(fn ($id) => (int) $id)->values()->all();
         $this->is_phase = false; // Reset phase toggle on edit
 
         $this->showFormModal = true;
@@ -179,7 +180,7 @@ new class extends Component {
             $this->resetFormModal();
             $this->dispatch('project-saved');
         } catch (\Exception $e) {
-            $this->dispatch('toast', message: 'Lỗi: ' . $e->getMessage(), type: 'error');
+            $this->dispatch('toast', message: 'Lỗi: '.$e->getMessage(), type: 'error');
         }
     }
 
@@ -240,6 +241,17 @@ new class extends Component {
 
             $this->validate();
 
+            if ($this->is_phase && $this->templateTotalDays > 0 && $this->startDate && $this->endDate) {
+                $start = Carbon::parse($this->startDate)->startOfDay();
+                $end = Carbon::parse($this->endDate)->startOfDay();
+
+                if ($start->diffInDays($end) < $this->templateTotalDays) {
+                    $this->addError('endDate', 'Ngày kết thúc phải cách ngày bắt đầu tối thiểu '.$this->templateTotalDays.' ngày để đảm bảo thời gian cho các giai đoạn mẫu.');
+
+                    return;
+                }
+            }
+
             $projectService = app(ProjectService::class);
             $attributes = [
                 'name' => $this->name,
@@ -256,7 +268,6 @@ new class extends Component {
             if ($this->mode === 'create') {
                 $phasePayloads = $this->is_phase ? null : [];
             }
-
 
             if ($this->mode === 'edit' && $this->editingProjectId !== null) {
                 $project = $projectService->findForEdit(auth()->user(), $this->editingProjectId);
@@ -282,11 +293,11 @@ new class extends Component {
         } catch (ValidationException $e) {
             \Log::error('Validation failed', ['errors' => $e->validator->errors()->toArray()]);
             $this->setErrorBag($e->validator->errors());
-            $this->dispatch('toast', message: 'Vui lòng kiểm tra lại thông tin! ' . $e->getMessage(), type: 'error');
+            $this->dispatch('toast', message: 'Vui lòng kiểm tra lại thông tin! '.$e->getMessage(), type: 'error');
         } catch (\Exception $e) {
             \Log::error('Project save failed', ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
-            session()->flash('error', 'Có lỗi xảy ra: ' . $e->getMessage());
-            $this->dispatch('toast', message: 'Có lỗi xảy ra: ' . $e->getMessage(), type: 'error');
+            session()->flash('error', 'Có lỗi xảy ra: '.$e->getMessage());
+            $this->dispatch('toast', message: 'Có lỗi xảy ra: '.$e->getMessage(), type: 'error');
         }
     }
 };
