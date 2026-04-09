@@ -183,19 +183,25 @@ new #[Title('Quản lý giai đoạn')] class extends Component
     #[Computed]
     public function projectStart(): string
     {
-        $phases = $this->phases;
-        $starts = $phases->map(fn ($p) => $p->start_date ? Carbon::parse($p->start_date) : null)->filter();
-
-        return $starts->isEmpty() ? '---' : $starts->min()->format('d/m/Y');
+        return $this->project->start_date ? Carbon::parse($this->project->start_date)->format('d/m/Y') : '---';
     }
 
     #[Computed]
     public function projectEnd(): string
     {
-        $phases = $this->phases;
-        $ends = $phases->map(fn ($p) => $p->end_date ? Carbon::parse($p->end_date) : null)->filter();
+        return $this->project->end_date ? Carbon::parse($this->project->end_date)->format('d/m/Y') : '---';
+    }
 
-        return $ends->isEmpty() ? '---' : $ends->max()->format('d/m/Y');
+    #[Computed]
+    public function isPhaseEndEarlier(): bool
+    {
+        $phases = $this->phases;
+        $phaseEnds = $phases->map(fn ($p) => $p->end_date ? Carbon::parse($p->end_date) : null)->filter();
+
+        $phaseEndMax = $phaseEnds->max();
+        $projEndCarbon = $this->project->end_date ? Carbon::parse($this->project->end_date) : null;
+
+        return $phaseEndMax && $projEndCarbon && $phaseEndMax->startOfDay()->lt($projEndCarbon->startOfDay());
     }
 
     /**
@@ -427,11 +433,21 @@ new #[Title('Quản lý giai đoạn')] class extends Component
         </div>
         {{-- Thời gian bắt đầu và kết thúc dự án --}}
         <div
-            class="flex flex-col gap-1 rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
+            @class([
+                'flex flex-col gap-1 rounded-xl border p-5',
+                'border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/30' => $this->isPhaseEndEarlier,
+                'border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900' => ! $this->isPhaseEndEarlier,
+            ])>
             <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Thời gian bắt đầu và kết thúc dự án</p>
-            <div class="flex items-baseline gap-2">
+            <div class="flex flex-col gap-1">
                 <span class="text-2xl font-bold text-slate-600 dark:text-white">{{ $this->projectStart }} -
                     {{ $this->projectEnd }}</span>
+                @if($this->isPhaseEndEarlier)
+                    <p class="mt-1 flex items-center gap-1 text-xs font-semibold text-amber-600 dark:text-amber-400">
+                        <span class="material-symbols-rounded text-[16px]">warning</span>
+                        Thời gian kết thúc cuối cùng của phase sớm hơn dự kiến của dự án
+                    </p>
+                @endif
             </div>
         </div>
         {{-- Phase count --}}
