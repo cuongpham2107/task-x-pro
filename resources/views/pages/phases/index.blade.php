@@ -444,7 +444,7 @@ new #[Title('Quản lý giai đoạn')] class extends Component
                     {{ $this->projectEnd }}</span>
                 @if($this->isPhaseEndEarlier)
                     <p class="mt-1 flex items-center gap-1 text-xs font-semibold text-amber-600 dark:text-amber-400">
-                        <span class="material-symbols-rounded text-[16px]">warning</span>
+                        <span class="material-symbols-outlined text-[16px]">warning</span>
                         Thời gian kết thúc cuối cùng của phase sớm hơn dự kiến của dự án
                     </p>
                 @endif
