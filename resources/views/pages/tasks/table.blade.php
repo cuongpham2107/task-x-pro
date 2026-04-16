@@ -38,6 +38,9 @@ new #[Title('Công việc')] class extends Component
     #[Url(as: 'my', except: false)]
     public bool $filterMyTasks = false;
 
+    #[Url(as: 'time', except: '')]
+    public ?string $filterTime = null;
+
     #[Url(as: 'sort', except: 'deadline')]
     public string $sortBy = 'deadline';
 
@@ -90,6 +93,11 @@ new #[Title('Công việc')] class extends Component
     }
 
     public function updatedFilterMyTasks(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedFilterTime(): void
     {
         $this->resetPage();
     }
@@ -155,6 +163,7 @@ new #[Title('Công việc')] class extends Component
                 'phase_id' => $this->filterPhaseId,
                 'pic_id' => $this->filterPicId,
                 'my_tasks' => $this->filterMyTasks,
+                'time' => $this->filterTime,
             ],
             12,
             $this->sortBy,
@@ -260,6 +269,16 @@ new #[Title('Công việc')] class extends Component
             <div class="shrink-0">
                 <x-ui.filter-select model="filterPriority" :value="$filterPriority" label="Ưu tiên" icon="flag"
                     all-label="Tất cả ưu tiên" width="w-40" drop-width="w-48" :options="App\Enums\TaskPriority::options()" />
+            </div>
+
+            <div class="shrink-0">
+                <x-ui.filter-select model="filterTime" :value="$filterTime" label="Thời hạn" icon="calendar_today"
+                    all-label="Tất cả thời gian" width="w-40" drop-width="w-48" :options="[
+                        'this_week' => 'Trong tuần này',
+                        'this_month' => 'Tháng này',
+                        'this_quarter' => 'Quý này',
+                        'this_year' => 'Năm nay',
+                    ]" />
             </div>
 
             <div class="shrink-0">

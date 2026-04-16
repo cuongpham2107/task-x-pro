@@ -20,6 +20,26 @@ services:
     networks:
       - taskxpro-network
 
+  scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: taskxpro-scheduler
+    restart: unless-stopped
+    command: php artisan schedule:work
+    environment:
+      SERVICE_NAME: scheduler
+      SERVICE_TAGS: dev
+    volumes:
+      - ./:/var/www
+      - storage:/var/www/storage
+      - bootstrap_cache:/var/www/bootstrap/cache
+      - ./php/upload.ini:/usr/local/etc/php/conf.d/upload.ini:ro
+    networks:
+      - taskxpro-network
+    depends_on:
+      - app
+
   web:
     image: nginx:alpine
     container_name: taskxpro-web

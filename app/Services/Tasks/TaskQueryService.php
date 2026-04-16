@@ -52,11 +52,11 @@ class TaskQueryService
 
         // Mặc định luôn ưu tiên sắp xếp theo status
         $query->orderByRaw("CASE
-            WHEN tasks.status = 'late' THEN 1
-            WHEN tasks.status = 'waiting_approval' THEN 2
-            WHEN tasks.status = 'in_progress' THEN 3
-            WHEN tasks.status = 'pending' THEN 4
-            WHEN tasks.status = 'completed' THEN 5
+            WHEN tasks.status = 'late' THEN 5
+            WHEN tasks.status = 'waiting_approval' THEN 1
+            WHEN tasks.status = 'in_progress' THEN 2
+            WHEN tasks.status = 'pending' THEN 3
+            WHEN tasks.status = 'completed' THEN 4
             ELSE 6 END {$statusDir}");
 
         if ($actualSort !== 'status') {
@@ -298,6 +298,37 @@ class TaskQueryService
                         $q->where('users.id', $user->id);
                     });
             });
+        }
+
+        $time = $filters['time'] ?? null;
+        if (is_string($time) && $time !== '') {
+            $now = now();
+            switch ($time) {
+                case 'this_week':
+                    $query->whereBetween('tasks.deadline', [
+                        $now->copy()->startOfWeek()->startOfDay(),
+                        $now->copy()->endOfWeek()->endOfDay()
+                    ]);
+                    break;
+                case 'this_month':
+                    $query->whereBetween('tasks.deadline', [
+                        $now->copy()->startOfMonth()->startOfDay(),
+                        $now->copy()->endOfMonth()->endOfDay()
+                    ]);
+                    break;
+                case 'this_quarter':
+                    $query->whereBetween('tasks.deadline', [
+                        $now->copy()->startOfQuarter()->startOfDay(),
+                        $now->copy()->endOfQuarter()->endOfDay()
+                    ]);
+                    break;
+                case 'this_year':
+                    $query->whereBetween('tasks.deadline', [
+                        $now->copy()->startOfYear()->startOfDay(),
+                        $now->copy()->endOfYear()->endOfDay()
+                    ]);
+                    break;
+            }
         }
     }
 }

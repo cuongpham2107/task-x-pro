@@ -258,7 +258,7 @@ Artisan::command('kpi:backfill-all {--chunk=200 : Số lượng thành viên x�
     }
 })->purpose('Backfill KPI lịch sử cho toàn bộ thành viên có dữ liệu task/KPI');
 
-Schedule::command('tasks:mark-late')->everyFiveMinutes();
+Schedule::command('tasks:mark-late')->daily()->at('07:00');
 Schedule::command('tasks:daily-reminders')->daily()->at('07:00');
 Schedule::command('reports:weekly')->weekly()->fridays()->at('17:00');
 Schedule::command('kpi:daily-sync')
