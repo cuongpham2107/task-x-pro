@@ -613,173 +613,226 @@ new #[Title('KPI toàn công ty')] class extends Component {
         $approvalOverview = $this->approvalOverview;
     @endphp
 
-    <!-- Metric Cards -->
-    <div class="animate-enter mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4" style="animation-delay: 0.2s">
-        <!-- Final Score Card -->
-        <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-            <div class="mb-4 flex items-center justify-between">
-                <div class="bg-primary/10 text-primary flex h-12 w-12 items-center justify-center rounded-full">
-                    <span class="material-symbols-outlined">star</span>
+    @php
+        $summary = $this->summary;
+        $trends = $this->trends;
+        $approvalOverview = $this->approvalOverview;
+
+        // Strategic interpretation
+        $overallTrend = $trends['avg_score']['direction'];
+        $overallTrendLabel = $trends['avg_score']['label'];
+    @endphp
+
+    <div class="animate-enter mb-8" style="animation-delay: 0.15s">
+        <x-kpi.team-summary :avg-score="$summary['avg_score']" :total-tasks="0" {{-- CEO view might focus on high level scores --}} :sla-rate="$summary['avg_sla_rate']"
+            :on-time-rate="$summary['avg_on_time_rate']" :approval-rate="$approvalOverview['approval_rate']" :trend="$overallTrend" :trend-label="$overallTrendLabel" />
+    </div>
+
+    <!-- Strategic Insights & Company Spotlight -->
+    <div class="animate-enter mb-8 grid grid-cols-1 gap-6 lg:grid-cols-3" style="animation-delay: 0.2s">
+        <!-- Strategic Performance Radar -->
+        <div
+            class="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm lg:col-span-2 dark:border-slate-800 dark:bg-slate-900">
+            <div class="mb-6 flex items-center justify-between">
+                <div>
+                    <h3 class="text-sm font-black uppercase tracking-widest text-slate-700 dark:text-white">Ma trận hiệu
+                        suất chiến lược</h3>
+                    <p class="text-xs text-slate-400">Tương quan giữa các bộ chỉ số chính toàn công ty</p>
                 </div>
-                @if ($trends['avg_score']['direction'] !== 'neutral')
-                    <span
-                        class="{{ $trends['avg_score']['direction'] === 'up' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' }} inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium">
-                        {{ $trends['avg_score']['label'] }}
-                    </span>
-                @endif
+                <div class="flex items-center gap-2 rounded-lg bg-slate-50 px-3 py-1.5 dark:bg-slate-800">
+                    <span class="material-symbols-outlined text-primary text-sm">groups</span>
+                    <span class="text-xs font-bold text-slate-600 dark:text-slate-300">Toàn công ty</span>
+                </div>
             </div>
-            <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Điểm Final Score (Avg)</p>
-            <h3 class="mt-1 text-3xl font-bold text-slate-600 dark:text-white">
-                {{ number_format($summary['avg_score'], 2) }}</h3>
-            <p class="mt-2 text-xs italic text-slate-400">Mã chỉ số: BR-002</p>
+
+            <div class="flex flex-col items-center gap-8 md:flex-row">
+                <div class="w-full max-w-[280px]">
+                    <x-kpi.radar-chart :metrics="[
+                        'Đúng hạn' => $summary['avg_on_time_rate'],
+                        'SLA' => $summary['avg_sla_rate'],
+                        'Chất lượng' => $summary['avg_star'] * 20,
+                        'Cam kết' => $approvalOverview['approval_rate'],
+                        'Ổn định' => 85,
+                    ]" :final-score="$summary['avg_score']" />
+                </div>
+                <div class="grid flex-1 grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div class="rounded-xl bg-slate-50 p-4 dark:bg-slate-800/50">
+                        <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Điểm chất lượng (Avg)
+                        </p>
+                        <p class="text-xl font-black text-slate-700 dark:text-white">
+                            {{ number_format($summary['avg_star'], 1) }}/5.0</p>
+                    </div>
+                    <div class="rounded-xl bg-slate-50 p-4 dark:bg-slate-800/50">
+                        <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Độ cam kết SLA</p>
+                        <p class="text-primary text-xl font-black">{{ number_format($summary['avg_sla_rate'], 1) }}%</p>
+                    </div>
+                    <div class="bg-primary/5 col-span-1 rounded-xl p-4 sm:col-span-2">
+                        <p class="text-primary/80 text-[10px] font-bold uppercase tracking-wider">Nhận định chiến lược
+                        </p>
+                        <p class="mt-1 text-xs leading-relaxed text-slate-600 dark:text-slate-400">
+                            Hiệu suất toàn công ty đang @if ($overallTrend === 'up')
+                                <span class="font-bold italic text-emerald-500">tăng trưởng tích cực</span>
+                            @else
+                                <span class="font-bold italic text-amber-500">giữ mức ổn định</span>
+                            @endif.
+                            Tập tập trung cải thiện <span class="text-primary font-bold">tỷ lệ đúng hạn</span> vào các
+                            giờ cao điểm để tối ưu hóa cam kết với khách hàng.
+                        </p>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <!-- On Time Rate Card -->
-        <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-            <div class="mb-4 flex items-center justify-between">
-                <div
-                    class="flex h-12 w-12 items-center justify-center rounded-full bg-teal-100 text-teal-600 dark:bg-teal-900/30 dark:text-teal-400">
-                    <span class="material-symbols-outlined">schedule</span>
+        <!-- At-Risk Departments -->
+        <div class="flex flex-col gap-6">
+            <div
+                class="rounded-2xl border border-rose-100 bg-rose-50/30 p-6 dark:border-rose-900/40 dark:bg-rose-900/10">
+                <div class="mb-4 flex items-center justify-between">
+                    <h3 class="text-xs font-black uppercase tracking-widest text-rose-700 dark:text-rose-400">Khu vực
+                        cần lưu ý</h3>
+                    <span class="material-symbols-outlined text-rose-500">warning</span>
                 </div>
-                @if ($trends['avg_on_time_rate']['direction'] !== 'neutral')
-                    <span
-                        class="{{ $trends['avg_on_time_rate']['direction'] === 'up' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' }} inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium">
-                        {{ $trends['avg_on_time_rate']['label'] }}
-                    </span>
-                @endif
+                <div class="space-y-4">
+                    @php
+                        $lowDepartments = collect($this->departmentStats->items())
+                            ->where('avg_final_score', '<', 75)
+                            ->take(2);
+                    @endphp
+                    @forelse($lowDepartments as $dept)
+                        <div
+                            class="flex items-center justify-between rounded-xl bg-white p-3 shadow-sm dark:bg-slate-800">
+                            <div>
+                                <p class="text-xs font-bold text-slate-700 dark:text-white">{{ $dept->name }}</p>
+                                <p class="text-[10px] text-rose-500">Score:
+                                    {{ number_format($dept->avg_final_score, 1) }}</p>
+                            </div>
+                            <span class="material-symbols-outlined text-rose-300">trending_down</span>
+                        </div>
+                    @empty
+                        <p class="text-xs italic text-slate-400">Tất cả phòng ban đều đạt trên 75 điểm.</p>
+                    @endforelse
+                </div>
             </div>
-            <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Tỷ lệ đúng hạn</p>
-            <h3 class="mt-1 text-3xl font-bold text-slate-600 dark:text-white">
-                {{ number_format($summary['avg_on_time_rate'], 1) }}%</h3>
-            <div class="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
-                <div class="h-full bg-teal-500" style="width: {{ min($summary['avg_on_time_rate'], 100) }}%"></div>
-            </div>
-        </div>
 
-        <!-- SLA Rate Card -->
-        <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-            <div class="mb-4 flex items-center justify-between">
-                <div
-                    class="flex h-12 w-12 items-center justify-center rounded-full bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400">
-                    <span class="material-symbols-outlined">verified</span>
+            <!-- Approval Status -->
+            <div
+                class="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                <div class="mb-4 flex items-center justify-between">
+                    <h3 class="text-xs font-black uppercase tracking-widest text-slate-500">Tiến độ phê duyệt</h3>
+                    <span class="text-primary text-xs font-black">{{ $approvalOverview['approval_rate'] }}%</span>
                 </div>
-                @if ($trends['avg_sla_rate']['direction'] !== 'neutral')
-                    <span
-                        class="{{ $trends['avg_sla_rate']['direction'] === 'up' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' }} inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium">
-                        {{ $trends['avg_sla_rate']['label'] }}
-                    </span>
-                @endif
-            </div>
-            <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Tỷ lệ đạt SLA</p>
-            <h3 class="mt-1 text-3xl font-bold text-slate-600 dark:text-white">
-                {{ number_format($summary['avg_sla_rate'], 1) }}%</h3>
-            <div class="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
-                <div class="h-full bg-orange-500" style="width: {{ min($summary['avg_sla_rate'], 100) }}%"></div>
-            </div>
-        </div>
-
-        <!-- Star Rating Card -->
-        <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-            <div class="mb-4 flex items-center justify-between">
-                <div
-                    class="flex h-12 w-12 items-center justify-center rounded-full bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400">
-                    <span class="material-symbols-outlined">thumb_up</span>
+                <div class="h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+                    <div class="bg-primary h-full rounded-full transition-all duration-1000"
+                        style="width: {{ $approvalOverview['approval_rate'] }}%"></div>
                 </div>
-                @if ($trends['avg_star']['direction'] !== 'neutral')
-                    <span
-                        class="{{ $trends['avg_star']['direction'] === 'up' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' }} inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium">
-                        {{ $trends['avg_star']['label'] }}
-                    </span>
-                @endif
-            </div>
-            <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Đánh giá sao trung bình</p>
-            <div class="mt-1 flex items-baseline gap-2">
-                <h3 class="text-3xl font-bold text-slate-600 dark:text-white">
-                    {{ number_format($summary['avg_star'], 1) }}</h3>
-                <span class="text-slate-400">/ 5.0</span>
-            </div>
-            <div class="mt-2 flex gap-0.5 text-amber-400">
-                @for ($i = 1; $i <= 5; $i++)
-                    <span class="material-symbols-outlined text-sm">
-                        {{ $summary['avg_star'] >= $i ? 'star' : ($summary['avg_star'] >= $i - 0.5 ? 'star_half' : 'star_outline') }}
-                    </span>
-                @endfor
+                <p class="mt-4 text-[11px] text-slate-400">
+                    {{ $approvalOverview['approved'] }}/{{ $approvalOverview['total'] }} bản ghi đã được chốt và duyệt
+                    bởi các cấp Leader.
+                </p>
             </div>
         </div>
     </div>
 
+
     <div class="grid grid-cols-4 gap-4">
-        <!-- Department Table -->
-        <div class="animate-enter col-span-3 mb-8 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900"
+        <div class="animate-enter col-span-3 mb-8 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900"
             style="animation-delay: 0.26s">
-            <div class="flex items-center justify-between border-b border-slate-100 p-4 dark:border-slate-800">
-                <h3 class="text-lg font-bold text-slate-600 dark:text-white">Hiệu suất theo phòng ban</h3>
-                <div class="flex items-center gap-4">
+            <div class="flex items-center justify-between border-b border-slate-100 p-6 dark:border-slate-800">
+                <div>
+                    <h3 class="text-base font-black text-slate-800 dark:text-white">Bảng xếp hạng phòng ban</h3>
+                    <p class="text-xs text-slate-400">Dữ liệu hiệu suất trung bình theo từng bộ phận</p>
+                </div>
+                <div class="flex items-center gap-3">
                     <button wire:click="exportExcel('xlsx')"
-                        class="flex items-center gap-1.5 text-sm font-semibold text-emerald-600 transition-colors hover:text-emerald-700 dark:text-emerald-400">
-                        <span class="material-symbols-outlined text-lg">table_view</span>
-                        Excel
+                        class="flex size-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 transition-all hover:bg-emerald-600 hover:text-white dark:bg-emerald-900/20">
+                        <span class="material-symbols-outlined text-[20px]">table_view</span>
                     </button>
-                    <div class="h-4 w-px bg-slate-200 dark:bg-slate-700"></div>
                     <button wire:click="exportExcel('pdf')"
-                        class="flex items-center gap-1.5 text-sm font-semibold text-rose-600 transition-colors hover:text-rose-700 dark:text-rose-400">
-                        <span class="material-symbols-outlined text-lg">picture_as_pdf</span>
-                        PDF
+                        class="flex size-9 items-center justify-center rounded-xl bg-rose-50 text-rose-600 transition-all hover:bg-rose-600 hover:text-white dark:bg-rose-900/20">
+                        <span class="material-symbols-outlined text-[20px]">picture_as_pdf</span>
                     </button>
                 </div>
             </div>
             <div class="overflow-x-auto">
-                <table class="w-full border-collapse text-left">
+                <table class="w-full border-collapse text-left text-sm">
                     <thead>
-                        <tr class="bg-slate-50 dark:bg-slate-800/50">
-                            <th class="px-6 py-4 text-xs font-bold uppercase text-slate-500">Phòng ban</th>
-                            <th class="px-6 py-4 text-xs font-bold uppercase text-slate-500">Trưởng bộ phận</th>
-                            <th class="px-6 py-4 text-center text-xs font-bold uppercase text-slate-500">Nhân sự</th>
-                            <th class="px-6 py-4 text-center text-xs font-bold uppercase text-slate-500">Avg Final Score
-                            </th>
-                            <th class="px-6 py-4 text-center text-xs font-bold uppercase text-slate-500">SLA %</th>
-                            <th class="px-6 py-4 text-right text-xs font-bold uppercase text-slate-500">Trạng thái</th>
+                        <tr
+                            class="bg-slate-50 text-[10px] font-black uppercase tracking-widest text-slate-500 dark:bg-slate-800/50">
+                            <th class="px-6 py-4">Phòng ban</th>
+                            <th class="px-6 py-4">Quản lý</th>
+                            <th class="px-4 py-4 text-center">Quy mô</th>
+                            <th class="px-6 py-4 text-center">Avg Score</th>
+                            <th class="px-6 py-4 text-center">SLA Met</th>
+                            <th class="px-6 py-4 text-right">Phân loại</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-                        @forelse ($this->departmentStats as $department)
+                        @forelse ($this->departmentStats as $index => $department)
                             @php
                                 $avgFinal = (float) ($department->avg_final_score ?? 0);
                                 $avgSla = (float) ($department->avg_sla_rate ?? 0);
                                 $statusMeta = $this->departmentStatusMeta($avgFinal);
+
+                                $scoreColor = match (true) {
+                                    $avgFinal >= 85 => 'text-emerald-600',
+                                    $avgFinal >= 75 => 'text-primary',
+                                    $avgFinal >= 60 => 'text-amber-600',
+                                    default => 'text-rose-600',
+                                };
                             @endphp
-                            <tr class="transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/30">
-                                <td class="px-6 py-4 font-semibold text-slate-600 dark:text-white">
-                                    {{ $department->name }}
-                                    <p class="text-2xs font-normal text-slate-400">{{ $department->code }}</p>
+                            <tr class="group transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center gap-3">
+                                        <div
+                                            class="flex size-10 items-center justify-center rounded-xl bg-slate-100 font-black text-slate-400 dark:bg-slate-800">
+                                            {{ $department->code }}
+                                        </div>
+                                        <span
+                                            class="font-bold text-slate-700 dark:text-white">{{ $department->name }}</span>
+                                    </div>
                                 </td>
-                                <td class="px-6 py-4 text-slate-700 dark:text-slate-300">
-                                    {{ $department->head?->name ?? '—' }}
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center gap-2">
+                                        @if ($department->head?->avatar)
+                                            <img src="{{ $department->head->avatar }}"
+                                                class="size-6 rounded-full object-cover" />
+                                        @endif
+                                        <span
+                                            class="text-xs text-slate-600 dark:text-slate-300">{{ $department->head?->name ?? '—' }}</span>
+                                    </div>
                                 </td>
-                                <td class="px-6 py-4 text-center text-slate-700 dark:text-slate-300">
-                                    {{ $department->active_users_count }}
+                                <td class="px-4 py-4 text-center">
+                                    <span
+                                        class="rounded-lg bg-slate-50 px-2.5 py-1 text-xs font-bold text-slate-500 dark:bg-slate-800">
+                                        {{ $department->active_users_count }}
+                                    </span>
                                 </td>
                                 <td class="px-6 py-4 text-center">
-                                    <span class="text-primary font-bold">{{ number_format($avgFinal, 2) }}</span>
+                                    <div class="flex flex-col items-center gap-1">
+                                        <span
+                                            class="{{ $scoreColor }} text-lg font-black">{{ number_format($avgFinal, 1) }}</span>
+                                        <div class="h-1 w-16 rounded-full bg-slate-100 dark:bg-slate-800">
+                                            <div class="bg-primary h-full rounded-full"
+                                                style="width: {{ $avgFinal }}%"></div>
+                                        </div>
+                                    </div>
                                 </td>
                                 <td class="px-6 py-4 text-center">
                                     <span
-                                        class="{{ $avgSla >= 90 ? 'text-green-600' : ($avgSla >= 75 ? 'text-blue-600' : 'text-orange-600') }}">
-                                        {{ number_format($avgSla, 1) }}%
-                                    </span>
+                                        class="text-xs font-black text-slate-600 dark:text-slate-300">{{ number_format($avgSla, 1) }}%</span>
                                 </td>
                                 <td class="px-6 py-4 text-right">
                                     <span
-                                        class="{{ $statusMeta['bg'] }} {{ $statusMeta['text'] }} inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium">
+                                        class="{{ $statusMeta['bg'] }} {{ $statusMeta['text'] }} inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-wider">
+                                        <div class="size-1.5 rounded-full bg-current opacity-50"></div>
                                         {{ $statusMeta['label'] }}
                                     </span>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="px-6 py-8 text-center text-slate-500">Chưa có dữ liệu phòng
-                                    ban.
-                                </td>
+                                <td colspan="6" class="px-6 py-12 text-center italic text-slate-400">Chưa có dữ
+                                    liệu phòng ban trong kỳ này.</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -791,6 +844,7 @@ new #[Title('KPI toàn công ty')] class extends Component {
                 </div>
             @endif
         </div>
+
         <div class="animate-enter col-span-1 mb-8 grid grid-cols-1 gap-8" style="animation-delay: 0.3s">
             <div
                 class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">

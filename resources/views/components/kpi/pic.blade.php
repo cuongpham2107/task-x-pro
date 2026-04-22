@@ -501,208 +501,133 @@ new class extends Component
             <p class="mt-2 text-xs font-semibold text-sky-700 dark:text-sky-300">Trạng thái hiện tại: {{ $nextAction }}</p>
         </div>
         <!-- Score Cards Grid -->
-        <div class="animate-enter grid grid-cols-1 gap-6 md:grid-cols-3" style="animation-delay: 0.2s">
+        <div class="animate-enter grid grid-cols-1 gap-6 lg:grid-cols-4" style="animation-delay: 0.2s">
             <!-- Main Score Card -->
-            <div
-                class="relative overflow-hidden rounded-2xl border border-slate-100 bg-white p-6 shadow-xl shadow-slate-200/50 md:col-span-2 dark:border-slate-700 dark:bg-slate-800 dark:shadow-none">
-                <div class="bg-primary/5 absolute right-0 top-0 h-32 w-32 rounded-bl-full"></div>
+            <div class="relative overflow-hidden rounded-2xl border border-slate-100 bg-white p-8 shadow-xl shadow-slate-200/50 lg:col-span-3 dark:border-slate-700 dark:bg-slate-800 dark:shadow-none">
+                <div class="absolute right-0 top-0 h-40 w-40 rounded-bl-full bg-primary/5 dark:bg-primary/10"></div>
+
                 <div class="relative z-10 flex h-full flex-col justify-between">
-                    <div class="flex items-start justify-between">
-                        <div>
-                            <p class="text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
-                                Điểm thực tế kỳ này</p>
-                            <h3 class="mt-2 text-6xl font-black text-slate-600 dark:text-white">
-                                {{ number_format($actualScore, 1) }}
-                                <span class="text-2xl text-slate-400">/{{ number_format($targetScore, 0) }}</span>
-                            </h3>
+                    <div class="flex flex-col justify-between gap-6 md:flex-row md:items-start">
+                        <div class="space-y-2">
+                            <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">Hiệu suất thực tế kỳ này</p>
+                            <div class="flex items-baseline gap-3">
+                                <h3 class="text-7xl font-black tracking-tight text-slate-800 dark:text-white">
+                                    {{ number_format($actualScore, 1) }}
+                                </h3>
+                                <span class="text-2xl font-bold text-slate-300 dark:text-slate-600">/ {{ number_format($targetScore, 0) }}</span>
+                            </div>
+
+                            <div class="mt-4 flex flex-wrap gap-3">
+                                <div class="flex items-center gap-1.5 rounded-full bg-slate-50 px-3 py-1 dark:bg-slate-900/50">
+                                    <span class="size-2 rounded-full bg-primary"></span>
+                                    <span class="text-[11px] font-bold text-slate-600 dark:text-slate-400">Target: {{ $targetScore }}</span>
+                                </div>
+                                @if($teamAvg > 0)
+                                    <div class="flex items-center gap-1.5 rounded-full bg-slate-50 px-3 py-1 dark:bg-slate-900/50">
+                                        <span class="size-2 rounded-full {{ $delta >= 0 ? 'bg-emerald-500' : 'bg-rose-500' }}"></span>
+                                        <span class="text-[11px] font-bold text-slate-600 dark:text-slate-400">So với Team: {{ $deltaLabel }}</span>
+                                    </div>
+                                @endif
+                            </div>
                         </div>
-                        <div class="flex flex-col items-end gap-2">
-                            <span class="{{ $statusClass }} rounded-full px-3 py-1.5 text-xs font-bold uppercase">
-                                {{ $statusLabel }}
-                            </span>
-                            <span class="text-right text-[10px] italic text-slate-400">{{ $statusHint }}</span>
-                            @if ($score?->approved_at)
-                                <span class="text-[10px] text-slate-400">
-                                    Duyệt: {{ $score->approved_at->format('d/m/Y') }}
+
+                        <div class="flex flex-col items-end gap-3">
+                            <div class="flex flex-col items-end">
+                                <span class="{{ $statusClass }} rounded-xl px-4 py-2 text-xs font-black uppercase tracking-wider shadow-sm">
+                                    {{ $statusLabel }}
                                 </span>
+                                <p class="mt-2 text-right text-[10px] font-medium italic text-slate-400 dark:text-slate-500">{{ $statusHint }}</p>
+                            </div>
+                            @if ($score?->approved_at)
+                                <div class="flex items-center gap-2 rounded-lg bg-emerald-50/50 px-3 py-1.5 text-emerald-600 dark:bg-emerald-900/10 dark:text-emerald-400">
+                                    <span class="material-symbols-outlined text-[16px]">verified</span>
+                                    <span class="text-[10px] font-bold uppercase">{{ $score->approved_at->format('d/m/Y') }}</span>
+                                </div>
                             @endif
                         </div>
                     </div>
-                    <div class="mt-8">
-                        <div class="h-3 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-700">
-                            <div class="bg-primary h-full rounded-full" style="width: {{ $progressWidth }}%"></div>
+
+                    <div class="mt-12">
+                        @php
+                            $progressWidth = min(100, $actualScore);
+                        @endphp
+                        <div class="group relative h-4 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-700">
+                            <!-- Background gradient for the bar -->
+                            <div class="absolute inset-0 bg-linear-to-r from-rose-500/20 via-amber-500/20 to-emerald-500/20 opacity-30"></div>
+                            <!-- Actual progress -->
+                            <div class="absolute left-0 top-0 h-full rounded-full bg-primary transition-all duration-1000 ease-out" style="width: {{ $progressWidth }}%">
+                                <div class="absolute inset-0 bg-[linear-gradient(45deg,rgba(255,255,255,0.15)_25%,transparent_25%,transparent_50%,rgba(255,255,255,0.15)_50%,rgba(255,255,255,0.15)_75%,transparent_75%,transparent)] bg-size-[1rem_1rem] animate-[shimmer_2s_linear_infinite]"></div>
+                            </div>
                         </div>
-                        <div class="mt-2 flex justify-between text-[10px] font-bold uppercase text-slate-400">
-                            <span>Cần cố gắng (0-60)</span>
-                            <span>Đạt yêu cầu (60-80)</span>
-                            <span class="text-primary">Xuất sắc (80-100)</span>
+                        <div class="mt-4 grid grid-cols-3 text-[10px] font-black uppercase tracking-widest">
+                            <div class="text-rose-500/70 dark:text-rose-500/50">Cần cố gắng</div>
+                            <div class="text-center text-amber-500/70 dark:text-amber-500/50">Đạt yêu cầu</div>
+                            <div class="text-right text-emerald-500">Xuất sắc</div>
                         </div>
                     </div>
                 </div>
             </div>
-            <!-- Secondary Stats -->
-            <div class="space-y-4">
-                <div class="bg-primary shadow-primary/20 rounded-2xl p-6 text-white shadow-xl">
-                    <p class="text-primary-foreground/70 text-xs font-bold uppercase tracking-widest opacity-80">Xếp
-                        loại dự kiến</p>
-                    <h3 class="mt-1 text-3xl font-black uppercase">{{ $gradeLabel }}</h3>
-                    <p class="mt-4 text-sm italic leading-relaxed opacity-90">
-                        {{ $finalScore >= 80 ? 'Hiệu suất rất tốt. Hãy tiếp tục giữ vững các chỉ số.' : ($finalScore >= 60 ? 'Hiệu suất ổn định, có thể cải thiện thêm.' : 'Cần ưu tiên cải thiện các chỉ số trọng yếu.') }}
-                    </p>
-                </div>
-                <div
-                    class="flex items-center justify-between rounded-2xl border border-slate-100 bg-white p-6 dark:border-slate-700 dark:bg-slate-800">
-                    <div>
-                        <p class="text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">So với
-                            trung bình Team</p>
-                        <p class="{{ $deltaClass }} mt-1 text-2xl font-bold">{{ $deltaLabel }}</p>
-                    </div>
-                    <div class="bg-primary/10 text-primary flex size-12 items-center justify-center rounded-xl">
-                        <span class="material-symbols-outlined">groups</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <!-- Formula Breakdown Section -->
-        <div class="animate-enter grid grid-cols-1 gap-8 lg:grid-cols-2" style="animation-delay: 0.3s">
-            <div class="rounded-2xl border border-slate-100 bg-white p-8 dark:border-slate-700 dark:bg-slate-800">
-                <div class="mb-8 flex items-center justify-between">
-                    <div>
-                        <h3 class="text-lg font-bold text-slate-600 dark:text-white">Chi tiết chỉ số</h3>
-                        <p class="text-sm text-slate-500">Phân rã các chỉ số thành phần cấu thành điểm số</p>
-                    </div>
-                    <span class="material-symbols-outlined text-4xl text-slate-300 dark:text-slate-600">info</span>
-                </div>
-                <div class="space-y-6">
-                    <!-- Weight 1: On-time -->
-                    <div>
-                        <div class="mb-2 flex items-center justify-between">
-                            <div class="flex items-center gap-2">
-                                <span class="bg-primary size-2 rounded-full"></span>
-                                <span class="font-bold text-slate-700 dark:text-slate-300">Đúng hạn (40%)</span>
-                            </div>
-                            <span
-                                class="font-black text-slate-600 dark:text-white">{{ number_format($onTimeRate, 1) }}/100</span>
-                        </div>
-                        <div class="h-2 w-full rounded-full bg-slate-100 dark:bg-slate-700">
-                            <div class="bg-primary h-full rounded-full" style="width: {{ $onTimeRate }}%"></div>
-                        </div>
-                    </div>
-                    <!-- Weight 2: SLA -->
-                    <div>
-                        <div class="mb-2 flex items-center justify-between">
-                            <div class="flex items-center gap-2">
-                                <span class="size-2 rounded-full bg-blue-500"></span>
-                                <span class="font-bold text-slate-700 dark:text-slate-300">SLA Xử lý (40%)</span>
-                            </div>
-                            <span
-                                class="font-black text-slate-600 dark:text-white">{{ number_format($slaRate, 1) }}/100</span>
-                        </div>
-                        <div class="h-2 w-full rounded-full bg-slate-100 dark:bg-slate-700">
-                            <div class="h-full rounded-full bg-blue-500" style="width: {{ $slaRate }}%"></div>
-                        </div>
-                    </div>
-                    <!-- Weight 3: Stars -->
-                    <div>
-                        <div class="mb-2 flex items-center justify-between">
-                            <div class="flex items-center gap-2">
-                                <span class="size-2 rounded-full bg-amber-400"></span>
-                                <span class="font-bold text-slate-700 dark:text-slate-300">Đánh giá sao (20%)</span>
-                            </div>
-                            <span
-                                class="font-black text-slate-600 dark:text-white">{{ number_format($starScore, 1) }}/100</span>
-                        </div>
-                        <div class="h-2 w-full rounded-full bg-slate-100 dark:bg-slate-700">
-                            <div class="h-full rounded-full bg-amber-400" style="width: {{ $starScore }}%"></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="mt-8 border-t border-slate-100 pt-8 dark:border-slate-700">
-                    <div class="flex items-center gap-4 rounded-xl bg-slate-50 p-4 dark:bg-slate-900/50">
-                        <span class="material-symbols-outlined text-primary">psychology</span>
-                        <p class="text-sm text-slate-600 dark:text-slate-400">
-                            <strong>Gợi ý:</strong> {{ $hintText }}
+
+            <!-- Grade Card -->
+            <div class="flex flex-col gap-6">
+                <div class="flex-1 rounded-2xl bg-linear-to-br from-primary to-orange-600 p-8 text-white shadow-xl shadow-primary/20">
+                    <p class="text-xs font-bold uppercase tracking-[0.2em] opacity-80">Xếp loại dự kiến</p>
+                    <h3 class="mt-4 text-4xl font-black uppercase tracking-tight">{{ explode(' - ', $gradeLabel)[0] }}</h3>
+                    <p class="mt-1 text-sm font-bold uppercase opacity-90">{{ @explode(' - ', $gradeLabel)[1] }}</p>
+
+                    <div class="mt-8 rounded-xl bg-white/10 p-4 backdrop-blur-sm">
+                        <p class="text-xs italic leading-relaxed text-white/90">
+                            {{ $finalScore >= 80 ? 'Bạn đang duy trì một hiệu suất tuyệt vời. Tiếp tục phát huy!' : ($finalScore >= 60 ? 'Hiệu suất ổn định. Một chút nỗ lực nữa để đạt loại A.' : 'Đã đến lúc cần bứt phá các chỉ số trọng yếu.') }}
                         </p>
                     </div>
                 </div>
             </div>
-            <!-- Radar Representation Placeholder -->
-            <div
-                class="flex flex-col items-center justify-center rounded-2xl border border-slate-100 bg-white p-8 text-center dark:border-slate-700 dark:bg-slate-800">
-                <h3 class="mb-6 self-start text-lg font-bold text-slate-600 dark:text-white">Biểu đồ chỉ số năng lực
-                </h3>
-                <div class="relative flex size-64 items-center justify-center">
-                    @php
-                        // Radar chart: 4 axes at 0°, 90°, 180°, 270° (top, right, bottom, left)
-                        // Map each metric (0–100) to a radius (0–40 in SVG units), center at 50,50
-                        $maxR = 40;
-                        $cx = 50;
-                        $cy = 50;
-                        $axes = [
-                            ['angle' => -90, 'value' => $onTimeRate], // top
-                            ['angle' => 0, 'value' => $slaRate], // right
-                            ['angle' => 90, 'value' => $starScore], // bottom
-                            ['angle' => 180, 'value' => $finalScore], // left
-                        ];
-                        $points = collect($axes)->map(function ($axis) use ($cx, $cy, $maxR) {
-                            $r = ($axis['value'] / 100) * $maxR;
-                            $rad = deg2rad($axis['angle']);
-                            return [
-                                'x' => round($cx + $r * cos($rad), 2),
-                                'y' => round($cy + $r * sin($rad), 2),
-                                'ax' => round($cx + $maxR * cos($rad), 2),
-                                'ay' => round($cy + $maxR * sin($rad), 2),
-                            ];
-                        });
-                        $polyPath = $points->map(fn($p) => $p['x'] . ' ' . $p['y'])->join(' L ');
-                        $polyPath = 'M ' . $polyPath . ' Z';
-                    @endphp
-                    <svg class="size-full overflow-visible" viewBox="0 0 100 100">
-                        {{-- Grid circles --}}
-                        @foreach ([10, 20, 30, 40] as $r)
-                            <circle cx="50" cy="50" r="{{ $r }}" fill="none"
-                                stroke="currentColor" class="text-slate-200 dark:text-slate-700"
-                                stroke-width="0.5" />
-                        @endforeach
-                        {{-- Axis lines --}}
-                        @foreach ($points as $p)
-                            <line x1="50" y1="50" x2="{{ $p['ax'] }}" y2="{{ $p['ay'] }}"
-                                stroke="currentColor" class="text-slate-200 dark:text-slate-700"
-                                stroke-width="0.5" />
-                        @endforeach
-                        {{-- Data shape --}}
-                        <path d="{{ $polyPath }}" fill="rgba(236, 91, 19, 0.2)" stroke="#ec5b13"
-                            stroke-width="2" />
-                        {{-- Data points --}}
-                        @foreach ($points as $p)
-                            <circle cx="{{ $p['x'] }}" cy="{{ $p['y'] }}" r="2.5" fill="#ec5b13" />
-                        @endforeach
-                    </svg>
+        </div>
+
+        <!-- Analytical Breakdown & Radar -->
+        <div class="animate-enter grid grid-cols-1 gap-8 lg:grid-cols-5" style="animation-delay: 0.3s">
+            <!-- Formula Infographic -->
+            <div class="lg:col-span-3">
+                <x-kpi.formula-card
+                    :on-time-rate="$onTimeRate"
+                    :sla-rate="$slaRate"
+                    :star-score="$starScore"
+                    :final-score="$finalScore"
+                    class="h-full"
+                />
+            </div>
+
+            <!-- Enhanced Radar Chart -->
+            <div class="rounded-2xl border border-slate-100 bg-white p-8 dark:border-slate-700 dark:bg-slate-800 lg:col-span-2">
+                <div class="mb-6 flex items-center justify-between">
+                    <h3 class="text-sm font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">Phân tích năng lực</h3>
+                    <span class="material-symbols-outlined text-slate-300">insights</span>
                 </div>
-                <div class="mt-8 grid w-full max-w-sm grid-cols-2 gap-4">
-                    <div class="flex items-center gap-2">
-                        <span class="bg-primary size-3 rounded-full"></span>
-                        <span class="text-xs font-medium text-slate-600 dark:text-slate-400">Đúng hạn
-                            {{ number_format($onTimeRate, 1) }}%</span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <span class="bg-primary/60 size-3 rounded-full"></span>
-                        <span class="text-xs font-medium text-slate-600 dark:text-slate-400">SLA
-                            {{ number_format($slaRate, 1) }}%</span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <span class="bg-primary/30 size-3 rounded-full"></span>
-                        <span class="text-xs font-medium text-slate-600 dark:text-slate-400">Đánh giá
-                            {{ number_format($starScore, 1) }}%</span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <span class="bg-primary/10 size-3 rounded-full"></span>
-                        <span class="text-xs font-medium text-slate-600 dark:text-slate-400">Điểm tổng
-                            {{ number_format($finalScore, 1) }}</span>
+
+                <x-kpi.radar-chart
+                    :metrics="[
+                        'Đúng hạn' => $onTimeRate,
+                        'SLA' => $slaRate,
+                        'Đánh giá' => $starScore,
+                    ]"
+                    :final-score="$finalScore"
+                    size="size-72"
+                />
+
+                <div class="mt-8 border-t border-slate-100 pt-6 dark:border-slate-700">
+                    <div class="flex items-start gap-4 rounded-xl bg-slate-50 p-4 dark:bg-slate-900/50">
+                        <span class="material-symbols-outlined text-primary">lightbulb</span>
+                        <div class="flex-1">
+                            <p class="text-[11px] font-bold uppercase text-slate-400">Gợi ý phát triển</p>
+                            <p class="mt-1 text-xs leading-relaxed text-slate-600 dark:text-slate-300">
+                                {{ $hintText }}
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
+
 
         @php
             $taskReviewItems = $this->taskReviewItems;

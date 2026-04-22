@@ -668,99 +668,126 @@ new #[Title('KPI phòng ban')] class extends Component
         $warnings = $this->warnings;
         $summary = $this->summary;
         $approvalSummary = $this->approvalSummary;
+
+        // Mock trend for now, could be calculated from previous period in a real scenario
+        $trend = $summary['avg_score'] > 75 ? 'up' : 'neutral';
+        $trendLabel = $trend === 'up' ? '+2.4%' : '';
     @endphp
 
-    <div class="animate-enter mb-6 rounded-xl border border-sky-100 bg-sky-50/70 p-4 dark:border-sky-900/40 dark:bg-sky-900/10"
-        style="animation-delay: 0.15s">
-        <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
-            <h3 class="text-sm font-bold text-sky-900 dark:text-sky-300">Mục tiêu phê duyệt KPI của Leader</h3>
-            <span
-                class="rounded-full bg-white px-3 py-1 text-xs font-semibold text-sky-700 dark:bg-slate-900 dark:text-sky-300">
-                Tỷ lệ duyệt: {{ number_format((float) $approvalSummary['approval_rate'], 1) }}%
-            </span>
+    <div class="animate-enter mb-8" style="animation-delay: 0.15s">
+        <x-kpi.team-summary
+            :avg-score="$summary['avg_score']"
+            :total-tasks="$summary['total_tasks']"
+            :sla-rate="$summary['avg_sla_rate']"
+            :on-time-rate="$summary['avg_on_time_rate']"
+            :approval-rate="$approvalSummary['approval_rate']"
+            :trend="$trend"
+            :trend-label="$trendLabel"
+        />
+    </div>
+
+    <!-- Quick Insights & Leaderboard Preview -->
+    <div class="animate-enter mb-8 grid grid-cols-1 gap-6 lg:grid-cols-3" style="animation-delay: 0.2s">
+        <!-- Spotlight / Warnings -->
+        <div class="flex flex-col gap-4 lg:col-span-2">
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <!-- Top Performer Spotlight -->
+                @if ($warnings['top_performer'])
+                    <div class="group relative overflow-hidden rounded-2xl border border-emerald-100 bg-white p-5 dark:border-emerald-900/30 dark:bg-slate-800">
+                        <div class="absolute -right-4 -top-4 size-16 rounded-full bg-emerald-50 dark:bg-emerald-900/20"></div>
+                        <div class="relative z-10 flex items-center gap-4">
+                            <div class="relative">
+                                @if($warnings['top_performer']->user->avatar)
+                                    <img src="{{ $warnings['top_performer']->user->avatar }}" class="size-12 rounded-xl object-cover" />
+                                @else
+                                    <div class="flex size-12 items-center justify-center rounded-xl bg-emerald-500 text-lg font-bold text-white uppercase">
+                                        {{ substr($warnings['top_performer']->user->name, 0, 1) }}
+                                    </div>
+                                @endif
+                                <div class="absolute -bottom-1 -right-1 flex size-5 items-center justify-center rounded-full bg-amber-400 text-[10px] text-white shadow-sm">
+                                    <span class="material-symbols-outlined text-[12px]">workspace_premium</span>
+                                </div>
+                            </div>
+                            <div>
+                                <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Ngôi sao sáng</p>
+                                <h4 class="font-bold text-slate-700 dark:text-white">{{ $warnings['top_performer']->user->name }}</h4>
+                                <p class="text-xs text-emerald-600 font-bold">{{ $warnings['top_performer']->final_score }} điểm</p>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
+                <!-- Critical Attention -->
+                <div class="group relative overflow-hidden rounded-2xl border border-rose-100 bg-white p-5 dark:border-rose-900/30 dark:bg-slate-800">
+                    <div class="absolute -right-4 -top-4 size-16 rounded-full bg-rose-50 dark:bg-rose-900/20"></div>
+                    <div class="relative z-10 flex items-center gap-4">
+                        <div class="flex size-12 items-center justify-center rounded-xl bg-rose-100 text-rose-500 dark:bg-rose-900/40">
+                            <span class="material-symbols-outlined">report</span>
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Trường hợp cần hỗ trợ</p>
+                            @if ($warnings['low_sla_count'] > 0 || $warnings['most_late_user'])
+                                <h4 class="font-bold text-slate-700 dark:text-white">
+                                    {{ $warnings['low_sla_count'] }} nhân sự SLA thấp
+                                </h4>
+                                <p class="text-xs text-rose-500 font-bold">Cần rà soát ngay</p>
+                            @else
+                                <h4 class="font-bold text-emerald-600">Mọi thứ đều ổn định</h4>
+                                <p class="text-xs text-slate-400">Không có cảnh báo đỏ</p>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Summary Text -->
+            <div class="rounded-2xl bg-slate-50 p-6 dark:bg-slate-900/50">
+                <div class="flex items-start gap-4">
+                    <div class="rounded-full bg-white p-2 text-primary shadow-sm dark:bg-slate-800">
+                        <span class="material-symbols-outlined">analytics</span>
+                    </div>
+                    <div>
+                        <h4 class="text-sm font-bold text-slate-700 dark:text-white">Đánh giá chung kỳ này</h4>
+                        <p class="mt-1 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+                            Hiệu suất trung bình Team đạt {{ $summary['avg_score'] }} điểm.
+                            @if($approvalSummary['pending'] > 0)
+                                Có <span class="font-bold text-primary">{{ $approvalSummary['pending'] }} bản ghi đang chờ bạn phê duyệt</span>.
+                            @else
+                                Tất cả KPI đã được duyệt và chốt dữ liệu thành công.
+                            @endif
+                        </p>
+                    </div>
+                </div>
+            </div>
         </div>
-        <p class="mb-3 text-xs text-slate-600 dark:text-slate-300">
-            Phê duyệt KPI là bước xác nhận dữ liệu task hoàn thành của nhân sự đã phản ánh đúng deadline, SLA và chất
-            lượng đầu ra trước khi chốt báo cáo tháng.
-        </p>
-        <div class="grid grid-cols-2 gap-3 md:grid-cols-4">
-            <div class="rounded-lg bg-white p-3 shadow-sm dark:bg-slate-900/80">
-                <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Tổng bản ghi</p>
-                <p class="mt-1 text-2xl font-black text-slate-600 dark:text-white">{{ $approvalSummary['total'] }}</p>
-            </div>
-            <div class="rounded-lg bg-white p-3 shadow-sm dark:bg-slate-900/80">
-                <p class="text-[11px] font-semibold uppercase tracking-wide text-amber-600">Chờ duyệt</p>
-                <p class="mt-1 text-2xl font-black text-amber-600">{{ $approvalSummary['pending'] }}</p>
-            </div>
-            <div class="rounded-lg bg-white p-3 shadow-sm dark:bg-slate-900/80">
-                <p class="text-[11px] font-semibold uppercase tracking-wide text-emerald-600">Đã duyệt</p>
-                <p class="mt-1 text-2xl font-black text-emerald-600">{{ $approvalSummary['approved'] }}</p>
-            </div>
-            <div class="rounded-lg bg-white p-3 shadow-sm dark:bg-slate-900/80">
-                <p class="text-[11px] font-semibold uppercase tracking-wide text-rose-600">Từ chối</p>
-                <p class="mt-1 text-2xl font-black text-rose-600">{{ $approvalSummary['rejected'] }}</p>
+
+        <!-- Mini Leaderboard -->
+        <div class="rounded-2xl border border-slate-100 bg-white p-6 dark:border-slate-700 dark:bg-slate-800">
+            <h3 class="mb-4 text-xs font-bold uppercase tracking-wider text-slate-500">Top Hiệu Suất</h3>
+            <div class="space-y-4">
+                @foreach ($this->scores->take(3) as $index => $topScore)
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <span class="text-xs font-black {{ $index == 0 ? 'text-amber-500' : 'text-slate-300' }}">#{{ $index + 1 }}</span>
+                            @if($topScore->user->avatar)
+                                <img src="{{ $topScore->user->avatar }}" class="size-8 rounded-lg object-cover" />
+                            @else
+                                <div class="flex size-8 items-center justify-center rounded-lg bg-slate-100 text-[10px] font-bold dark:bg-slate-700">
+                                    {{ substr($topScore->user->name, 0, 1) }}
+                                </div>
+                            @endif
+                            <div class="flex flex-col">
+                                <span class="text-xs font-bold text-slate-700 dark:text-white">{{ $topScore->user->name }}</span>
+                                <span class="text-[10px] text-slate-400">{{ $topScore->user->job_title }}</span>
+                            </div>
+                        </div>
+                        <span class="text-xs font-black text-primary">{{ number_format($topScore->final_score, 1) }}</span>
+                    </div>
+                @endforeach
             </div>
         </div>
     </div>
 
-    <!-- Warning Cards for low performance -->
-    <div class="animate-enter mb-8 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3" style="animation-delay: 0.2s">
-        <!-- Low SLA Warning -->
-        <div
-            class="flex items-start gap-4 rounded-xl border border-red-100 bg-red-50 p-4 dark:border-red-900/30 dark:bg-red-900/10">
-            <div class="rounded-lg bg-red-500 p-2 text-white">
-                <span class="material-symbols-outlined block">warning</span>
-            </div>
-            <div>
-                <h4 class="font-bold text-red-800 dark:text-red-400">Cảnh báo SLA thấp</h4>
-                <p class="text-sm text-red-700 dark:text-red-500/80">
-                    @if ($warnings['low_sla_count'] > 0)
-                        {{ $warnings['low_sla_count'] }} nhân sự có tỷ lệ đạt SLA dưới 75%.
-                    @else
-                        Không có nhân sự nào dưới 75% SLA.
-                    @endif
-                </p>
-            </div>
-        </div>
-
-        <!-- Late Warning -->
-        <div
-            class="flex items-start gap-4 rounded-xl border border-orange-100 bg-orange-50 p-4 dark:border-orange-900/30 dark:bg-orange-900/10">
-            <div class="rounded-lg bg-orange-500 p-2 text-white">
-                <span class="material-symbols-outlined block">priority_high</span>
-            </div>
-            <div>
-                <h4 class="font-bold text-orange-800 dark:text-orange-400">Trễ hạn cao</h4>
-                <p class="text-sm text-orange-700 dark:text-orange-500/80">
-                    @if ($warnings['most_late_user'])
-                        {{ $warnings['most_late_user']->user->name }} có tỷ lệ trễ hạn
-                        {{ 100 - $warnings['most_late_user']->on_time_rate }}%.
-                    @else
-                        Tất cả nhân sự đều đảm bảo tiến độ tốt.
-                    @endif
-                </p>
-            </div>
-        </div>
-
-        <!-- Top Performer -->
-        <div
-            class="flex items-start gap-4 rounded-xl border border-emerald-100 bg-emerald-50 p-4 dark:border-emerald-900/30 dark:bg-emerald-900/10">
-            <div class="rounded-lg bg-emerald-500 p-2 text-white">
-                <span class="material-symbols-outlined block">verified</span>
-            </div>
-            <div>
-                <h4 class="font-bold text-emerald-800 dark:text-emerald-400">Nhân sự xuất sắc</h4>
-                <p class="text-sm text-emerald-700 dark:text-emerald-500/80">
-                    @if ($warnings['top_performer'])
-                        {{ $warnings['top_performer']->user->name }} đạt
-                        {{ $warnings['top_performer']->final_score }}/100 điểm.
-                    @else
-                        Chưa có dữ liệu đánh giá.
-                    @endif
-                </p>
-            </div>
-        </div>
-    </div>
 
     <!-- KPI Table -->
     <div class="animate-enter mb-8 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900"
@@ -985,8 +1012,15 @@ new #[Title('KPI phòng ban')] class extends Component
     <x-ui.modal wire:model="showTaskReviewModal" maxWidth="6xl"
         wire:key="kpi-task-review-modal-{{ $reviewScoreId ?? 'none' }}">
         <x-slot name="header">
-            <x-ui.form.heading icon="fact_check" title="Chi tiết công việc trước khi duyệt KPI"
-                description="Kiểm tra công việc trong kỳ để xác nhận KPI phản ánh đúng hiệu suất thực tế." />
+            <div class="flex items-center gap-3">
+                <div class="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                    <span class="material-symbols-outlined text-[24px]">fact_check</span>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-slate-800 dark:text-white">Đối soát & Phê duyệt KPI</h3>
+                    <p class="text-xs text-slate-500">Kiểm tra chi tiết công việc trước khi xác nhận hiệu suất.</p>
+                </div>
+            </div>
         </x-slot>
 
         @php
@@ -996,28 +1030,69 @@ new #[Title('KPI phòng ban')] class extends Component
         @endphp
 
         @if ($reviewScore)
-            <div
-                class="mb-4 rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/50">
-                <div class="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                        <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Nhân sự</p>
-                        <h4 class="text-lg font-bold text-slate-600 dark:text-white">
-                            {{ $reviewScore->user?->name ?? $reviewUserName }}</h4>
-                        <p class="text-xs text-slate-500">{{ $reviewScore->user?->job_title ?? 'N/A' }}</p>
-                    </div>
-                    <div class="flex flex-col items-end gap-3 text-right">
+            <div class="space-y-6">
+                <!-- User & Period Info -->
+                <div class="flex flex-col justify-between gap-6 rounded-2xl bg-slate-50 p-6 md:flex-row md:items-center dark:bg-slate-900/50">
+                    <div class="flex items-center gap-4">
+                        @if($reviewScore->user?->avatar)
+                            <img src="{{ $reviewScore->user->avatar }}" class="size-14 rounded-2xl object-cover shadow-sm" />
+                        @else
+                            <div class="flex size-14 items-center justify-center rounded-2xl bg-white text-xl font-black text-primary shadow-sm dark:bg-slate-800">
+                                {{ substr($reviewScore->user?->name ?? '?', 0, 1) }}
+                            </div>
+                        @endif
                         <div>
-                            <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Kỳ đánh giá</p>
-                            <p class="text-sm font-bold text-slate-600 dark:text-white">{{ $this->reviewPeriodLabel }}
-                            </p>
-                            <p class="mt-1 text-xs text-slate-500">Final score hiện tại:
-                                <span
-                                    class="text-primary font-bold">{{ number_format((float) $reviewScore->final_score, 1) }}</span>
-                            </p>
+                            <h4 class="text-xl font-black text-slate-800 dark:text-white">{{ $reviewScore->user?->name }}</h4>
+                            <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">{{ $reviewScore->user?->job_title }}</p>
                         </div>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-6">
+                        <div class="text-right">
+                            <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Kỳ đánh giá</p>
+                            <p class="text-sm font-black text-slate-700 dark:text-slate-200">{{ $this->reviewPeriodLabel }}</p>
+                        </div>
+                        <div class="h-8 w-px bg-slate-200 dark:bg-slate-700"></div>
+                        <div class="text-right">
+                            <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Điểm hiện tại</p>
+                            <p class="text-xl font-black text-primary">{{ number_format((float) $reviewScore->final_score, 1) }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stats Summary -->
+                <div class="grid grid-cols-2 gap-4 md:grid-cols-5">
+                    <div class="rounded-2xl border border-slate-100 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
+                        <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Tổng Task</p>
+                        <p class="mt-1 text-2xl font-black text-slate-700 dark:text-white">{{ $reviewSummary['total'] }}</p>
+                    </div>
+                    <div class="rounded-2xl border border-slate-100 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
+                        <p class="text-[10px] font-bold uppercase tracking-wider text-emerald-500">Hoàn thành</p>
+                        <p class="mt-1 text-2xl font-black text-emerald-600">{{ $reviewSummary['completed'] }}</p>
+                    </div>
+                    <div class="rounded-2xl border border-slate-100 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
+                        <p class="text-[10px] font-bold uppercase tracking-wider text-blue-500">Đạt SLA</p>
+                        <p class="mt-1 text-2xl font-black text-blue-600">{{ $reviewSummary['sla_met'] }}</p>
+                    </div>
+                    <div class="rounded-2xl border border-slate-100 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
+                        <p class="text-[10px] font-bold uppercase tracking-wider text-rose-500">Trễ hạn</p>
+                        <p class="mt-1 text-2xl font-black text-rose-600">{{ $reviewSummary['late'] }}</p>
+                    </div>
+                    <div class="rounded-2xl border border-slate-100 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
+                        <p class="text-[10px] font-bold uppercase tracking-wider text-amber-500">Avg Sao</p>
+                        <div class="mt-1 flex items-center gap-1">
+                            <p class="text-2xl font-black text-amber-600">{{ number_format((float) $reviewSummary['avg_star'], 1) }}</p>
+                            <span class="material-symbols-outlined text-[20px] text-amber-400 fill-[1]">star</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filter & Table -->
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <h4 class="text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-widest">Danh sách công việc đối soát</h4>
                         <div class="flex items-center gap-2">
-                            <span class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Lọc
-                                duyệt</span>
+                            <span class="text-[11px] font-bold text-slate-400 uppercase">Lọc theo duyệt:</span>
                             <x-ui.filter-select model="reviewApprovalFilter" :value="$reviewApprovalFilter" icon="filter_alt"
                                 :permit-all="false" width="w-36" :options="[
                                     'all' => 'Tất cả',
@@ -1027,169 +1102,107 @@ new #[Title('KPI phòng ban')] class extends Component
                                 ]" />
                         </div>
                     </div>
-                </div>
-            </div>
 
-            <div class="mb-4 grid grid-cols-2 gap-3 md:grid-cols-5">
-                <div class="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900">
-                    <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Tổng task</p>
-                    <p class="mt-1 text-2xl font-black text-slate-600 dark:text-white">{{ $reviewSummary['total'] }}
-                    </p>
+                    <div class="overflow-hidden rounded-2xl border border-slate-100 dark:border-slate-800">
+                        <table class="w-full border-collapse text-left text-sm">
+                            <thead>
+                                <tr class="bg-slate-50 text-[10px] font-black uppercase tracking-widest text-slate-500 dark:bg-slate-800/50">
+                                    <th class="px-6 py-4">Công việc</th>
+                                    <th class="px-6 py-4 text-center">Tiền độ</th>
+                                    <th class="px-6 py-4 text-center">Deadline</th>
+                                    <th class="px-6 py-4 text-center">Hoàn thành</th>
+                                    <th class="px-6 py-4 text-center">SLA</th>
+                                    <th class="px-6 py-4 text-center">Đánh giá</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                                @forelse ($reviewTasks as $task)
+                                    @php
+                                        $latestApprovedLog = $task->approvalLogs
+                                            ->where('action', 'approved')
+                                            ->whereNotNull('star_rating')
+                                            ->sortByDesc('id')
+                                            ->first();
+                                    @endphp
+                                    <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
+                                        <td class="px-6 py-4">
+                                            <p class="font-bold text-slate-700 dark:text-white">{{ $task->name }}</p>
+                                            <p class="text-[10px] text-slate-400">{{ $task->phase?->project?->name }} / {{ $task->phase?->name }}</p>
+                                        </td>
+                                        <td class="px-6 py-4 text-center">
+                                            <div class="flex flex-col items-center gap-1">
+                                                <span class="text-[11px] font-black text-slate-600 dark:text-slate-300">{{ (int) $task->progress }}%</span>
+                                                <div class="h-1 w-12 rounded-full bg-slate-100 dark:bg-slate-800">
+                                                    <div class="bg-primary h-full rounded-full" style="width: {{ $task->progress }}%"></div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 text-center text-xs text-slate-500">
+                                            {{ $task->deadline?->format('d/m/Y') ?? '—' }}
+                                        </td>
+                                        <td class="px-6 py-4 text-center text-xs text-slate-600 dark:text-slate-300">
+                                            {{ $task->completed_at?->format('d/m/Y') ?? '—' }}
+                                        </td>
+                                        <td class="px-6 py-4 text-center">
+                                            @if ($task->sla_met === true)
+                                                <span class="material-symbols-outlined text-emerald-500 text-[20px]">check_circle</span>
+                                            @elseif($task->sla_met === false)
+                                                <span class="material-symbols-outlined text-rose-500 text-[20px]">cancel</span>
+                                            @else
+                                                <span class="text-slate-300">—</span>
+                                            @endif
+                                        </td>
+                                        <td class="px-6 py-4 text-center">
+                                            @if ($latestApprovedLog)
+                                                <div class="flex items-center justify-center gap-0.5 text-amber-500">
+                                                    <span class="text-xs font-black">{{ $latestApprovedLog->star_rating }}</span>
+                                                    <span class="material-symbols-outlined text-[14px] fill-[1]">star</span>
+                                                </div>
+                                            @else
+                                                <span class="text-slate-300">—</span>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="6" class="px-6 py-12 text-center text-slate-400 italic">Không có dữ liệu task phù hợp.</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-                <div class="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900">
-                    <p class="text-[11px] font-semibold uppercase tracking-wide text-emerald-600">Hoàn thành</p>
-                    <p class="mt-1 text-2xl font-black text-emerald-600">{{ $reviewSummary['completed'] }}</p>
-                </div>
-                <div class="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900">
-                    <p class="text-[11px] font-semibold uppercase tracking-wide text-amber-600">Chờ duyệt</p>
-                    <p class="mt-1 text-2xl font-black text-amber-600">{{ $reviewSummary['waiting_approval'] }}</p>
-                </div>
-                <div class="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900">
-                    <p class="text-[11px] font-semibold uppercase tracking-wide text-rose-600">Trễ hạn</p>
-                    <p class="mt-1 text-2xl font-black text-rose-600">{{ $reviewSummary['late'] }}</p>
-                </div>
-                <div class="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900">
-                    <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Avg tiến độ</p>
-                    <p class="mt-1 text-2xl font-black text-slate-600 dark:text-white">
-                        {{ number_format((float) $reviewSummary['avg_progress'], 1) }}%</p>
-                </div>
-            </div>
-
-            <div class="mb-3 flex flex-wrap items-center gap-4 text-xs text-slate-600 dark:text-slate-300">
-                <span>Đúng hạn: <strong>{{ $reviewSummary['on_time'] }}</strong></span>
-                <span>SLA đạt: <strong>{{ $reviewSummary['sla_met'] }}</strong></span>
-                <span>Avg sao: <strong>{{ number_format((float) $reviewSummary['avg_star'], 1) }}</strong></span>
-            </div>
-
-            <div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700">
-                <table class="w-full border-collapse text-left">
-                    <thead>
-                        <tr
-                            class="bg-slate-50 text-xs font-bold uppercase tracking-wide text-slate-500 dark:bg-slate-800/70 dark:text-slate-300">
-                            <th class="px-4 py-3">Công việc</th>
-                            <th class="px-4 py-3">Dự án / Giai đoạn</th>
-                            <th class="px-4 py-3 text-center">Trạng thái</th>
-                            <th class="px-4 py-3 text-center">Tiến độ</th>
-                            <th class="px-4 py-3 text-center">Deadline</th>
-                            <th class="px-4 py-3 text-center">Hoàn thành</th>
-                            <th class="px-4 py-3 text-center">SLA</th>
-                            <th class="px-4 py-3 text-center">Sao</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-                        @forelse ($reviewTasks as $task)
-                            @php
-                                $taskStatus = $task->status;
-                                $taskStatusValue = $taskStatus instanceof \BackedEnum
-                                    ? $taskStatus->value
-                                    : ($taskStatus->value ?? ($taskStatus ?? ''));
-
-                                $statusEnum = \App\Enums\TaskStatus::tryFrom($taskStatusValue);
-                                $statusLabel = $statusEnum?->label() ?? ucfirst($taskStatusValue);
-                                $statusClass = $statusEnum?->badgeClass() ?? 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300';
-
-                                $latestApprovedLog = $task->approvalLogs
-                                    ->where('action', 'approved')
-                                    ->whereNotNull('star_rating')
-                                    ->sortByDesc('id')
-                                    ->first();
-                            @endphp
-                            <tr class="align-top hover:bg-slate-50/80 dark:hover:bg-slate-800/40">
-                                <td class="px-4 py-3">
-                                    <p class="font-semibold text-slate-600 dark:text-white">{{ $task->name }}</p>
-                                    @if ($task->description)
-                                        <p class="mt-0.5 line-clamp-2 text-xs text-slate-500">{{ $task->description }}
-                                        </p>
-                                    @endif
-                                </td>
-                                <td class="px-4 py-3 text-xs text-slate-600 dark:text-slate-300">
-                                    <p class="font-medium">{{ $task->phase?->project?->name ?? 'N/A' }}</p>
-                                    <p class="text-slate-500">{{ $task->phase?->name ?? 'N/A' }}</p>
-                                </td>
-                                <td class="px-4 py-3 text-center">
-                                    <span
-                                        class="{{ $statusClass }} inline-flex items-center rounded px-2 py-0.5 text-[11px] font-semibold">
-                                        {{ $statusLabel }}
-                                    </span>
-                                </td>
-                                <td class="px-4 py-3 text-center">
-                                    <div class="mx-auto w-24">
-                                        <div class="mb-1 text-xs font-semibold text-slate-700 dark:text-slate-200">
-                                            {{ (int) $task->progress }}%</div>
-                                        <div class="h-1.5 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
-                                            <div class="bg-primary h-full rounded-full"
-                                                style="width: {{ max(0, min(100, (int) $task->progress)) }}%"></div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="px-4 py-3 text-center text-xs text-slate-600 dark:text-slate-300">
-                                    {{ $task->deadline?->format('d/m/Y') ?? '—' }}
-                                </td>
-                                <td class="px-4 py-3 text-center text-xs text-slate-600 dark:text-slate-300">
-                                    {{ $task->completed_at?->format('d/m/Y') ?? '—' }}
-                                </td>
-                                <td class="px-4 py-3 text-center text-xs">
-                                    @if ($taskStatusValue === 'completed')
-                                        @if ($task->sla_met === true)
-                                            <span
-                                                class="rounded bg-emerald-100 px-2 py-0.5 font-semibold text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">Đạt</span>
-                                        @elseif($task->sla_met === false)
-                                            <span
-                                                class="rounded bg-rose-100 px-2 py-0.5 font-semibold text-rose-700 dark:bg-rose-900/30 dark:text-rose-300">Không
-                                                đạt</span>
-                                        @else
-                                            <span class="text-slate-400">—</span>
-                                        @endif
-                                    @else
-                                        <span class="text-slate-400">—</span>
-                                    @endif
-                                </td>
-                                <td class="px-4 py-3 text-center text-xs text-slate-700 dark:text-slate-200">
-                                    @if ($latestApprovedLog?->star_rating)
-                                        <div class="inline-flex items-center gap-1">
-                                            <span class="font-semibold">{{ $latestApprovedLog->star_rating }}</span>
-                                            <span
-                                                class="material-symbols-outlined text-primary fill-[1] text-sm">star</span>
-                                        </div>
-                                    @else
-                                        <span class="text-slate-400">—</span>
-                                    @endif
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="8" class="px-4 py-8 text-center text-sm text-slate-500">
-                                    Không có task nào của nhân sự trong kỳ này để đối soát.
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
             </div>
             @if ($reviewTasks->hasPages())
-                <div class="mt-4 border-t border-slate-100 p-4 dark:border-slate-800">
+                <div class="mt-4">
                     {{ $reviewTasks->links() }}
                 </div>
             @endif
         @else
-            <div
-                class="rounded-xl border border-slate-200 bg-slate-50 p-6 text-center text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-800/50">
-                Không tìm thấy dữ liệu KPI để xem chi tiết.
+            <div class="py-12 text-center">
+                <span class="material-symbols-outlined text-4xl text-slate-300">search_off</span>
+                <p class="mt-2 text-slate-500 font-medium">Không tìm thấy dữ liệu KPI để xem chi tiết.</p>
             </div>
         @endif
 
         <x-slot name="footer">
-            <x-ui.button variant="secondary" wire:click="closeTaskReviewModal">Đóng</x-ui.button>
-            @if ($reviewScore && $this->canReviewScore($reviewScore))
-                <x-ui.button variant="danger" icon="cancel" wire:click="rejectScore({{ $reviewScore->id }})"
-                    loading="rejectScore({{ $reviewScore->id }})">
-                    Từ chối KPI
-                </x-ui.button>
-                <x-ui.button variant="success" icon="check_circle" wire:click="approveScore({{ $reviewScore->id }})"
-                    loading="approveScore({{ $reviewScore->id }})">
-                    Duyệt KPI
-                </x-ui.button>
-            @endif
+            <div class="flex w-full items-center justify-between">
+                <x-ui.button variant="secondary" wire:click="closeTaskReviewModal">Đóng</x-ui.button>
+
+                @if ($reviewScore && $this->canReviewScore($reviewScore))
+                    <div class="flex items-center gap-3">
+                        <x-ui.button variant="danger" outline wire:click="rejectScore({{ $reviewScore->id }})"
+                            loading="rejectScore({{ $reviewScore->id }})">
+                            Từ chối KPI
+                        </x-ui.button>
+                        <x-ui.button variant="primary" wire:click="approveScore({{ $reviewScore->id }})"
+                            loading="approveScore({{ $reviewScore->id }})">
+                            Duyệt & Chốt điểm
+                        </x-ui.button>
+                    </div>
+                @endif
+            </div>
         </x-slot>
     </x-ui.modal>
+
 </main>

@@ -64,6 +64,10 @@ class Task extends Model
 
         static::saved(function (Task $task): void {
             $task->syncPhaseAndProjectProgress();
+            
+            if ($task->pic_id) {
+                KpiScore::syncForUser($task->pic_id);
+            }
         });
 
         static::deleting(function (Task $task): void {
@@ -72,10 +76,18 @@ class Task extends Model
 
         static::deleted(function (Task $task): void {
             $task->syncPhaseAndProjectProgress();
+            
+            if ($task->pic_id) {
+                KpiScore::syncForUser($task->pic_id);
+            }
         });
 
         static::restored(function (Task $task): void {
             $task->syncPhaseAndProjectProgress();
+            
+            if ($task->pic_id) {
+                KpiScore::syncForUser($task->pic_id);
+            }
         });
 
         static::created(function (Task $task): void {

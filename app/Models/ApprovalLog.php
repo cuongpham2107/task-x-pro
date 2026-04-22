@@ -11,6 +11,18 @@ class ApprovalLog extends Model
     use HasFactory;
 
     public const UPDATED_AT = null;
+    
+    /**
+     * Tu dong dong bo KPI khi co approval log moi.
+     */
+    protected static function booted(): void
+    {
+        static::saved(function (ApprovalLog $log): void {
+            if ($log->task && $log->task->pic_id) {
+                KpiScore::syncForUser($log->task->pic_id);
+            }
+        });
+    }
 
     /**
      * @var list<string>
