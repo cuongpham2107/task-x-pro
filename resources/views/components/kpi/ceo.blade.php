@@ -1057,8 +1057,4 @@ new #[Title('KPI toàn công ty')] class extends Component {
             </div>
         @endif
     </div>
-
-
-
-
 </main>
