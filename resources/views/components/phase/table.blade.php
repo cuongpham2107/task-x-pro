@@ -22,10 +22,12 @@
         });">
             @forelse ($phases as $index => $phase)
                 @php
-                    $statusEnum = \App\Enums\PhaseStatus::tryFrom($phase->status);
-                    $statusColor = match ($phase->status) {
-                        'completed' => 'green',
-                        'active' => 'primary',
+                    $statusEnum = $phase->status;
+                    $statusColor = match ($statusEnum) {
+                        \App\Enums\PhaseStatus::Completed => 'green',
+                        \App\Enums\PhaseStatus::Active => 'primary',
+                        \App\Enums\PhaseStatus::Paused => 'amber',
+                        \App\Enums\PhaseStatus::Overdue => 'red',
                         default => 'slate',
                     };
                 @endphp
@@ -82,10 +84,10 @@
                             <x-ui.icon-button icon="visibility" size="sm" tooltip="Xem"
                                 href="{{ route('projects.phases.tasks.index', [$project, $phase]) }}" />
                             @can('update', $phase)
-                                @if ($phase->status === 'pending')
+                                @if ($phase->status === \App\Enums\PhaseStatus::Pending)
                                     <x-ui.icon-button icon="play_circle" size="sm" color="blue" tooltip="Bắt đầu"
                                         wire:click="confirmStartStatus({{ $phase->id }})" />
-                                @elseif($phase->status === 'active')
+                                @elseif($phase->status === \App\Enums\PhaseStatus::Active)
                                     <x-ui.icon-button icon="stop" size="sm" tooltip="Hoàn thành" :hidden="$phase->progress !== 100"
                                         wire:click="confirmCompleteStatus({{ $phase->id }})" />
                                 @endif

@@ -13,6 +13,7 @@ enum ProjectStatus: string
     case Paused = 'paused';
     case Completed = 'completed';
     case Cancelled = 'cancelled';
+    case Overdue = 'overdue';
 
     public function label(): string
     {
@@ -22,6 +23,7 @@ enum ProjectStatus: string
             self::Paused => 'Tạm dừng',
             self::Completed => 'Hoàn thành',
             self::Cancelled => 'Đã hủy',
+            self::Overdue => 'Quá hạn',
         };
     }
 
@@ -36,6 +38,7 @@ enum ProjectStatus: string
             self::Paused => 'pause_circle',
             self::Completed => 'check_circle',
             self::Cancelled => 'cancel',
+            self::Overdue => 'history',
         };
     }
 
@@ -47,6 +50,7 @@ enum ProjectStatus: string
             self::Paused => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
             self::Completed => 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
             self::Cancelled => 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
+            self::Overdue => 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300',
         };
     }
 
@@ -58,6 +62,7 @@ enum ProjectStatus: string
             self::Paused => 'bg-yellow-400',
             self::Completed => 'bg-green-500',
             self::Cancelled => 'bg-red-500',
+            self::Overdue => 'bg-orange-500',
         };
     }
 }

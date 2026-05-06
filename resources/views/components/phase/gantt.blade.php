@@ -43,6 +43,20 @@ $palette = [
         'dot'    => '#475569',              // slate-600
         'shadow' => '0 1px 3px rgba(0,0,0,0.50)',
     ],
+    'paused' => [
+        'fill'   => '#d97706',              // amber-600
+        'track'  => 'rgba(217,119,6,0.11)',
+        'border' => 'rgba(217,119,6,0.28)',
+        'dot'    => '#b45309',              // amber-700
+        'shadow' => '0 1px 3px rgba(0,0,0,0.50)',
+    ],
+    'overdue' => [
+        'fill'   => '#dc2626',              // red-600
+        'track'  => 'rgba(220,38,38,0.11)',
+        'border' => 'rgba(220,38,38,0.28)',
+        'dot'    => '#b91c1c',              // red-700
+        'shadow' => '0 1px 3px rgba(0,0,0,0.50)',
+    ],
 ];
 
 // Badge style: always legible regardless of what colour the bar fill is
@@ -123,13 +137,13 @@ $minInnerPx = max(count($g['months'] ?? []) * 140, 520);
                     @foreach ($phases as $idx => $phase)
                         @php
                             $rowBg = match ($phase->status) {
-                                'active'    => 'bg-blue-50/60 dark:bg-blue-900/10',
-                                'completed' => 'bg-green-50/50 dark:bg-green-900/10',
+                                \App\Enums\PhaseStatus::Active    => 'bg-blue-50/60 dark:bg-blue-900/10',
+                                \App\Enums\PhaseStatus::Completed => 'bg-green-50/50 dark:bg-green-900/10',
                                 default     => '',
                             };
                             $nameStyle = match ($phase->status) {
-                                'active'    => 'color:#1d4ed8',
-                                'completed' => 'color:#15803d',
+                                \App\Enums\PhaseStatus::Active    => 'color:#1d4ed8',
+                                \App\Enums\PhaseStatus::Completed => 'color:#15803d',
                                 default     => '',
                             };
                         @endphp
@@ -366,6 +380,14 @@ $minInnerPx = max(count($g['months'] ?? []) * 140, 520);
                 <div class="flex items-center gap-1.5">
                     <span class="inline-block h-2.5 w-3.5 rounded-sm" style="background:#64748b;"></span>
                     <span class="text-xs text-slate-500">Kế hoạch</span>
+                </div>
+                <div class="flex items-center gap-1.5">
+                    <span class="inline-block h-2.5 w-3.5 rounded-sm" style="background:#d97706;"></span>
+                    <span class="text-xs text-slate-500">Tạm dừng</span>
+                </div>
+                <div class="flex items-center gap-1.5">
+                    <span class="inline-block h-2.5 w-3.5 rounded-sm" style="background:#dc2626;"></span>
+                    <span class="text-xs text-slate-500">Quá hạn</span>
                 </div>
                 @if ($todayOffset !== null)
                     <div class="flex items-center gap-1.5">

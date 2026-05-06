@@ -165,8 +165,15 @@
                                     wire:click.stop="startProject({{ $project->id }})" />
                             @endif
 
-                            <x-ui.icon-button icon="edit" size="sm" tooltip="Sửa"
-                                wire:click.stop="openEditProjectModal({{ $project->id }})" />
+                            @if (($statusEnum?->value ?? '') === 'paused')
+                                <x-ui.icon-button icon="play_circle" size="sm" color="green" tooltip="Tiếp tục dự án"
+                                    wire:click.stop="startProject({{ $project->id }})" />
+                            @endif
+
+                            @if (($statusEnum?->value ?? '') !== 'paused')
+                                <x-ui.icon-button icon="edit" size="sm" tooltip="Sửa"
+                                    wire:click.stop="openEditProjectModal({{ $project->id }})" />
+                            @endif
                         @endcan
 
                         @can('delete', $project)

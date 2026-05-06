@@ -9,27 +9,27 @@ class DepartmentPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->can('project.view');
+        return $user->can('department.view');
     }
 
     public function view(User $user, Department $department): bool
     {
-        return $this->viewAny($user);
+        return $user->can('department.viewAny');
     }
 
     public function create(User $user): bool
     {
-        return $user->can('project.create');
+        return $user->can('department.create');
     }
 
     public function update(User $user, Department $department): bool
     {
-        return $user->can('project.update');
+        return $user->can('department.update');
     }
 
     public function delete(User $user, Department $department): bool
     {
-        return $user->can('project.delete');
+        return $user->can('department.delete');
     }
 
     public function restore(User $user, Department $department): bool

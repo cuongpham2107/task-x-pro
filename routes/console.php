@@ -1,8 +1,10 @@
 <?php
 
+use App\Enums\ProjectStatus;
 use App\Enums\TaskStatus;
 use App\Enums\UserStatus;
 use App\Models\KpiScore;
+use App\Models\Project;
 use App\Models\Task;
 use App\Models\User;
 use App\Notifications\MonthlyKpiSummaryNotification;
@@ -20,6 +22,21 @@ Artisan::command('tasks:mark-late', function (TaskService $taskService): void {
 
     $this->info("Đã cập nhập {$affectedTasks} công việc sang trạng thái trễ hạn.");
 })->purpose('Cập công việc trễ hạn theo deadline');
+
+Artisan::command('projects:mark-overdue', function (\App\Services\Projects\ProjectPhaseService $phaseService): void {
+    $projects = Project::query()
+        ->whereIn('status', [ProjectStatus::Init, ProjectStatus::Running, ProjectStatus::Paused])
+        ->whereNotNull('end_date')
+        ->where('end_date', '<', now()->startOfDay())
+        ->get();
+
+    foreach ($projects as $project) {
+        $project->update(['status' => ProjectStatus::Overdue]);
+        $phaseService->syncPhaseStatusesWithProjectStatus($project);
+    }
+
+    $this->info('Đã chuyển '.$projects->count().' dự án quá hạn sang trạng thái Quá hạn (Overdue) và đồng bộ Phase.');
+})->purpose('Chuyển dự án quá hạn sang trạng thái Quá hạn');
 
 Artisan::command('tasks:daily-reminders', function (): void {
     $now = now();
@@ -259,6 +276,7 @@ Artisan::command('kpi:backfill-all {--chunk=200 : Số lượng thành viên x�
 })->purpose('Backfill KPI lịch sử cho toàn bộ thành viên có dữ liệu task/KPI');
 
 Schedule::command('tasks:mark-late')->daily()->at('07:00');
+Schedule::command('projects:mark-overdue')->daily()->at('07:00');
 Schedule::command('tasks:daily-reminders')->daily()->at('07:00');
 Schedule::command('reports:weekly')->weekly()->fridays()->at('17:00');
 Schedule::command('kpi:daily-sync')

@@ -33,8 +33,10 @@ new #[Title('Quản lý giai đoạn')] class extends Component
     }
 
     #[On('phase-saved')]
+    #[On('project-saved')]
     public function refreshPhases(): void
     {
+        $this->project->refresh();
         unset($this->phases);
     }
 
@@ -48,11 +50,14 @@ new #[Title('Quản lý giai đoạn')] class extends Component
         $this->dispatch('project-edit-requested', projectId: $projectId);
     }
 
-    public function startProject(): void
+    public function startProject(\App\Services\Projects\ProjectPhaseService $phaseService): void
     {
         Gate::forUser(auth()->user())->authorize('update', $this->project);
 
         $this->project->update(['status' => ProjectStatus::Running->value]);
+        $phaseService->syncPhaseStatusesWithProjectStatus($this->project);
+
+        $this->refreshPhases();
         $this->dispatch('toast', message: 'Dự án đã được bắt đầu thành công!', type: 'success');
     }
 
@@ -346,7 +351,7 @@ new #[Title('Quản lý giai đoạn')] class extends Component
                 'end' => $e->format('d/m/Y'),
                 'left' => round(($offset / $totalDays) * 100, 4),
                 'width' => round(($duration / $totalDays) * 100, 4),
-                'color' => $phase->status, // 'completed' | 'active' | 'pending'
+                'color' => $phase->status->value, // 'completed' | 'active' | 'pending' | 'paused' | 'overdue'
             ];
         }
 
@@ -394,10 +399,23 @@ new #[Title('Quản lý giai đoạn')] class extends Component
                     </x-ui.button>
                 @endif
 
-                <x-ui.button icon="edit" size="sm" variant="secondary"
-                    wire:click="openEditProjectModal({{ $project->id }})">
-                    Chỉnh sửa dự án
-                </x-ui.button>
+                @if ($project->status === ProjectStatus::Paused)
+                    <x-ui.button icon="play_circle" size="sm" variant="primary" wire:click="startProject">
+                        Tiếp tục dự án
+                    </x-ui.button>
+                @endif
+
+                @if ($project->status === ProjectStatus::Overdue)
+                    <x-ui.button icon="history" size="sm" variant="warning"
+                        wire:click="openEditProjectModal({{ $project->id }})">
+                        Gia hạn dự án
+                    </x-ui.button>
+                @elseif ($project->status !== ProjectStatus::Paused)
+                    <x-ui.button icon="edit" size="sm" variant="secondary"
+                        wire:click="openEditProjectModal({{ $project->id }})">
+                        Chỉnh sửa dự án
+                    </x-ui.button>
+                @endif
             @endcan
 
             @can('create', [App\Models\Phase::class, $project])
@@ -432,17 +450,17 @@ new #[Title('Quản lý giai đoạn')] class extends Component
             </div>
         </div>
         {{-- Thời gian bắt đầu và kết thúc dự án --}}
-        <div
-            @class([
-                'flex flex-col gap-1 rounded-xl border p-5',
-                'border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/30' => $this->isPhaseEndEarlier,
-                'border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900' => ! $this->isPhaseEndEarlier,
-            ])>
+        <div @class([
+            'flex flex-col gap-1 rounded-xl border p-5',
+            'border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/30' =>
+                $this->isPhaseEndEarlier,
+            'border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900' => !$this->isPhaseEndEarlier,
+        ])>
             <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Thời gian bắt đầu và kết thúc dự án</p>
             <div class="flex flex-col gap-1">
                 <span class="text-2xl font-bold text-slate-600 dark:text-white">{{ $this->projectStart }} -
                     {{ $this->projectEnd }}</span>
-                @if($this->isPhaseEndEarlier)
+                @if ($this->isPhaseEndEarlier)
                     <p class="mt-1 flex items-center gap-1 text-xs font-semibold text-amber-600 dark:text-amber-400">
                         <span class="material-symbols-outlined text-[16px]">warning</span>
                         Thời gian kết thúc cuối cùng của phase sớm hơn dự kiến của dự án

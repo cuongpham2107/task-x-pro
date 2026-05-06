@@ -31,7 +31,7 @@ return new class extends Migration
             $table->date('start_date')->nullable();
             $table->date('end_date')->nullable();
             $table->unsignedTinyInteger('progress')->default(0);
-            $table->enum('status', ['pending', 'active', 'completed'])->default('pending');
+            $table->enum('status', ['pending', 'active', 'completed', 'paused', 'overdue'])->default('pending');
             $table->boolean('is_template')->default(false);
             $table->timestamps();
 

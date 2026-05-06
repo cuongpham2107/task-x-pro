@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Enums\ProjectStatus;
 use App\Models\Phase;
 use App\Models\Task;
 use App\Models\User;
@@ -32,7 +33,7 @@ class TaskPolicy
 
     public function create(User $user, ?Phase $phase = null): bool
     {
-        if ($phase?->project?->status === \App\Enums\ProjectStatus::Completed) {
+        if (in_array($phase?->project?->status, [ProjectStatus::Completed, ProjectStatus::Cancelled, ProjectStatus::Paused, ProjectStatus::Overdue], true)) {
             return false;
         }
 
@@ -45,7 +46,7 @@ class TaskPolicy
 
     public function update(User $user, Task $task): bool
     {
-        if ($task->phase?->project?->status === \App\Enums\ProjectStatus::Completed) {
+        if (in_array($task->phase?->project?->status, [ProjectStatus::Completed, ProjectStatus::Cancelled, ProjectStatus::Paused, ProjectStatus::Overdue], true)) {
             return false;
         }
 
@@ -70,7 +71,7 @@ class TaskPolicy
 
     public function delete(User $user, Task $task): bool
     {
-        if ($task->phase?->project?->status === \App\Enums\ProjectStatus::Completed) {
+        if (in_array($task->phase?->project?->status, [ProjectStatus::Completed, ProjectStatus::Cancelled, ProjectStatus::Paused, ProjectStatus::Overdue], true)) {
             return false;
         }
 
@@ -101,7 +102,7 @@ class TaskPolicy
 
     public function assign(User $user, Task $task): bool
     {
-        if ($task->phase?->project?->status === \App\Enums\ProjectStatus::Completed) {
+        if (in_array($task->phase?->project?->status, [ProjectStatus::Completed, ProjectStatus::Cancelled, ProjectStatus::Paused, ProjectStatus::Overdue], true)) {
             return false;
         }
 
@@ -122,7 +123,7 @@ class TaskPolicy
 
     public function approve(User $user, Task $task): bool
     {
-        if ($task->phase?->project?->status === \App\Enums\ProjectStatus::Completed) {
+        if (in_array($task->phase?->project?->status, [ProjectStatus::Completed, ProjectStatus::Cancelled, ProjectStatus::Paused, ProjectStatus::Overdue], true)) {
             return false;
         }
 

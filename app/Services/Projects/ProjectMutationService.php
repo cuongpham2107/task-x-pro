@@ -74,6 +74,10 @@ class ProjectMutationService
                 $this->phaseService->upsertPhases($project, $phasePayloads);
             }
 
+            if (array_key_exists('status', $attributes)) {
+                $this->phaseService->syncPhaseStatusesWithProjectStatus($project);
+            }
+
             $project->refreshProgressFromPhases();
             $project->refresh();
 

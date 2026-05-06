@@ -2,6 +2,8 @@
 
 namespace App\Services\Projects;
 
+use App\Enums\PhaseStatus;
+use App\Enums\ProjectStatus;
 use App\Models\Phase;
 use App\Models\PhaseTemplate;
 use App\Models\Project;
@@ -10,6 +12,36 @@ use Illuminate\Validation\ValidationException;
 
 class ProjectPhaseService
 {
+    /**
+     * Đồng bộ trạng thái phase theo trạng thái project.
+     */
+    public function syncPhaseStatusesWithProjectStatus(Project $project): void
+    {
+        $projectStatus = $project->status;
+
+        // Nếu dự án Paused hoặc Overdue
+        if (in_array($projectStatus, [ProjectStatus::Paused, ProjectStatus::Overdue], true)) {
+            $newPhaseStatus = $projectStatus === ProjectStatus::Paused ? PhaseStatus::Paused : PhaseStatus::Overdue;
+
+            $project->phases()
+                ->where('status', '!=', PhaseStatus::Completed)
+                ->update(['status' => $newPhaseStatus->value]);
+
+            return;
+        }
+
+        // Nếu dự án Running hoặc Init, khôi phục trạng thái phase dựa trên thực tế công việc
+        if (in_array($projectStatus, [ProjectStatus::Running, ProjectStatus::Init], true)) {
+            $phases = $project->phases()
+                ->whereIn('status', [PhaseStatus::Paused, PhaseStatus::Overdue])
+                ->get();
+
+            foreach ($phases as $phase) {
+                $phase->refreshProgressFromTasks();
+            }
+        }
+    }
+
     public function createPhasesFromTemplate(Project $project): void
     {
         $templates = PhaseTemplate::query()

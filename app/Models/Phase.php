@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\PhaseStatus;
 use App\Enums\TaskStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -55,6 +56,7 @@ class Phase extends Model
             'end_date' => 'date',
             'progress' => 'integer',
             'is_template' => 'boolean',
+            'status' => PhaseStatus::class,
         ];
     }
 
@@ -80,36 +82,44 @@ class Phase extends Model
      */
     public function refreshProgressFromTasks(): void
     {
-        $taskCount = (int) $this->tasks()->count();
+        $baseQuery = $this->tasks()->where('status', '!=', TaskStatus::Cancelled);
+        $taskCount = (int) $baseQuery->count();
 
         if ($taskCount === 0) {
             $progress = 0;
         } else {
-            $completedCount = (int) $this->tasks()
+            $completedCount = (int) (clone $baseQuery)
                 ->where('status', TaskStatus::Completed)
                 ->count();
             $progress = (int) round($completedCount / $taskCount * 100);
         }
 
-        $hasIncompleteTask = $this->tasks()
+        $hasIncompleteTask = (clone $baseQuery)
             ->where('status', '!=', TaskStatus::Completed)
             ->exists();
 
-        $hasStartedTask = $this->tasks()
+        $hasStartedTask = (clone $baseQuery)
             ->where('status', '!=', TaskStatus::Pending)
             ->exists();
 
         $canMarkCompleted = $taskCount > 0 && ! $hasIncompleteTask;
         $status = match (true) {
-            $canMarkCompleted => 'completed',
-            $progress > 0 || $hasStartedTask => 'active',
-            default => 'pending',
+            $canMarkCompleted => PhaseStatus::Completed,
+            $progress > 0 || $hasStartedTask => PhaseStatus::Active,
+            default => PhaseStatus::Pending,
         };
+
+        // If project is paused or overdue, phase status must follow project status,
+        // UNLESS it's already completed.
+        $projectStatus = $this->project?->status;
+        if (in_array($projectStatus, [\App\Enums\ProjectStatus::Paused, \App\Enums\ProjectStatus::Overdue], true) && $status !== PhaseStatus::Completed) {
+            $status = $projectStatus === \App\Enums\ProjectStatus::Paused ? PhaseStatus::Paused : PhaseStatus::Overdue;
+        }
 
         if ($this->progress !== $progress || $this->status !== $status) {
             $this->forceFill([
                 'progress' => $progress,
-                'status' => $status,
+                'status' => $status->value,
             ])->saveQuietly();
         }
 

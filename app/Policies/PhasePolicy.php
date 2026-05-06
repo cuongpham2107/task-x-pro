@@ -25,7 +25,7 @@ class PhasePolicy
 
     public function create(User $user, ?Project $project = null): bool
     {
-        if ($project?->status === ProjectStatus::Completed) {
+        if (in_array($project?->status, [ProjectStatus::Completed, ProjectStatus::Cancelled, ProjectStatus::Paused, ProjectStatus::Overdue], true)) {
             return false;
         }
 
@@ -38,7 +38,7 @@ class PhasePolicy
 
     public function update(User $user, Phase $phase): bool
     {
-        if ($phase->project?->status === \App\Enums\ProjectStatus::Completed) {
+        if (in_array($phase->project?->status, [ProjectStatus::Completed, ProjectStatus::Cancelled, ProjectStatus::Paused, ProjectStatus::Overdue], true)) {
             return false;
         }
 

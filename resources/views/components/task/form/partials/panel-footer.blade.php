@@ -85,6 +85,11 @@
             <x-ui.button variant="primary" icon="check_circle" wire:click="approveTask"
                 loading="approveTask">Đạt</x-ui.button>
         @endif
+
+        @if ($mode === 'edit' && $this->canCancel && $status !== 'completed' && $status !== 'cancelled')
+            <x-ui.button variant="outline" color="red" icon="cancel" wire:click="cancelTask"
+                wire:confirm="Bạn có chắc chắn muốn hủy công việc này không?">Hủy công việc</x-ui.button>
+        @endif
     </div>
     <div class="flex items-center gap-3">
 

@@ -219,8 +219,8 @@
 
             {{-- dropdown-style Danh mục group --}}
             @php
-                $canViewDepartments = auth()->user()?->can('create', App\Models\Department::class) ?? false;
-                $canViewUsers = auth()->user()?->can('create', App\Models\User::class) ?? false;
+                $canViewDepartments = auth()->user()?->can('viewAny', App\Models\Department::class) ?? false;
+                $canViewUsers = auth()->user()?->can('viewAny', App\Models\User::class) ?? false;
             @endphp
             @if ($canViewDepartments || $canViewUsers)
                 <div class="relative flex items-center" x-data="{ open: false }" @click.outside="open = false">

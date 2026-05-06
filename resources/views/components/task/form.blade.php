@@ -56,6 +56,8 @@ new class extends Component {
 
     public bool $isTaskStarted = false;
 
+    public bool $canCancel = false;
+
     public string $name = '';
 
     public string $type = 'technical';
@@ -322,6 +324,9 @@ new class extends Component {
             } elseif ($actor->hasRole('leader')) {
                 $this->isResponsibleLeader = (bool) $task->phase?->project?->projectLeaders()->where('user_id', $actor->id)->exists();
             }
+
+            // canCancel if super_admin, responsible leader, or task creator
+            $this->canCancel = $actor->hasRole('super_admin') || $this->isResponsibleLeader || (int) $task->created_by === (int) $actor->id;
         }
         $this->existing_attachments = $task
             ->attachments()
@@ -351,7 +356,7 @@ new class extends Component {
 
     public function resetFormModal(): void
     {
-        $this->reset(['name', 'type', 'status', 'priority', 'workflow_type', 'deadline', 'description', 'deliverable_url', 'progress', 'issue_note', 'recommendation', 'pic_id', 'dependency_task_id', 'project_id', 'phase_id', 'newComment', 'co_pic_ids', 'editing_task_id', 'files', 'existing_attachments', 'hasDependencyBlock', 'dependencyTaskName', 'activeTab', 'showCompletionRatingModal', 'completionStarRating', 'completionApprovalComment', 'completionTaskName', 'showRejectReasonModal', 'rejectReason', 'original_status', 'isResponsibleLeader', 'isTaskStarted']);
+        $this->reset(['name', 'type', 'status', 'priority', 'workflow_type', 'deadline', 'description', 'deliverable_url', 'progress', 'issue_note', 'recommendation', 'pic_id', 'dependency_task_id', 'project_id', 'phase_id', 'newComment', 'co_pic_ids', 'editing_task_id', 'files', 'existing_attachments', 'hasDependencyBlock', 'dependencyTaskName', 'activeTab', 'showCompletionRatingModal', 'completionStarRating', 'completionApprovalComment', 'completionTaskName', 'showRejectReasonModal', 'rejectReason', 'original_status', 'isResponsibleLeader', 'isTaskStarted', 'canCancel']);
         $this->existing_attachments = collect();
         $this->taskComments = collect();
         $this->activeTab = 'general';
@@ -482,7 +487,7 @@ new class extends Component {
     public function save(): void
     {
         if ($this->isCompletedLocked()) {
-            $this->dispatch('toast', message: 'Công việc đã hoàn thành, không thể chỉnh sửa.', type: 'warning');
+            $this->dispatch('toast', message: 'Công việc đã hoàn thành hoặc đã hủy, không thể chỉnh sửa.', type: 'warning');
 
             return;
         }
@@ -706,6 +711,10 @@ new class extends Component {
             return false;
         }
 
+        if ($this->isCompletedLocked()) {
+            return false;
+        }
+
         $actor = auth()->user();
         if ($actor->hasAnyRole(['super_admin', 'ceo', 'leader'])) {
             return true;
@@ -742,6 +751,10 @@ new class extends Component {
             return;
         }
 
+        if ($this->isCompletedLocked()) {
+            return;
+        }
+
         $this->validateOnly('newComment');
 
         try {
@@ -763,7 +776,7 @@ new class extends Component {
     #[Computed]
     public function isCompletedLocked(): bool
     {
-        return $this->mode === 'edit' && $this->original_status === 'completed';
+        return $this->mode === 'edit' && ($this->original_status === 'completed' || $this->original_status === 'cancelled');
     }
 
     public function completionModalTaskName(): string
@@ -785,6 +798,10 @@ new class extends Component {
 
     public function deleteAttachment(int $attachmentId): void
     {
+        if ($this->isCompletedLocked()) {
+            return;
+        }
+
         try {
             $attachment = \App\Models\TaskAttachment::findOrFail($attachmentId);
             app(TaskService::class)->deleteAttachment(auth()->user(), $attachment);
@@ -814,6 +831,47 @@ new class extends Component {
             $this->dispatch('toast', message: 'Lỗi: Chỉ PIC của task mới có thể bắt đầu công việc.', type: 'error');
         } catch (\Exception $e) {
             $this->dispatch('toast', message: 'Lỗi: ' . $e->getMessage(), type: 'error');
+        }
+    }
+
+    public function cancelTask(): void
+    {
+        if ($this->mode !== 'edit' || $this->editing_task_id === null) {
+            return;
+        }
+
+        try {
+            $task = Task::findOrFail($this->editing_task_id);
+
+            // Authorization check: project leader, task creator, or super admin
+            $actor = auth()->user();
+            $isCreator = (int) $task->created_by === (int) $actor->id;
+
+            if (!$actor->hasRole('super_admin') && !$this->isResponsibleLeader && !$isCreator) {
+                $this->dispatch('toast', message: 'Bạn không có quyền hủy công việc này.', type: 'error');
+
+                return;
+            }
+
+            if ($task->status === \App\Enums\TaskStatus::Completed) {
+                $this->dispatch('toast', message: 'Không thể hủy công việc đã hoàn thành.', type: 'warning');
+
+                return;
+            }
+
+            if ($task->status === \App\Enums\TaskStatus::Cancelled) {
+                $this->dispatch('toast', message: 'Công việc đã được hủy trước đó.', type: 'info');
+
+                return;
+            }
+
+            $task->update(['status' => \App\Enums\TaskStatus::Cancelled]);
+
+            $this->loadTaskDataIntoForm();
+            $this->dispatch('toast', message: 'Đã hủy công việc thành công.', type: 'success');
+            $this->dispatch('task-updated', taskId: $task->id);
+        } catch (\Exception $e) {
+            $this->dispatch('toast', message: 'Lỗi hệ thống: ' . $e->getMessage(), type: 'error');
         }
     }
 
@@ -980,7 +1038,13 @@ new class extends Component {
                 <div
                     class="mb-4 flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700 dark:border-emerald-900/40 dark:bg-emerald-900/10 dark:text-emerald-300">
                     <span class="material-symbols-outlined text-base">lock</span>
-                    <span>Task đã hoàn thành nên form được khóa để tránh chỉnh sửa.</span>
+                    <span>
+                        @if ($this->original_status === 'completed')
+                            Công việc đã hoàn thành nên form được khóa để tránh chỉnh sửa.
+                        @else
+                            Công việc đã hủy nên form được khóa để tránh chỉnh sửa.
+                        @endif
+                    </span>
                 </div>
             @endif
 

@@ -85,13 +85,14 @@ new #[Title('Dự án')] class extends Component
         $this->dispatch('project-edit-requested', projectId: $project->id);
     }
 
-    public function startProject(int $projectId): void
+    public function startProject(int $projectId, \App\Services\Projects\ProjectPhaseService $phaseService): void
     {
         $project = Project::query()->findOrFail($projectId);
 
         Gate::forUser(auth()->user())->authorize('update', $project);
 
         $project->update(['status' => ProjectStatus::Running->value]);
+        $phaseService->syncPhaseStatusesWithProjectStatus($project);
 
         $this->refreshAfterProjectSaved();
         $this->dispatch('toast', message: 'Dự án đã được bắt đầu thành công!', type: 'success');

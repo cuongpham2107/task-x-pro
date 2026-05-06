@@ -141,8 +141,10 @@
                     <x-ui.table.cell>
                         <div class="flex items-center gap-2">
                             <!-- <span class="{{ $status->dotClass() }} h-2 w-2 shrink-0 rounded-full"></span> -->
-                            <span class="{{ $status->badgeClass() }} inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold">
-                                <span class="material-symbols-outlined text-[14px] {{ $status->textColor() }}">{{ $status->icon() }}</span>
+                            <span
+                                class="{{ $status->badgeClass() }} inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold">
+                                <span
+                                    class="material-symbols-outlined {{ $status->textColor() }} text-[14px]">{{ $status->icon() }}</span>
                                 {{ $status->label() }}
                             </span>
                         </div>
@@ -154,7 +156,9 @@
                             @if ($status === App\Enums\TaskStatus::Pending && !$hasDependencyBlock)
                                 @php
                                     $actor = auth()->user();
-                                    $canStartTask = $actor && ($actor->hasRole('super_admin') || (int) $task->pic_id === (int) $actor->id);
+                                    $canStartTask =
+                                        $actor &&
+                                        ($actor->hasRole('super_admin') || (int) $task->pic_id === (int) $actor->id);
                                 @endphp
                                 @if ($canStartTask)
                                     <x-ui.icon-button icon="play_circle" size="sm" color="primary"
@@ -167,9 +171,20 @@
                                     wire:click="openEditTask({{ $task->id }})" />
                             @endcan
                             @can('delete', $task)
-                                <x-ui.icon-button icon="delete" size="sm" color="red" tooltip="Xóa"
-                                    wire:click.stop="deleteTask({{ $task->id }})"
-                                    wire:confirm="Bạn có chắc muốn xóa công việc này không?" />
+                                @php
+                                    $isDisabledDelete = in_array($status, [
+                                        \App\Enums\TaskStatus::InProgress,
+                                        \App\Enums\TaskStatus::WaitingApproval,
+                                        \App\Enums\TaskStatus::Completed,
+                                    ]);
+                                @endphp
+                                <span data-tooltip-target="tooltip-delete-{{ $task->id }}" data-tooltip-placement="top"
+                                    class="inline-block">
+                                    <x-ui.icon-button icon="delete" size="sm" color="red" :disabled="$isDisabledDelete"
+                                        :class="$isDisabledDelete ? 'opacity-50 cursor-not-allowed' : ''"
+                                        wire:click.stop="{{ $isDisabledDelete ? '' : 'deleteTask(' . $task->id . ')' }}"
+                                        wire:confirm="{{ $isDisabledDelete ? '' : 'Bạn có chắc muốn xóa công việc này không?' }}" />
+                                </span>
                             @endcan
                         </div>
                     </x-ui.table.cell>
@@ -180,9 +195,35 @@
         </x-ui.table.body>
     </x-ui.table>
 
+    {{-- Tooltips rendered outside table container to avoid overflow clipping --}}
+    @foreach ($tasks as $task)
+        @php
+            $status =
+                $task->status instanceof App\Enums\TaskStatus
+                    ? $task->status
+                    : App\Enums\TaskStatus::from($task->status);
+            $isDisabledDelete = in_array($status, [
+                \App\Enums\TaskStatus::InProgress,
+                \App\Enums\TaskStatus::WaitingApproval,
+                \App\Enums\TaskStatus::Completed,
+            ]);
+            $deleteTooltip = $isDisabledDelete
+                ? 'Không thể xóa công việc đang thực hiện, chờ duyệt hoặc đã hoàn thành'
+                : 'Xóa';
+        @endphp
+        <div id="tooltip-delete-{{ $task->id }}" role="tooltip"
+            class="tooltip z-9999 invisible absolute inline-block max-w-48 whitespace-normal rounded-lg bg-slate-900 px-3 py-2 text-center text-xs font-medium text-white opacity-0 shadow-sm transition-opacity duration-300 dark:bg-slate-700">
+            {{ $deleteTooltip }}
+            <div class="tooltip-arrow" data-popper-arrow></div>
+        </div>
+    @endforeach
+
     {{-- Footer --}}
     <div class="flex items-center justify-between px-1">
-        @if (auth()->user()?->can('create', App\Models\Task::class) && auth()->user()?->can('update', $project))
+        @if (auth()->user()?->can('create', App\Models\Task::class) &&
+                auth()->user()?->can('update', $project) &&
+                $project->status !== \App\Enums\ProjectStatus::Paused &&
+                $project->status !== \App\Enums\ProjectStatus::Overdue)
             <button @click="$dispatch('task-create-requested')"
                 class="text-primary flex items-center gap-1.5 text-sm font-bold hover:underline">
                 <span class="material-symbols-outlined text-sm">add</span>

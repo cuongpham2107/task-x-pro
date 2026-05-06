@@ -11,8 +11,7 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use Maatwebsite\Excel\Facades\Excel;
 
-new class extends Component
-{
+new class extends Component {
     use WithPagination;
 
     public string $periodType = KpiPeriodType::Monthly->value;
@@ -87,12 +86,12 @@ new class extends Component
             ->get();
 
         $title = 'Báo cáo KPI Cá nhân';
-        $periodLabel = 'Lịch sử '.$this->historyYear;
+        $periodLabel = 'Lịch sử ' . $this->historyYear;
         $ownerSlug = Str::slug((string) (auth()->user()?->name ?? 'nhan-su'));
-        $filename = 'kpi-ca-nhan-'.$ownerSlug.'-'.$this->historyYear.'.'.($format === 'pdf' ? 'pdf' : 'xlsx');
+        $filename = 'kpi-ca-nhan-' . $ownerSlug . '-' . $this->historyYear . '.' . ($format === 'pdf' ? 'pdf' : 'xlsx');
         $writer = $format === 'pdf' ? \Maatwebsite\Excel\Excel::DOMPDF : \Maatwebsite\Excel\Excel::XLSX;
 
-        $this->dispatch('toast', message: 'Bắt đầu xuất file '.strtoupper($format), type: 'info');
+        $this->dispatch('toast', message: 'Bắt đầu xuất file ' . strtoupper($format), type: 'info');
 
         $meta = [
             'generated_at' => now()->format('d/m/Y H:i'),
@@ -106,7 +105,7 @@ new class extends Component
     public function getTeamAverageProperty(): float
     {
         $user = auth()->user();
-        if (! $user || ! $user->department_id) {
+        if (!$user || !$user->department_id) {
             return 0;
         }
 
@@ -123,11 +122,11 @@ new class extends Component
     public function getPeriodValueOptionsProperty(): array
     {
         if ($this->periodType === KpiPeriodType::Monthly->value) {
-            return collect(range(1, 12))->mapWithKeys(fn ($m) => [$m => "Tháng $m"])->all();
+            return collect(range(1, 12))->mapWithKeys(fn($m) => [$m => "Tháng $m"])->all();
         }
 
         if ($this->periodType === KpiPeriodType::Quarterly->value) {
-            return collect(range(1, 4))->mapWithKeys(fn ($q) => [$q => "Quý $q"])->all();
+            return collect(range(1, 4))->mapWithKeys(fn($q) => [$q => "Quý $q"])->all();
         }
 
         return [1 => 'Cả năm'];
@@ -136,14 +135,14 @@ new class extends Component
     public function getYearOptionsProperty(): array
     {
         return collect(range(now()->year - 2, now()->year))
-            ->mapWithKeys(fn ($y) => [$y => "Năm $y"])
+            ->mapWithKeys(fn($y) => [$y => "Năm $y"])
             ->all();
     }
 
     public function getHistoryYearOptionsProperty(): array
     {
         return collect(range(now()->year - 3, now()->year))
-            ->mapWithKeys(fn ($y) => [$y => "Năm $y"])
+            ->mapWithKeys(fn($y) => [$y => "Năm $y"])
             ->all();
     }
 
@@ -160,20 +159,15 @@ new class extends Component
         if ($this->taskApprovalFilter !== 'all') {
             $query->where(function ($q): void {
                 if ($this->taskApprovalFilter === 'waiting') {
-                    $q->whereDoesntHave('approvalLogs')
-                        ->orWhereHas('approvalLogs', function ($sub): void {
-                            $sub->whereIn('id', function ($latest): void {
-                                $latest->selectRaw('max(id)')
-                                    ->from('approval_logs')
-                                    ->groupBy('task_id');
-                            })->where('action', 'submitted');
-                        });
+                    $q->whereDoesntHave('approvalLogs')->orWhereHas('approvalLogs', function ($sub): void {
+                        $sub->whereIn('id', function ($latest): void {
+                            $latest->selectRaw('max(id)')->from('approval_logs')->groupBy('task_id');
+                        })->where('action', 'submitted');
+                    });
                 } else {
                     $q->whereHas('approvalLogs', function ($sub): void {
                         $sub->whereIn('id', function ($latest): void {
-                            $latest->selectRaw('max(id)')
-                                ->from('approval_logs')
-                                ->groupBy('task_id');
+                            $latest->selectRaw('max(id)')->from('approval_logs')->groupBy('task_id');
                         })->where('action', $this->taskApprovalFilter);
                     });
                 }
@@ -186,12 +180,7 @@ new class extends Component
     public function getTaskReviewItemsProperty()
     {
         return $this->getTaskReviewQuery()
-            ->with([
-                'phase:id,name,project_id',
-                'phase.project:id,name',
-                'approvalLogs:id,task_id,reviewer_id,approval_level,action,star_rating,created_at',
-                'approvalLogs.reviewer:id,name',
-            ])
+            ->with(['phase:id,name,project_id', 'phase.project:id,name', 'approvalLogs:id,task_id,reviewer_id,approval_level,action,star_rating,created_at', 'approvalLogs.reviewer:id,name'])
             ->orderByDesc('completed_at')
             ->paginate(10, ['*'], 'taskReviewPage');
     }
@@ -226,32 +215,31 @@ new class extends Component
             ->whereNotNull('completed_at')
             ->whereBetween('completed_at', [$periodStart, $periodEnd]);
 
-        $waitingCount = (clone $baseSummaryQuery)->where(function ($q): void {
-            $q->whereDoesntHave('approvalLogs')
-                ->orWhereHas('approvalLogs', function ($sub): void {
+        $waitingCount = (clone $baseSummaryQuery)
+            ->where(function ($q): void {
+                $q->whereDoesntHave('approvalLogs')->orWhereHas('approvalLogs', function ($sub): void {
                     $sub->whereIn('id', function ($latest): void {
-                        $latest->selectRaw('max(id)')
-                            ->from('approval_logs')
-                            ->groupBy('task_id');
+                        $latest->selectRaw('max(id)')->from('approval_logs')->groupBy('task_id');
                     })->where('action', 'submitted');
                 });
-        })->count();
+            })
+            ->count();
 
-        $approvedCount = (clone $baseSummaryQuery)->whereHas('approvalLogs', function ($sub): void {
-            $sub->whereIn('id', function ($latest): void {
-                $latest->selectRaw('max(id)')
-                    ->from('approval_logs')
-                    ->groupBy('task_id');
-            })->where('action', 'approved');
-        })->count();
+        $approvedCount = (clone $baseSummaryQuery)
+            ->whereHas('approvalLogs', function ($sub): void {
+                $sub->whereIn('id', function ($latest): void {
+                    $latest->selectRaw('max(id)')->from('approval_logs')->groupBy('task_id');
+                })->where('action', 'approved');
+            })
+            ->count();
 
-        $rejectedCount = (clone $baseSummaryQuery)->whereHas('approvalLogs', function ($sub): void {
-            $sub->whereIn('id', function ($latest): void {
-                $latest->selectRaw('max(id)')
-                    ->from('approval_logs')
-                    ->groupBy('task_id');
-            })->where('action', 'rejected');
-        })->count();
+        $rejectedCount = (clone $baseSummaryQuery)
+            ->whereHas('approvalLogs', function ($sub): void {
+                $sub->whereIn('id', function ($latest): void {
+                    $latest->selectRaw('max(id)')->from('approval_logs')->groupBy('task_id');
+                })->where('action', 'rejected');
+            })
+            ->count();
 
         return [
             'total' => $totalCount,
@@ -267,9 +255,9 @@ new class extends Component
     public function getTaskReviewPeriodLabelProperty(): string
     {
         return match ($this->periodType) {
-            KpiPeriodType::Quarterly->value => 'Quý '.$this->selectedValue.'/'.$this->selectedYear,
-            KpiPeriodType::Yearly->value => 'Năm '.$this->selectedYear,
-            default => 'Tháng '.$this->selectedValue.'/'.$this->selectedYear,
+            KpiPeriodType::Quarterly->value => 'Quý ' . $this->selectedValue . '/' . $this->selectedYear,
+            KpiPeriodType::Yearly->value => 'Năm ' . $this->selectedYear,
+            default => 'Tháng ' . $this->selectedValue . '/' . $this->selectedYear,
         };
     }
 
@@ -303,7 +291,7 @@ new class extends Component
     public function taskApprovalMeta(Task $task): array
     {
         $latestLog = $task->approvalLogs->sortByDesc('id')->first();
-        if (! $latestLog) {
+        if (!$latestLog) {
             return [
                 'label' => 'Chưa gửi duyệt',
                 'class' => 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300',
@@ -354,7 +342,7 @@ new class extends Component
         }
 
         if ($this->periodType === KpiPeriodType::Quarterly->value) {
-            $startMonth = (($this->selectedValue - 1) * 3) + 1;
+            $startMonth = ($this->selectedValue - 1) * 3 + 1;
             $start = Carbon::create($this->selectedYear, $startMonth, 1)->startOfDay();
 
             return [$start, $start->copy()->addMonths(2)->endOfMonth()->endOfDay()];
@@ -496,36 +484,47 @@ new class extends Component
             style="animation-delay: 0.18s">
             <h3 class="mb-2 text-sm font-bold text-sky-900 dark:text-sky-300">Vì sao cần Leader phê duyệt KPI?</h3>
             <p class="text-xs text-slate-600 dark:text-slate-300">
-                Leader xác nhận dữ liệu KPI đã phản ánh đúng thực tế công việc (deadline, SLA, chất lượng) trước khi dùng cho báo cáo và đánh giá hiệu suất.
+                Leader xác nhận dữ liệu KPI đã phản ánh đúng thực tế công việc (deadline, SLA, chất lượng) trước khi
+                dùng cho báo cáo và đánh giá hiệu suất.
             </p>
-            <p class="mt-2 text-xs font-semibold text-sky-700 dark:text-sky-300">Trạng thái hiện tại: {{ $nextAction }}</p>
+            <p class="mt-2 text-xs font-semibold text-sky-700 dark:text-sky-300">Trạng thái hiện tại:
+                {{ $nextAction }}</p>
         </div>
         <!-- Score Cards Grid -->
         <div class="animate-enter grid grid-cols-1 gap-6 lg:grid-cols-4" style="animation-delay: 0.2s">
             <!-- Main Score Card -->
-            <div class="relative overflow-hidden rounded-2xl border border-slate-100 bg-white p-8 shadow-xl shadow-slate-200/50 lg:col-span-3 dark:border-slate-700 dark:bg-slate-800 dark:shadow-none">
-                <div class="absolute right-0 top-0 h-40 w-40 rounded-bl-full bg-primary/5 dark:bg-primary/10"></div>
+            <div
+                class="relative overflow-hidden rounded-2xl border border-slate-100 bg-white p-8 shadow-xl shadow-slate-200/50 lg:col-span-3 dark:border-slate-700 dark:bg-slate-800 dark:shadow-none">
+                <div class="bg-primary/5 dark:bg-primary/10 absolute right-0 top-0 h-40 w-40 rounded-bl-full"></div>
 
                 <div class="relative z-10 flex h-full flex-col justify-between">
                     <div class="flex flex-col justify-between gap-6 md:flex-row md:items-start">
                         <div class="space-y-2">
-                            <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">Hiệu suất thực tế kỳ này</p>
+                            <p
+                                class="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">
+                                Hiệu suất thực tế kỳ này</p>
                             <div class="flex items-baseline gap-3">
                                 <h3 class="text-7xl font-black tracking-tight text-slate-800 dark:text-white">
                                     {{ number_format($actualScore, 1) }}
                                 </h3>
-                                <span class="text-2xl font-bold text-slate-300 dark:text-slate-600">/ {{ number_format($targetScore, 0) }}</span>
+                                <span class="text-2xl font-bold text-slate-300 dark:text-slate-600">/
+                                    {{ number_format($targetScore, 0) }}</span>
                             </div>
 
                             <div class="mt-4 flex flex-wrap gap-3">
-                                <div class="flex items-center gap-1.5 rounded-full bg-slate-50 px-3 py-1 dark:bg-slate-900/50">
-                                    <span class="size-2 rounded-full bg-primary"></span>
-                                    <span class="text-[11px] font-bold text-slate-600 dark:text-slate-400">Target: {{ $targetScore }}</span>
+                                <div
+                                    class="flex items-center gap-1.5 rounded-full bg-slate-50 px-3 py-1 dark:bg-slate-900/50">
+                                    <span class="bg-primary size-2 rounded-full"></span>
+                                    <span class="text-[11px] font-bold text-slate-600 dark:text-slate-400">Target:
+                                        {{ $targetScore }}</span>
                                 </div>
-                                @if($teamAvg > 0)
-                                    <div class="flex items-center gap-1.5 rounded-full bg-slate-50 px-3 py-1 dark:bg-slate-900/50">
-                                        <span class="size-2 rounded-full {{ $delta >= 0 ? 'bg-emerald-500' : 'bg-rose-500' }}"></span>
-                                        <span class="text-[11px] font-bold text-slate-600 dark:text-slate-400">So với Team: {{ $deltaLabel }}</span>
+                                @if ($teamAvg > 0)
+                                    <div
+                                        class="flex items-center gap-1.5 rounded-full bg-slate-50 px-3 py-1 dark:bg-slate-900/50">
+                                        <span
+                                            class="{{ $delta >= 0 ? 'bg-emerald-500' : 'bg-rose-500' }} size-2 rounded-full"></span>
+                                        <span class="text-[11px] font-bold text-slate-600 dark:text-slate-400">So với
+                                            Team: {{ $deltaLabel }}</span>
                                     </div>
                                 @endif
                             </div>
@@ -533,15 +532,20 @@ new class extends Component
 
                         <div class="flex flex-col items-end gap-3">
                             <div class="flex flex-col items-end">
-                                <span class="{{ $statusClass }} rounded-xl px-4 py-2 text-xs font-black uppercase tracking-wider shadow-sm">
+                                <span
+                                    class="{{ $statusClass }} rounded-xl px-4 py-2 text-xs font-black uppercase tracking-wider shadow-sm">
                                     {{ $statusLabel }}
                                 </span>
-                                <p class="mt-2 text-right text-[10px] font-medium italic text-slate-400 dark:text-slate-500">{{ $statusHint }}</p>
+                                <p
+                                    class="mt-2 text-right text-[10px] font-medium italic text-slate-400 dark:text-slate-500">
+                                    {{ $statusHint }}</p>
                             </div>
                             @if ($score?->approved_at)
-                                <div class="flex items-center gap-2 rounded-lg bg-emerald-50/50 px-3 py-1.5 text-emerald-600 dark:bg-emerald-900/10 dark:text-emerald-400">
+                                <div
+                                    class="flex items-center gap-2 rounded-lg bg-emerald-50/50 px-3 py-1.5 text-emerald-600 dark:bg-emerald-900/10 dark:text-emerald-400">
                                     <span class="material-symbols-outlined text-[16px]">verified</span>
-                                    <span class="text-[10px] font-bold uppercase">{{ $score->approved_at->format('d/m/Y') }}</span>
+                                    <span
+                                        class="text-[10px] font-bold uppercase">{{ $score->approved_at->format('d/m/Y') }}</span>
                                 </div>
                             @endif
                         </div>
@@ -551,12 +555,18 @@ new class extends Component
                         @php
                             $progressWidth = min(100, $actualScore);
                         @endphp
-                        <div class="group relative h-4 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-700">
+                        <div
+                            class="group relative h-4 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-700">
                             <!-- Background gradient for the bar -->
-                            <div class="absolute inset-0 bg-linear-to-r from-rose-500/20 via-amber-500/20 to-emerald-500/20 opacity-30"></div>
+                            <div
+                                class="bg-linear-to-r absolute inset-0 from-rose-500/20 via-amber-500/20 to-emerald-500/20 opacity-30">
+                            </div>
                             <!-- Actual progress -->
-                            <div class="absolute left-0 top-0 h-full rounded-full bg-primary transition-all duration-1000 ease-out" style="width: {{ $progressWidth }}%">
-                                <div class="absolute inset-0 bg-[linear-gradient(45deg,rgba(255,255,255,0.15)_25%,transparent_25%,transparent_50%,rgba(255,255,255,0.15)_50%,rgba(255,255,255,0.15)_75%,transparent_75%,transparent)] bg-size-[1rem_1rem] animate-[shimmer_2s_linear_infinite]"></div>
+                            <div class="bg-primary absolute left-0 top-0 h-full rounded-full transition-all duration-1000 ease-out"
+                                style="width: {{ $progressWidth }}%">
+                                <div
+                                    class="bg-size-[1rem_1rem] absolute inset-0 animate-[shimmer_2s_linear_infinite] bg-[linear-gradient(45deg,rgba(255,255,255,0.15)_25%,transparent_25%,transparent_50%,rgba(255,255,255,0.15)_50%,rgba(255,255,255,0.15)_75%,transparent_75%,transparent)]">
+                                </div>
                             </div>
                         </div>
                         <div class="mt-4 grid grid-cols-3 text-[10px] font-black uppercase tracking-widest">
@@ -570,9 +580,11 @@ new class extends Component
 
             <!-- Grade Card -->
             <div class="flex flex-col gap-6">
-                <div class="flex-1 rounded-2xl bg-linear-to-br from-primary to-orange-600 p-8 text-white shadow-xl shadow-primary/20">
+                <div
+                    class="bg-linear-to-br from-primary shadow-primary/20 flex-1 rounded-2xl to-orange-600 p-8 text-white shadow-xl">
                     <p class="text-xs font-bold uppercase tracking-[0.2em] opacity-80">Xếp loại dự kiến</p>
-                    <h3 class="mt-4 text-4xl font-black uppercase tracking-tight">{{ explode(' - ', $gradeLabel)[0] }}</h3>
+                    <h3 class="mt-4 text-4xl font-black uppercase tracking-tight">{{ explode(' - ', $gradeLabel)[0] }}
+                    </h3>
                     <p class="mt-1 text-sm font-bold uppercase opacity-90">{{ @explode(' - ', $gradeLabel)[1] }}</p>
 
                     <div class="mt-8 rounded-xl bg-white/10 p-4 backdrop-blur-sm">
@@ -588,31 +600,24 @@ new class extends Component
         <div class="animate-enter grid grid-cols-1 gap-8 lg:grid-cols-5" style="animation-delay: 0.3s">
             <!-- Formula Infographic -->
             <div class="lg:col-span-3">
-                <x-kpi.formula-card
-                    :on-time-rate="$onTimeRate"
-                    :sla-rate="$slaRate"
-                    :star-score="$starScore"
-                    :final-score="$finalScore"
-                    class="h-full"
-                />
+                <x-kpi.formula-card :on-time-rate="$onTimeRate" :sla-rate="$slaRate" :star-score="$starScore" :final-score="$finalScore"
+                    class="h-full" />
             </div>
 
             <!-- Enhanced Radar Chart -->
-            <div class="rounded-2xl border border-slate-100 bg-white p-8 dark:border-slate-700 dark:bg-slate-800 lg:col-span-2">
+            <div
+                class="rounded-2xl border border-slate-100 bg-white p-8 lg:col-span-2 dark:border-slate-700 dark:bg-slate-800">
                 <div class="mb-6 flex items-center justify-between">
-                    <h3 class="text-sm font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">Phân tích năng lực</h3>
+                    <h3 class="text-sm font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">Phân tích
+                        năng lực</h3>
                     <span class="material-symbols-outlined text-slate-300">insights</span>
                 </div>
 
-                <x-kpi.radar-chart
-                    :metrics="[
-                        'Đúng hạn' => $onTimeRate,
-                        'SLA' => $slaRate,
-                        'Đánh giá' => $starScore,
-                    ]"
-                    :final-score="$finalScore"
-                    size="size-72"
-                />
+                <x-kpi.radar-chart :metrics="[
+                    'Đúng hạn' => $onTimeRate,
+                    'SLA' => $slaRate,
+                    'Đánh giá' => $starScore,
+                ]" :final-score="$finalScore" size="size-72" />
 
                 <div class="mt-8 border-t border-slate-100 pt-6 dark:border-slate-700">
                     <div class="flex items-start gap-4 rounded-xl bg-slate-50 p-4 dark:bg-slate-900/50">
@@ -655,7 +660,8 @@ new class extends Component
                                 'rejected' => 'Từ chối',
                             ]" />
                     </div>
-                    <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700 dark:bg-slate-700 dark:text-slate-200">
+                    <span
+                        class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700 dark:bg-slate-700 dark:text-slate-200">
                         Tổng task: {{ $taskReviewSummary['total'] }}
                     </span>
                 </div>
@@ -684,13 +690,15 @@ new class extends Component
                 </div>
                 <div class="rounded-lg bg-slate-50 p-3 dark:bg-slate-900/50">
                     <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Avg tiến độ</p>
-                    <p class="mt-1 text-xl font-black text-slate-600 dark:text-white">{{ number_format((float) $taskReviewSummary['avg_progress'], 1) }}%</p>
+                    <p class="mt-1 text-xl font-black text-slate-600 dark:text-white">
+                        {{ number_format((float) $taskReviewSummary['avg_progress'], 1) }}%</p>
                 </div>
             </div>
 
             <div class="overflow-x-auto">
                 <table class="w-full text-left">
-                    <thead class="bg-slate-50 text-[10px] font-black uppercase tracking-widest text-slate-500 dark:bg-slate-900/50">
+                    <thead
+                        class="bg-slate-50 text-[10px] font-black uppercase tracking-widest text-slate-500 dark:bg-slate-900/50">
                         <tr>
                             <th class="px-6 py-4">Công việc</th>
                             <th class="px-6 py-4">Dự án / Giai đoạn</th>
@@ -711,7 +719,8 @@ new class extends Component
                                 <td class="px-6 py-4">
                                     <p class="font-semibold text-slate-600 dark:text-white">{{ $task->name }}</p>
                                     @if ($task->description)
-                                        <p class="mt-0.5 line-clamp-2 text-xs text-slate-500">{{ $task->description }}</p>
+                                        <p class="mt-0.5 line-clamp-2 text-xs text-slate-500">{{ $task->description }}
+                                        </p>
                                     @endif
                                 </td>
                                 <td class="px-6 py-4 text-xs text-slate-600 dark:text-slate-300">
@@ -719,15 +728,18 @@ new class extends Component
                                     <p class="text-slate-500">{{ $task->phase?->name ?? 'N/A' }}</p>
                                 </td>
                                 <td class="px-6 py-4 text-center">
-                                    <span class="{{ $taskStatusMeta['class'] }} rounded-full px-2.5 py-1 text-xs font-bold">
+                                    <span
+                                        class="{{ $taskStatusMeta['class'] }} rounded-full px-2.5 py-1 text-xs font-bold">
                                         {{ $taskStatusMeta['label'] }}
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 text-center">
                                     <div class="mx-auto w-24">
-                                        <div class="mb-1 text-xs font-semibold text-slate-700 dark:text-slate-200">{{ (int) $task->progress }}%</div>
+                                        <div class="mb-1 text-xs font-semibold text-slate-700 dark:text-slate-200">
+                                            {{ (int) $task->progress }}%</div>
                                         <div class="h-1.5 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
-                                            <div class="bg-primary h-full rounded-full" style="width: {{ max(0, min(100, (int) $task->progress)) }}%"></div>
+                                            <div class="bg-primary h-full rounded-full"
+                                                style="width: {{ max(0, min(100, (int) $task->progress)) }}%"></div>
                                         </div>
                                     </div>
                                 </td>
@@ -736,15 +748,19 @@ new class extends Component
                                 </td>
                                 <td class="px-6 py-4 text-center text-xs">
                                     @if ($task->sla_met === true)
-                                        <span class="rounded bg-emerald-100 px-2 py-0.5 font-semibold text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">Đạt</span>
+                                        <span
+                                            class="rounded bg-emerald-100 px-2 py-0.5 font-semibold text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">Đạt</span>
                                     @elseif ($task->sla_met === false)
-                                        <span class="rounded bg-rose-100 px-2 py-0.5 font-semibold text-rose-700 dark:bg-rose-900/30 dark:text-rose-300">Không đạt</span>
+                                        <span
+                                            class="rounded bg-rose-100 px-2 py-0.5 font-semibold text-rose-700 dark:bg-rose-900/30 dark:text-rose-300">Không
+                                            đạt</span>
                                     @else
                                         <span class="text-slate-400">—</span>
                                     @endif
                                 </td>
                                 <td class="px-6 py-4 text-center">
-                                    <span class="{{ $taskApprovalMeta['class'] }} inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold">
+                                    <span
+                                        class="{{ $taskApprovalMeta['class'] }} inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold">
                                         {{ $taskApprovalMeta['label'] }}
                                     </span>
                                     @if ($taskApprovalMeta['reviewer'] !== '' || $taskApprovalMeta['star'] !== null)
@@ -770,7 +786,8 @@ new class extends Component
             </div>
 
             @if ($taskReviewItems->hasPages())
-                <div class="border-t border-slate-100 bg-slate-50/50 px-6 py-4 dark:border-slate-700 dark:bg-slate-900/20">
+                <div
+                    class="border-t border-slate-100 bg-slate-50/50 px-6 py-4 dark:border-slate-700 dark:bg-slate-900/20">
                     {{ $taskReviewItems->links() }}
                 </div>
             @endif

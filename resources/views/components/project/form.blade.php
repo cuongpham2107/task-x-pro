@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\ProjectStatus;
 use App\Models\Project;
 use App\Services\Projects\ProjectService;
 use Illuminate\Support\Carbon;
@@ -44,12 +45,14 @@ new class extends Component {
     {
         if (!$this->is_phase || $this->startDate === '' || $this->startDate === null) {
             $this->checkEndDateWarning();
+
             return;
         }
 
         $totalDays = $this->templateTotalDays;
         if ($totalDays <= 0) {
             $this->checkEndDateWarning();
+
             return;
         }
 
@@ -267,6 +270,16 @@ new class extends Component {
 
             $this->validate();
 
+            // Custom validation for overdue projects
+            if ($this->mode === 'edit' && $this->project && $this->project->status === ProjectStatus::Overdue) {
+                $parsedEnd = Carbon::parse($this->endDate)->startOfDay();
+                if ($parsedEnd->lt(now()->startOfDay())) {
+                    throw ValidationException::withMessages([
+                        'endDate' => 'Ngày gia hạn phải từ ngày hôm nay trở đi.',
+                    ]);
+                }
+            }
+
             $this->checkEndDateWarning();
 
             $projectService = app(ProjectService::class);
@@ -278,6 +291,11 @@ new class extends Component {
                 'objective' => $this->objective ?: null,
                 'budget' => $this->budget !== '' ? $this->budget : null,
             ];
+
+            // Auto-resume if overdue and being saved
+            if ($this->mode === 'edit' && $this->project && $this->project->status === ProjectStatus::Overdue) {
+                $attributes['status'] = ProjectStatus::Running->value;
+            }
 
             // Build phase payloads: null means don't touch phases (default for edit)
             $phasePayloads = null;
@@ -308,9 +326,8 @@ new class extends Component {
 
             $this->dispatch('project-saved');
         } catch (ValidationException $e) {
-            \Log::error('Validation failed', ['errors' => $e->validator->errors()->toArray()]);
             $this->setErrorBag($e->validator->errors());
-            $this->dispatch('toast', message: 'Vui lòng kiểm tra lại thông tin! ' . $e->getMessage(), type: 'error');
+            $this->dispatch('toast', message: 'Vui lòng kiểm tra lại thông tin! ' . collect($e->validator->errors()->all())->first(), type: 'error');
         } catch (\Exception $e) {
             \Log::error('Project save failed', ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
             session()->flash('error', 'Có lỗi xảy ra: ' . $e->getMessage());
@@ -431,10 +448,17 @@ new class extends Component {
                 @if ($editingProjectId && $this->project)
                     @can('update', $this->project)
                         @if (!in_array($this->project->status->value, ['running', 'completed', 'cancelled'], true))
-                            <x-ui.button variant="primary" size="sm" icon="play_circle"
-                                wire:click="updateStatus('running')" loading="updateStatus('running')">
-                                Bắt đầu
-                            </x-ui.button>
+                            @if ($this->project->status->value === 'overdue')
+                                <x-ui.button variant="warning" size="sm" icon="history" wire:click="save"
+                                    loading="save">
+                                    Gia hạn
+                                </x-ui.button>
+                            @else
+                                <x-ui.button variant="primary" size="sm" icon="play_circle"
+                                    wire:click="updateStatus('running')" loading="updateStatus('running')">
+                                    {{ $this->project->status->value === 'paused' ? 'Tiếp tục' : 'Bắt đầu' }}
+                                </x-ui.button>
+                            @endif
                         @endif
 
                         @if ($this->project->status->value !== 'completed')
@@ -444,7 +468,7 @@ new class extends Component {
                             </x-ui.button>
                         @endif
 
-                        @if ($this->project->status->value !== 'paused')
+                        @if ($this->project->status->value === 'running')
                             <x-ui.button variant="warning" size="sm" icon="pause_circle" :hidden="$this->project->status->value === 'completed'"
                                 wire:click="updateStatus('paused')" loading="updateStatus('paused')">
                                 Tạm dừng

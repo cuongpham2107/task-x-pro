@@ -13,6 +13,7 @@ enum TaskStatus: string
     case WaitingApproval = 'waiting_approval';
     case Completed = 'completed';
     case Late = 'late';
+    case Cancelled = 'cancelled';
 
     public function label(): string
     {
@@ -22,6 +23,7 @@ enum TaskStatus: string
             self::WaitingApproval => 'Chờ duyệt',
             self::Completed => 'Hoàn thành',
             self::Late => 'Trễ hạn',
+            self::Cancelled => 'Đã hủy',
         };
     }
 
@@ -36,6 +38,7 @@ enum TaskStatus: string
             self::WaitingApproval => 'approval',
             self::Completed => 'check_circle',
             self::Late => 'warning',
+            self::Cancelled => 'cancel',
         };
     }
 
@@ -47,6 +50,7 @@ enum TaskStatus: string
             self::WaitingApproval => 'orange',
             self::Completed => 'green',
             self::Late => 'red',
+            self::Cancelled => 'gray',
         };
     }
 
@@ -59,6 +63,7 @@ enum TaskStatus: string
             self::WaitingApproval => 'bg-orange-400',
             self::Completed => 'bg-green-500',
             self::Late => 'bg-red-500',
+            self::Cancelled => 'bg-gray-400',
         };
     }
 
@@ -70,6 +75,7 @@ enum TaskStatus: string
             self::WaitingApproval => 'text-orange-600 dark:text-orange-400',
             self::Completed => 'text-green-700 dark:text-green-400',
             self::Late => 'text-red-700 dark:text-red-400',
+            self::Cancelled => 'text-gray-600 dark:text-gray-400',
         };
     }
 
@@ -82,6 +88,7 @@ enum TaskStatus: string
             self::WaitingApproval => 'bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400',
             self::Completed => 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
             self::Late => 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+            self::Cancelled => 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
         };
     }
 
@@ -94,6 +101,7 @@ enum TaskStatus: string
             self::WaitingApproval => 'border-l-4 border-l-orange-400',
             self::Completed => '',
             self::Late => '',
+            self::Cancelled => 'border-l-4 border-l-gray-300',
         };
     }
 }

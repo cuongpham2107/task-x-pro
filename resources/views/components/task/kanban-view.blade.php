@@ -10,8 +10,7 @@ use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\On;
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     public int $projectId;
 
     public int $phaseId;
@@ -69,8 +68,8 @@ new class extends Component
 
         $this->columns = collect(TaskStatus::cases())
             ->mapWithKeys(
-                fn ($status) => [
-                    $status->value => $tasks->filter(fn ($t) => $t->status === $status->value || ($t->status instanceof TaskStatus && $t->status->value === $status->value))->values(),
+                fn($status) => [
+                    $status->value => $tasks->filter(fn($t) => $t->status === $status->value || ($t->status instanceof TaskStatus && $t->status->value === $status->value))->values(),
                 ],
             )
             ->all();
@@ -121,7 +120,7 @@ new class extends Component
             $this->dispatch('toast', message: (string) ($firstError ?? $e->getMessage()), type: 'error');
             $this->loadTasks();
         } catch (\Exception $e) {
-            $this->dispatch('toast', message: 'Lỗi: '.$e->getMessage(), type: 'error');
+            $this->dispatch('toast', message: 'Lỗi: ' . $e->getMessage(), type: 'error');
             $this->loadTasks();
         }
     }
@@ -226,7 +225,7 @@ new class extends Component
             $this->dispatch('toast', message: (string) ($firstError ?? $e->getMessage()), type: 'error');
             $this->loadTasks();
         } catch (\Exception $e) {
-            $this->dispatch('toast', message: 'Lỗi: '.$e->getMessage(), type: 'error');
+            $this->dispatch('toast', message: 'Lỗi: ' . $e->getMessage(), type: 'error');
             $this->loadTasks();
         }
     }
@@ -258,7 +257,7 @@ new class extends Component
             $firstError = collect($e->errors())->flatten()->first();
             $this->addError('pendingRejectComment', (string) ($firstError ?? $e->getMessage()));
         } catch (\Exception $e) {
-            $this->addError('pendingRejectComment', 'Lỗi: '.$e->getMessage());
+            $this->addError('pendingRejectComment', 'Lỗi: ' . $e->getMessage());
         }
     }
 
@@ -330,7 +329,7 @@ new class extends Component
         } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
             $this->dispatch('toast', message: 'Lỗi: Chỉ có người được giao hoặc người hỗ trợ mới có thể bắt đầu công việc', type: 'error');
         } catch (\Exception $e) {
-            $this->dispatch('toast', message: 'Lỗi: '.$e->getMessage(), type: 'error');
+            $this->dispatch('toast', message: 'Lỗi: ' . $e->getMessage(), type: 'error');
         }
     }
 };
@@ -354,12 +353,15 @@ new class extends Component
 
     @php
         $kanbanProject = \App\Models\Project::find($projectId);
-        $canCreateTask = $kanbanProject !== null
-            && auth()->user()?->can('create', App\Models\Task::class)
-            && auth()->user()?->can('update', $kanbanProject);
+        $canCreateTask =
+            $kanbanProject !== null &&
+            auth()->user()?->can('create', App\Models\Task::class) &&
+            auth()->user()?->can('update', $kanbanProject) &&
+            $kanbanProject->status !== \App\Enums\ProjectStatus::Paused &&
+            $kanbanProject->status !== \App\Enums\ProjectStatus::Overdue;
     @endphp
 
-    <div class="flex w-full items-start gap-4 overflow-x-auto pb-6">
+    <div class="flex min-h-screen w-full items-start gap-4 overflow-x-auto pb-6">
         @foreach (TaskStatus::cases() as $status)
             @php
                 $tasks = collect($columns[$status->value] ?? []);
@@ -371,7 +373,8 @@ new class extends Component
                 {{-- Column header --}}
                 <div class="mb-1 flex items-center gap-2 px-1">
                     <!-- <span class="{{ $status->dotClass() }} h-2.5 w-2.5 rounded-full"></span> -->
-                    <span class="material-symbols-outlined text-[16px] {{ $status->textColor() }}">{{ $status->icon() }}</span>
+                    <span
+                        class="material-symbols-outlined {{ $status->textColor() }} text-[16px]">{{ $status->icon() }}</span>
                     <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200">{{ $status->label() }}</h3>
                     <span
                         class="{{ $status->badgeClass() }} text-2xs rounded-full px-2 py-0.5 font-bold">{{ $count }}</span>
@@ -437,24 +440,28 @@ new class extends Component
                                     $actor = auth()->user();
                                     $isAssignee = $actor && $actor->id === $task->pic_id;
                                     $taskPhase = $task->phase;
-                                    $isPhaseStarted = ! $taskPhase || ! $taskPhase->start_date || now()->greaterThanOrEqualTo($taskPhase->start_date->startOfDay());
+                                    $isPhaseStarted =
+                                        !$taskPhase ||
+                                        !$taskPhase->start_date ||
+                                        now()->greaterThanOrEqualTo($taskPhase->start_date->startOfDay());
 
                                     $canStart =
                                         $status === TaskStatus::Pending &&
-                                        ! $hasDependencyBlock &&
+                                        !$hasDependencyBlock &&
                                         ($actor?->hasRole('super_admin') || $isAssignee);
                                 @endphp
 
                                 @if ($canStart)
                                     <div class="group relative flex items-center justify-center">
-                                        <button wire:click.stop="startTask({{ $task->id }})" @disabled(! $isPhaseStarted)
-                                            class="hover:bg-primary/10 flex size-6 items-center justify-center rounded-full text-primary transition-all disabled:cursor-not-allowed disabled:opacity-30"
+                                        <button wire:click.stop="startTask({{ $task->id }})"
+                                            @disabled(!$isPhaseStarted)
+                                            class="hover:bg-primary/10 text-primary flex size-6 items-center justify-center rounded-full transition-all disabled:cursor-not-allowed disabled:opacity-30"
                                             title="{{ $isPhaseStarted ? 'Bắt đầu ngay' : '' }}">
                                             <span class="material-symbols-outlined text-[18px]">play_arrow</span>
                                         </button>
-                                        @if (! $isPhaseStarted && $taskPhase?->start_date)
+                                        @if (!$isPhaseStarted && $taskPhase?->start_date)
                                             <div
-                                                class="absolute bottom-full right-0 z-50 mb-2 hidden w-32 rounded bg-slate-900 px-2 py-1 text-2xs text-white group-hover:block">
+                                                class="text-2xs absolute bottom-full right-0 z-50 mb-2 hidden w-32 rounded bg-slate-900 px-2 py-1 text-white group-hover:block">
                                                 Giai đoạn chưa bắt đầu ({{ $taskPhase->start_date->format('d/m') }})
                                                 <div
                                                     class="absolute right-2 top-full h-0 w-0 border-4 border-transparent border-t-slate-900">
@@ -520,7 +527,8 @@ new class extends Component
                                             <div class="flex items-center justify-between gap-2 overflow-visible">
                                                 <div class="flex items-center gap-1.5 overflow-visible">
                                                     {{-- Reviewer Avatar with Premium Tooltip --}}
-                                                     <x-ui.avatar-stack :users="collect([$approvalLog->reviewer])" :max="1" :size="6" />
+                                                    <x-ui.avatar-stack :users="collect([$approvalLog->reviewer])" :max="1"
+                                                        :size="6" />
                                                     <div class="flex flex-col items-center gap-1">
                                                         @if ($approvalLog->star_rating !== null)
                                                             <div class="flex shrink-0 items-center gap-0.5">
@@ -529,7 +537,7 @@ new class extends Component
                                                         @endif
                                                         @if (!$isApproved && $approvalLog->comment)
                                                             <div class="group/comment relative">
-                                                                <p class="truncate text-2xs font-bold italic text-red-400 transition-colors hover:text-red-600"
+                                                                <p class="text-2xs truncate font-bold italic text-red-400 transition-colors hover:text-red-600"
                                                                     title="{{ $approvalLog->comment }}">
                                                                     “{{ $approvalLog->comment }}”
                                                                 </p>
@@ -567,7 +575,7 @@ new class extends Component
                                     @php $overdue = $task->deadline->isPast() && !$isDone; @endphp
                                     <div class="flex flex-col items-end">
                                         <span
-                                            class="{{ $overdue ? 'text-red-500 font-bold' : 'text-slate-400' }} flex items-center gap-1 text-2xs">
+                                            class="{{ $overdue ? 'text-red-500 font-bold' : 'text-slate-400' }} text-2xs flex items-center gap-1">
                                             <span
                                                 class="material-symbols-outlined {{ $overdue ? 'animate-pulse' : '' }} text-[14px]">calendar_clock</span>
                                             {{ $task->deadline->format('d/m') }}
@@ -577,7 +585,7 @@ new class extends Component
 
                                 @if ($task->completed_at && $isDone)
                                     <span
-                                        class="flex items-center gap-0.5 rounded-md bg-emerald-50 px-1.5 py-0.5 text-2xs font-bold text-emerald-500 dark:bg-emerald-900/20">
+                                        class="text-2xs flex items-center gap-0.5 rounded-md bg-emerald-50 px-1.5 py-0.5 font-bold text-emerald-500 dark:bg-emerald-900/20">
                                         <span class="material-symbols-outlined text-[14px]">check_circle</span>
                                         {{ $task->completed_at->format('d/m') }}
                                     </span>
