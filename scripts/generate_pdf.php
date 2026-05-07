@@ -5,8 +5,7 @@ $app = require_once __DIR__.'/../bootstrap/app.php';
 $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
 $kernel->bootstrap();
 
-use App\Exports\KpiExport;
-use Maatwebsite\Excel\Facades\Excel;
+use Spatie\Pdf\Facades\Pdf;
 
 $data = collect([
     (object) [
@@ -20,6 +19,14 @@ $data = collect([
     ],
 ]);
 
-$pdf = Excel::raw(new KpiExport($data, 'Báo cáo KPI Toàn công ty', 'Tháng 5/2026', 'ceo', ['generated_at' => now()->format('d/m/Y H:i'), 'generated_by' => 'Nguyen Duc Minh']), \Maatwebsite\Excel\Excel::DOMPDF);
+$html = view('exports.kpi', [
+    'data' => $data,
+    'title' => 'Báo cáo KPI Toàn công ty',
+    'periodLabel' => 'Tháng 5/2026',
+    'exportType' => 'ceo',
+    'meta' => ['generated_at' => now()->format('d/m/Y H:i'), 'generated_by' => 'Nguyen Duc Minh'],
+])->render();
+
+$pdf = Pdf::loadHtml($html)->format('a4')->output();
 file_put_contents(storage_path('app/kpi_test.pdf'), $pdf);
 echo storage_path('app/kpi_test.pdf').PHP_EOL;
