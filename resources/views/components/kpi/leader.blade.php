@@ -44,8 +44,15 @@ new #[Title('KPI phòng ban')] class extends Component
         Gate::forUser(auth()->user())->authorize('viewAny', KpiScore::class);
 
         $now = now();
-        $this->selectedYear = (int) $now->year;
-        $this->selectedValue = (int) $now->month;
+        // If we're in the first week of the month, default to show the previous month
+        if ($now->day <= 7) {
+            $default = $now->copy()->subMonth();
+        } else {
+            $default = $now;
+        }
+
+        $this->selectedYear = (int) $default->year;
+        $this->selectedValue = (int) $default->month;
     }
 
     public function updatedPeriodType(): void

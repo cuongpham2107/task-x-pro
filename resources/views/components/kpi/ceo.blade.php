@@ -603,6 +603,23 @@ new #[Title('KPI toàn công ty')] class extends Component {
                     <x-ui.filter-select model="selectedDepartmentId" :value="$selectedDepartmentId" icon="apartment"
                         all-label="Tất cả phòng ban" width="w-48" :options="$this->departments->pluck('name', 'id')->all()" />
                 </div>
+
+                <div class="mb-0.5 flex shrink-0 flex-col gap-1 self-end">
+                    <div class="flex items-center gap-2">
+                        <button wire:click="exportExcel('xlsx')"
+                            class="flex items-center rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-emerald-600 shadow-sm transition-all hover:bg-emerald-600 hover:text-white"
+                            title="Xuất Excel">
+                            <span class="material-symbols-outlined text-[20px]">table_view</span>
+                            <span class="ml-2 text-xs font-semibold">Xuất Excel</span>
+                        </button>
+                        <button wire:click="exportExcel('pdf')"
+                            class="flex items-center rounded-xl border border-rose-200 bg-rose-50 px-3 py-1.5 text-rose-600 shadow-sm transition-all hover:bg-rose-600 hover:text-white"
+                            title="Xuất PDF">
+                            <span class="material-symbols-outlined text-[20px]">picture_as_pdf</span>
+                            <span class="ml-2 text-xs font-semibold">Xuất PDF</span>
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -645,8 +662,8 @@ new #[Title('KPI toàn công ty')] class extends Component {
                 </div>
             </div>
 
-            <div class="flex flex-col items-center gap-8 md:flex-row">
-                <div class="w-full max-w-[280px]">
+            <div class="flex flex-col items-center gap-8 md:flex-row md:items-start">
+                <div class="mx-auto w-full max-w-[320px] shrink-0 md:mx-0 md:w-72 lg:w-80">
                     <x-kpi.radar-chart :metrics="[
                         'Đúng hạn' => $summary['avg_on_time_rate'],
                         'SLA' => $summary['avg_sla_rate'],
@@ -655,19 +672,19 @@ new #[Title('KPI toàn công ty')] class extends Component {
                         'Ổn định' => 85,
                     ]" :final-score="$summary['avg_score']" />
                 </div>
-                <div class="grid flex-1 grid-cols-1 gap-4 sm:grid-cols-2">
+                <div class="grid min-w-0 flex-1 grid-cols-1 gap-4 sm:grid-cols-2">
                     <div class="rounded-xl bg-slate-50 p-4 dark:bg-slate-800/50">
-                        <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Điểm chất lượng (Avg)
+                        <p class="text-2xs font-bold uppercase tracking-wider text-slate-400">Điểm chất lượng (Avg)
                         </p>
                         <p class="text-xl font-black text-slate-700 dark:text-white">
                             {{ number_format($summary['avg_star'], 1) }}/5.0</p>
                     </div>
                     <div class="rounded-xl bg-slate-50 p-4 dark:bg-slate-800/50">
-                        <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Độ cam kết SLA</p>
+                        <p class="text-2xs font-bold uppercase tracking-wider text-slate-400">Độ cam kết SLA</p>
                         <p class="text-primary text-xl font-black">{{ number_format($summary['avg_sla_rate'], 1) }}%</p>
                     </div>
                     <div class="bg-primary/5 col-span-1 rounded-xl p-4 sm:col-span-2">
-                        <p class="text-primary/80 text-[10px] font-bold uppercase tracking-wider">Nhận định chiến lược
+                        <p class="text-primary/80 text-2xs font-bold uppercase tracking-wider">Nhận định chiến lược
                         </p>
                         <p class="mt-1 text-xs leading-relaxed text-slate-600 dark:text-slate-400">
                             Hiệu suất toàn công ty đang @if ($overallTrend === 'up')
@@ -703,7 +720,7 @@ new #[Title('KPI toàn công ty')] class extends Component {
                             class="flex items-center justify-between rounded-xl bg-white p-3 shadow-sm dark:bg-slate-800">
                             <div>
                                 <p class="text-xs font-bold text-slate-700 dark:text-white">{{ $dept->name }}</p>
-                                <p class="text-[10px] text-rose-500">Score:
+                                <p class="text-2xs text-rose-500">Score:
                                     {{ number_format($dept->avg_final_score, 1) }}</p>
                             </div>
                             <span class="material-symbols-outlined text-rose-300">trending_down</span>
@@ -742,22 +759,12 @@ new #[Title('KPI toàn công ty')] class extends Component {
                     <h3 class="text-base font-black text-slate-800 dark:text-white">Bảng xếp hạng phòng ban</h3>
                     <p class="text-xs text-slate-400">Dữ liệu hiệu suất trung bình theo từng bộ phận</p>
                 </div>
-                <div class="flex items-center gap-3">
-                    <button wire:click="exportExcel('xlsx')"
-                        class="flex size-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 transition-all hover:bg-emerald-600 hover:text-white dark:bg-emerald-900/20">
-                        <span class="material-symbols-outlined text-[20px]">table_view</span>
-                    </button>
-                    <button wire:click="exportExcel('pdf')"
-                        class="flex size-9 items-center justify-center rounded-xl bg-rose-50 text-rose-600 transition-all hover:bg-rose-600 hover:text-white dark:bg-rose-900/20">
-                        <span class="material-symbols-outlined text-[20px]">picture_as_pdf</span>
-                    </button>
-                </div>
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full border-collapse text-left text-sm">
                     <thead>
                         <tr
-                            class="bg-slate-50 text-[10px] font-black uppercase tracking-widest text-slate-500 dark:bg-slate-800/50">
+                            class="bg-slate-50 text-2xs font-black uppercase tracking-widest text-slate-500 dark:bg-slate-800/50">
                             <th class="px-6 py-4">Phòng ban</th>
                             <th class="px-6 py-4">Quản lý</th>
                             <th class="px-4 py-4 text-center">Quy mô</th>
@@ -823,7 +830,7 @@ new #[Title('KPI toàn công ty')] class extends Component {
                                 </td>
                                 <td class="px-6 py-4 text-right">
                                     <span
-                                        class="{{ $statusMeta['bg'] }} {{ $statusMeta['text'] }} inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-wider">
+                                        class="{{ $statusMeta['bg'] }} {{ $statusMeta['text'] }} inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-2xs font-black uppercase tracking-wider">
                                         <div class="size-1.5 rounded-full bg-current opacity-50"></div>
                                         {{ $statusMeta['label'] }}
                                     </span>
@@ -956,7 +963,7 @@ new #[Title('KPI toàn công ty')] class extends Component {
         <div class="overflow-x-auto">
             <table class="w-full text-left">
                 <thead
-                    class="bg-slate-50 text-[10px] font-black uppercase tracking-widest text-slate-500 dark:bg-slate-800/60">
+                    class="bg-slate-50 text-2xs font-black uppercase tracking-widest text-slate-500 dark:bg-slate-800/60">
                     <tr>
                         <th class="px-6 py-4">Công việc</th>
                         <th class="px-6 py-4">PIC / Phòng ban</th>

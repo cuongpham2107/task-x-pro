@@ -180,3 +180,13 @@ it('shows task kpi and approver data on ceo kpi page', function (): void {
         ->assertSee($taskInPeriod->name)
         ->assertDontSee($taskWaiting->name);
 });
+
+it('shows export actions on the ceo kpi page', function (): void {
+    $ceo = User::factory()->ceo()->create();
+    $ceo->assignRole('ceo');
+
+    Livewire::actingAs($ceo)
+        ->test('kpi.ceo')
+        ->assertSee('Xuất Excel')
+        ->assertSee('Xuất PDF');
+});

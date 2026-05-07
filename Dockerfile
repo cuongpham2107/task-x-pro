@@ -87,7 +87,8 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 RUN composer dump-autoload --optimize --no-dev
 
 # Set permissions for Laravel
-RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
+RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache /var/www/database && \
+    chmod -R 775 /var/www/storage /var/www/bootstrap/cache /var/www/database
 
 EXPOSE 9000
 CMD ["php-fpm"]

@@ -306,7 +306,7 @@ new class extends Component
                                             <div class="flex flex-col gap-1">
                                                 <button
                                                     wire:click="$dispatch('task-edit-requested', { taskId: {{ $task->id }} })"
-                                                    class="hover:text-primary max-w-[200px] truncate text-left text-sm font-bold text-slate-600 transition-colors dark:text-slate-100">
+                                                    class="hover:text-primary max-w-50 truncate text-left text-sm font-bold text-slate-600 transition-colors dark:text-slate-100">
                                                     {{ $task->name }}
                                                 </button>
                                                 <div class="flex items-center gap-2">
@@ -315,7 +315,7 @@ new class extends Component
                                                     </x-ui.badge>
                                                     @if ($task->comments_count > 0)
                                                         <span
-                                                            class="flex items-center gap-1 text-[10px] text-slate-400">
+                                                            class="flex items-center gap-1 text-2xs text-slate-400">
                                                             <span
                                                                 class="material-symbols-outlined text-[14px]">chat_bubble</span>
                                                             {{ $task->comments_count }}
@@ -351,7 +351,7 @@ new class extends Component
                                                     {{ $task->deadline ? \Carbon\Carbon::parse($task->deadline)->format('d/m/Y') : 'N/A' }}
                                                 </span>
                                                 @if ($task->deadline && \Carbon\Carbon::parse($task->deadline)->isPast())
-                                                    <span class="text-[10px] font-bold uppercase text-rose-500">Quá
+                                                    <span class="text-2xs font-bold uppercase text-rose-500">Quá
                                                         hạn</span>
                                                 @endif
                                             </div>
@@ -359,7 +359,7 @@ new class extends Component
                                         <td class="px-6 py-4">
                                             <div class="w-24">
                                                 <div
-                                                    class="mb-1 flex items-center justify-between text-[10px] font-bold text-slate-500">
+                                                    class="mb-1 flex items-center justify-between text-2xs font-bold text-slate-500">
                                                     <span>{{ $task->progress }}%</span>
                                                 </div>
                                                 <div
@@ -378,13 +378,13 @@ new class extends Component
                                                 $statusEnum = \App\Enums\TaskStatus::tryFrom($statusValue);
                                             @endphp
                                             <span
-                                                class="{{ $statusEnum?->badgeClass() ?? 'bg-slate-100 text-slate-600' }} rounded px-2 py-0.5 text-[10px] font-bold uppercase">
+                                                class="{{ $statusEnum?->badgeClass() ?? 'bg-slate-100 text-slate-600' }} rounded px-2 py-0.5 text-2xs font-bold uppercase">
                                                 {{ $statusEnum?->label() ?? $task->status }}
                                             </span>
                                         </td>
                                         <td class="px-6 py-4">
                                             <div
-                                                class="mb-1 flex items-center justify-between text-[10px] font-bold text-slate-500">
+                                                class="mb-1 flex items-center justify-between text-2xs font-bold text-slate-500">
                                                 <span> {{ $task->updated_at->diffForHumans() }}</span>
                                             </div>
                                         </td>

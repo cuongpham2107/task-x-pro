@@ -11,16 +11,45 @@
 @endphp
 
 <!DOCTYPE html>
-<html>
+<html lang="vi">
 
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <style>
-        body {
-            font-family: DejaVu Sans, sans-serif;
-            font-size: 11px;
-            color: #0f172a;
-        }
+        @font-face {
+    font-family: 'NotoSans';
+    src: url('{{ storage_path("fonts/NotoSans-Regular.ttf") }}') format('truetype');
+    font-weight: 400;
+    font-style: normal;
+}
+@font-face {
+    font-family: 'NotoSans';
+    src: url('{{ storage_path("fonts/NotoSans-Bold.ttf") }}') format('truetype');
+    font-weight: 700;
+    font-style: normal;
+}
+@font-face {
+    font-family: 'NotoSans';
+    src: url('{{ storage_path("fonts/NotoSans-Italic.ttf") }}') format('truetype');
+    font-weight: 400;
+    font-style: italic;
+}
+@font-face {
+    font-family: 'NotoSans';
+    src: url('{{ storage_path("fonts/NotoSans-BoldItalic.ttf") }}') format('truetype');
+    font-weight: 700;
+    font-style: italic;
+}
+
+html, body {
+    font-family: 'NotoSans', sans-serif;
+    font-size: 11px;
+    color: #0f172a;
+}
+
+table, th, td, p, div, span {
+    font-family: 'NotoSans', sans-serif;
+}
 
         table {
             width: 100%;
@@ -105,7 +134,7 @@
                     <th class="head center">SLA đạt</th>
                     <th class="head center">% SLA đạt</th>
                     <th class="head center">Avg sao</th>
-                    <th class="head right">Final Score</th>
+                    <th class="head center">Final Score</th>
                     <th class="head center">Trạng thái / Duyệt</th>
                 </tr>
             @else
@@ -115,7 +144,7 @@
                     <th class="head center">% Đúng hạn</th>
                     <th class="head center">% SLA đạt</th>
                     <th class="head center">Avg sao</th>
-                    <th class="head right">Final Score</th>
+                    <th class="head center">Final Score</th>
                     <th class="head center">Điểm mục tiêu</th>
                     <th class="head center">Điểm thực tế</th>
                     <th class="head center">Trạng thái</th>
@@ -177,7 +206,7 @@
                         <td class="center">{{ $score->sla_met_tasks }}</td>
                         <td class="center">{{ number_format((float) $score->sla_rate, 1) }}%</td>
                         <td class="center">{{ number_format((float) $score->avg_star, 1) }}</td>
-                        <td class="right">{{ number_format((float) $score->final_score, 1) }}</td>
+                        <td class="center">{{ number_format((float) $score->final_score, 1) }}</td>
                         <td class="center">
                             {{ $statusLabel }}
                             @if ($score->approved_at)
@@ -212,7 +241,7 @@
                         <td class="center">{{ number_format((float) $row->on_time_rate, 1) }}%</td>
                         <td class="center">{{ number_format((float) $row->sla_rate, 1) }}%</td>
                         <td class="center">{{ number_format((float) $row->avg_star, 1) }}</td>
-                        <td class="right">{{ number_format((float) $row->final_score, 1) }}</td>
+                        <td class="center">{{ number_format((float) $row->final_score, 1) }}</td>
                         <td class="center">{{ number_format((float) ($row->target_score ?? 100), 0) }}</td>
                         <td class="center">{{ number_format((float) ($row->actual_score ?? $row->final_score), 1) }}
                         </td>

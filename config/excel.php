@@ -5,7 +5,24 @@ use PhpOffice\PhpSpreadsheet\Reader\Csv;
 
 return [
     'exports' => [
-
+        'pdf' => [
+            'driver'       => 'dompdf',
+            'orientation'  => 'portrait',
+            'font_size'    => 11,
+            'font'         => 'NotoSans',
+            'margin_top'   => 10,
+            'margin_right' => 10,
+            'margin_bottom'=> 10,
+            'margin_left'  => 10,
+            'options' => [
+                'font_dir'             => storage_path('fonts/'),   // ← trỏ đúng thư mục
+                'font_cache'           => storage_path('fonts/'),
+                'chroot'               => realpath(base_path()),
+                'isHtml5ParserEnabled' => true,
+                'isRemoteEnabled'      => false,
+                'defaultFont'          => 'NotoSans',
+            ],
+        ],
         /*
         |--------------------------------------------------------------------------
         | Chunk size

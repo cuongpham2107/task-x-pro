@@ -1,8 +1,10 @@
 <?php
+use App\Exports\DashboardReportExport;
 use App\Models\ActivityLog;
 use App\Services\Dashboard\DashboardService;
 use Livewire\Attributes\On;
 use Livewire\Component;
+use Maatwebsite\Excel\Facades\Excel;
 
 new class extends Component
 {
@@ -39,10 +41,23 @@ new class extends Component
         $this->dispatch('update-top-performers-chart', data: $this->data['top_performers']);
     }
 
-    public function exportReport()
+    public function exportReport(string $format = 'xlsx')
     {
-        // TODO: Implement report export logic
-        $this->dispatch('toast', message: 'Tính năng xuất báo cáo CEO đang được phát triển', type: 'info');
+        $filename = 'dashboard-ceo-' . now()->format('Y-m-d-His') . '.' . ($format === 'pdf' ? 'pdf' : 'xlsx');
+        $writer = $format === 'pdf' ? \Maatwebsite\Excel\Excel::DOMPDF : \Maatwebsite\Excel\Excel::XLSX;
+
+        $this->dispatch('toast', message: 'Bắt đầu xuất báo cáo CEO', type: 'info');
+
+        return Excel::download(
+            new DashboardReportExport(
+                $this->data,
+                'Báo cáo dashboard CEO',
+                'Toàn bộ công ty',
+                auth()->user()?->name ?? 'Hệ thống',
+            ),
+            $filename,
+            $writer,
+        );
     }
 
     #[On('task-updated')]
@@ -72,16 +87,24 @@ new class extends Component
                         description="Đây là báo cáo hiệu suất tổng quát của hệ thống TaskXPro hôm nay."
                         class="mb-0" />
                 </div>
-                {{-- <div class="flex gap-3">
+                <div class="flex gap-3">
                     <x-ui.button
                         variant="outline"
                         size="sm"
-                        icon="download"
-                        wire:click="exportReport"
+                        icon="table_view"
+                        wire:click="exportReport('xlsx')"
                     >
-                        Xuất báo cáo
+                        Xuất Excel
                     </x-ui.button>
-                </div> --}}
+                    <x-ui.button
+                        variant="outline"
+                        size="sm"
+                        icon="picture_as_pdf"
+                        wire:click="exportReport('pdf')"
+                    >
+                        Xuất PDF
+                    </x-ui.button>
+                </div>
             </div>
             <div class="mb-8 grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4" x-show="ready"
                 x-transition:enter="transition ease-out duration-500 delay-100"
@@ -230,7 +253,7 @@ new class extends Component
                                             <div class="flex flex-col gap-1">
                                                 <button
                                                     wire:click="$dispatch('task-edit-requested', { taskId: {{ $task->id }} })"
-                                                    class="hover:text-primary max-w-[200px] truncate text-left text-sm font-bold text-slate-600 transition-colors dark:text-slate-100">
+                                                    class="hover:text-primary max-w-50 truncate text-left text-sm font-bold text-slate-600 transition-colors dark:text-slate-100">
                                                     {{ $task->name }}
                                                 </button>
                                                 <div class="flex items-center gap-2">
@@ -271,7 +294,7 @@ new class extends Component
                                         <td class="px-6 py-4">
                                             <div class="w-24">
                                                 <div
-                                                    class="mb-1 flex items-center justify-between text-[10px] font-bold text-slate-500">
+                                                    class="mb-1 flex items-center justify-between text-2xs font-bold text-slate-500">
                                                     <span>{{ $task->progress }}%</span>
                                                 </div>
                                                 <div
@@ -283,7 +306,7 @@ new class extends Component
                                         </td>
                                         <td class="px-6 py-4">
                                             <span
-                                                class="{{ $statusEnum?->badgeClass() ?? 'bg-slate-100 text-slate-600' }} rounded px-2 py-0.5 text-[10px] font-bold uppercase">
+                                                class="{{ $statusEnum?->badgeClass() ?? 'bg-slate-100 text-slate-600' }} rounded px-2 py-0.5 text-2xs font-bold uppercase">
                                                 {{ $statusEnum?->label() ?? $task->status }}
                                             </span>
                                         </td>

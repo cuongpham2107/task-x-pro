@@ -285,6 +285,14 @@ Schedule::command('kpi:daily-sync')
     ->withoutOverlapping()
     ->onOneServer();
 Schedule::command('kpi:monthly-sync')
-    ->lastDayOfMonth('23:59')
+    ->monthlyOn(1, '02:00')
+    ->withoutOverlapping()
+    ->onOneServer();
+Schedule::command('kpi:monthly-sync')
+    ->monthlyOn(2, '03:00')
+    ->withoutOverlapping()
+    ->onOneServer();
+Schedule::command('kpi:backfill-missing-months', ['--months' => '12'])
+    ->monthlyOn(1, '04:00')
     ->withoutOverlapping()
     ->onOneServer();
