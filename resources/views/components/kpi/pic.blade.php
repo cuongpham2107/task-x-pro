@@ -11,7 +11,8 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use Maatwebsite\Excel\Facades\Excel;
 
-new class extends Component {
+new class extends Component
+{
     use WithPagination;
 
     public string $periodType = KpiPeriodType::Monthly->value;
@@ -93,12 +94,11 @@ new class extends Component {
             ->get();
 
         $title = 'Báo cáo KPI Cá nhân';
-        $periodLabel = 'Lịch sử ' . $this->historyYear;
+        $periodLabel = 'Lịch sử '.$this->historyYear;
         $ownerSlug = Str::slug((string) (auth()->user()?->name ?? 'nhan-su'));
-        $filename = 'kpi-ca-nhan-' . $ownerSlug . '-' . $this->historyYear . '.' . ($format === 'pdf' ? 'pdf' : 'xlsx');
-        $writer = $format === 'pdf' ? \Maatwebsite\Excel\Excel::DOMPDF : \Maatwebsite\Excel\Excel::XLSX;
+        $filename = 'kpi-ca-nhan-'.$ownerSlug.'-'.$this->historyYear.'.'.($format === 'pdf' ? 'pdf' : 'xlsx');
 
-        $this->dispatch('toast', message: 'Bắt đầu xuất file ' . strtoupper($format), type: 'info');
+        $this->dispatch('toast', message: 'Bắt đầu xuất file '.strtoupper($format), type: 'info');
 
         $meta = [
             'generated_at' => now()->format('d/m/Y H:i'),
@@ -106,13 +106,31 @@ new class extends Component {
             'formula' => 'Điểm = (% đúng hạn x 0.4) + (% SLA đạt x 0.4) + (sao x 0.2)',
         ];
 
-        return Excel::download(new KpiExport($scores, $title, $periodLabel, 'pic', $meta), $filename, $writer);
+        if ($format === 'pdf') {
+            $html = view('exports.kpi', [
+                'data' => $scores,
+                'title' => $title,
+                'periodLabel' => $periodLabel,
+                'exportType' => 'pic',
+                'meta' => $meta,
+            ])->render();
+
+            return Pdf::loadHtml($html)
+                ->format('a4')
+                ->download($filename);
+        }
+
+        return Excel::download(
+            new KpiExport($scores, $title, $periodLabel, 'pic', $meta),
+            $filename,
+            \Maatwebsite\Excel\Excel::XLSX
+        );
     }
 
     public function getTeamAverageProperty(): float
     {
         $user = auth()->user();
-        if (!$user || !$user->department_id) {
+        if (! $user || ! $user->department_id) {
             return 0;
         }
 
@@ -129,11 +147,11 @@ new class extends Component {
     public function getPeriodValueOptionsProperty(): array
     {
         if ($this->periodType === KpiPeriodType::Monthly->value) {
-            return collect(range(1, 12))->mapWithKeys(fn($m) => [$m => "Tháng $m"])->all();
+            return collect(range(1, 12))->mapWithKeys(fn ($m) => [$m => "Tháng $m"])->all();
         }
 
         if ($this->periodType === KpiPeriodType::Quarterly->value) {
-            return collect(range(1, 4))->mapWithKeys(fn($q) => [$q => "Quý $q"])->all();
+            return collect(range(1, 4))->mapWithKeys(fn ($q) => [$q => "Quý $q"])->all();
         }
 
         return [1 => 'Cả năm'];
@@ -142,14 +160,14 @@ new class extends Component {
     public function getYearOptionsProperty(): array
     {
         return collect(range(now()->year - 2, now()->year))
-            ->mapWithKeys(fn($y) => [$y => "Năm $y"])
+            ->mapWithKeys(fn ($y) => [$y => "Năm $y"])
             ->all();
     }
 
     public function getHistoryYearOptionsProperty(): array
     {
         return collect(range(now()->year - 3, now()->year))
-            ->mapWithKeys(fn($y) => [$y => "Năm $y"])
+            ->mapWithKeys(fn ($y) => [$y => "Năm $y"])
             ->all();
     }
 
@@ -262,9 +280,9 @@ new class extends Component {
     public function getTaskReviewPeriodLabelProperty(): string
     {
         return match ($this->periodType) {
-            KpiPeriodType::Quarterly->value => 'Quý ' . $this->selectedValue . '/' . $this->selectedYear,
-            KpiPeriodType::Yearly->value => 'Năm ' . $this->selectedYear,
-            default => 'Tháng ' . $this->selectedValue . '/' . $this->selectedYear,
+            KpiPeriodType::Quarterly->value => 'Quý '.$this->selectedValue.'/'.$this->selectedYear,
+            KpiPeriodType::Yearly->value => 'Năm '.$this->selectedYear,
+            default => 'Tháng '.$this->selectedValue.'/'.$this->selectedYear,
         };
     }
 
@@ -298,7 +316,7 @@ new class extends Component {
     public function taskApprovalMeta(Task $task): array
     {
         $latestLog = $task->approvalLogs->sortByDesc('id')->first();
-        if (!$latestLog) {
+        if (! $latestLog) {
             return [
                 'label' => 'Chưa gửi duyệt',
                 'class' => 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300',
