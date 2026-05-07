@@ -56,9 +56,16 @@ new class extends Component
                 'generatedBy' => auth()->user()?->name ?? 'Hệ thống',
             ])->render();
 
-            return Pdf::html($html)
-                ->format('a4')
-                ->download($filename);
+            $pdf = Pdf::html($html)->format('a4');
+            $tempFile = tempnam(sys_get_temp_dir(), 'pdf_').'.pdf';
+            $pdf->save($tempFile);
+
+            return response()->streamDownload(function () use ($tempFile) {
+                readfile($tempFile);
+                unlink($tempFile);
+            }, $filename, [
+                'Content-Type' => 'application/pdf',
+            ]);
         }
 
         return Excel::download(

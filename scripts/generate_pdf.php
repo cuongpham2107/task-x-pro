@@ -27,6 +27,9 @@ $html = view('exports.kpi', [
     'meta' => ['generated_at' => now()->format('d/m/Y H:i'), 'generated_by' => 'Nguyen Duc Minh'],
 ])->render();
 
-$pdf = Pdf::html($html)->format('a4')->output();
-file_put_contents(storage_path('app/kpi_test.pdf'), $pdf);
-echo storage_path('app/kpi_test.pdf').PHP_EOL;
+$pdf = Pdf::html($html)->format('a4');
+$tempFile = tempnam(sys_get_temp_dir(), 'pdf_').'.pdf';
+$pdf->save($tempFile);
+
+echo "PDF generated: $tempFile\n";
+echo 'Size: '.filesize($tempFile)." bytes\n";

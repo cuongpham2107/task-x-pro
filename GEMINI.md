@@ -81,11 +81,6 @@ This project has domain-specific skills available. You MUST activate the relevan
 - To inspect routes, run `php artisan route:list` directly.
 - To check environment variables, read the `.env` file directly.
 
-## Reading Browser Logs With the `browser-logs` Tool
-
-- You can read browser logs, errors, and exceptions using the `browser-logs` tool from Boost.
-- Only recent browser logs will be useful - ignore old logs.
-
 ## Searching Documentation (Critically Important)
 
 - Boost comes with a powerful `search-docs` tool you should use before trying other approaches when working with Laravel or Laravel ecosystem packages. This tool automatically passes a list of installed packages and their versions to the remote Boost API, so it returns only version-specific documentation for the user's circumstance. You should pass an array of packages to filter on if you know you need docs for particular packages.

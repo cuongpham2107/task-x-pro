@@ -113,13 +113,30 @@ $isManager = $isLeader && !$isCeo && $status !== 'waiting_approval';
     <x-ui.range-slider label="Tiến độ công việc" name="progress" wire:model="progress" icon="trending_up"
         start-label="Bắt đầu (0%)" end-label="Hoàn thành (100%)" :disabled="!$canEditProgressFields || $status === 'pending' || ($this->phase?->status === 'pending')" />
 
-    {{-- Link sản phẩm --}}
-    <div class="col-span-full">
-        <x-ui.input label="Link sản phẩm (Drive/Figma/...)" name="deliverable_url" type="url"
-            placeholder="https://..." wire:model="deliverable_url" icon="link" :disabled="$isCeo || (!$isManager && !($isPic && $isTaskStarted))" />
-    </div>
+      {{-- Link sản phẩm --}}
+      <div class="col-span-full">
+          <div class="relative">
+              <x-ui.input label="Link sản phẩm (Drive/Figma/...)" name="deliverable_url" type="url"
+                  placeholder="https://..." wire:model="deliverable_url" icon="link" :disabled="$isCeo || (!$isManager && !($isPic && $isTaskStarted))" />
+              @if($deliverable_url)
+                  <div class="absolute right-3 top-8 flex gap-1">
+                      <button type="button"
+                          onclick="navigator.clipboard.writeText(@js($deliverable_url)).then(() => { Livewire.emit('toast', { message: 'Đã copy link!', type: 'success' }); }).catch(() => { Livewire.emit('toast', { message: 'Copy failed', type: 'error' }); })"
+                          class="text-gray-400 hover:text-blue-600 transition-colors p-1 rounded hover:bg-gray-100"
+                          title="Copy link">
+                          <flux:icon clipboard class="size-4" />
+                      </button>
+                      <a href="{{ $deliverable_url }}" target="_blank" rel="noopener noreferrer"
+                          class="text-gray-400 hover:text-blue-600 transition-colors p-1 rounded hover:bg-gray-100"
+                          title="Mở link">
+                          <flux:icon arrow-top-right-on-square class="size-4" />
+                      </a>
+                  </div>
+              @endif
+          </div>
+      </div>
 
-    {{-- Phụ thuộc công việc --}}
+     {{-- Phụ thuộc công việc --}}
     <div class="col-span-full space-y-2 text-slate-600" x-data="{
         search: '',
         showDropdown: false,
