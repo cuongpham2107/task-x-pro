@@ -18,25 +18,25 @@
     <style>
         @font-face {
     font-family: 'NotoSans';
-    src: url('{{ storage_path("fonts/NotoSans-Regular.ttf") }}') format('truetype');
+    src: url('file://{{ storage_path("fonts/NotoSans-Regular.ttf") }}') format('truetype');
     font-weight: 400;
     font-style: normal;
 }
-@font-face {
+        @font-face {
     font-family: 'NotoSans';
-    src: url('{{ storage_path("fonts/NotoSans-Bold.ttf") }}') format('truetype');
+    src: url('file://{{ storage_path("fonts/NotoSans-Bold.ttf") }}') format('truetype');
     font-weight: 700;
     font-style: normal;
 }
-@font-face {
+        @font-face {
     font-family: 'NotoSans';
-    src: url('{{ storage_path("fonts/NotoSans-Italic.ttf") }}') format('truetype');
+    src: url('file://{{ storage_path("fonts/NotoSans-Italic.ttf") }}') format('truetype');
     font-weight: 400;
     font-style: italic;
 }
-@font-face {
+        @font-face {
     font-family: 'NotoSans';
-    src: url('{{ storage_path("fonts/NotoSans-BoldItalic.ttf") }}') format('truetype');
+    src: url('file://{{ storage_path("fonts/NotoSans-BoldItalic.ttf") }}') format('truetype');
     font-weight: 700;
     font-style: italic;
 }
