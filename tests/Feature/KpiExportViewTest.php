@@ -70,13 +70,13 @@ it('renders kpi export template with vietnamese labels and formula for all repor
 
     expect($ceoHtml)->toContain('Công thức BR-002')
         ->and($ceoHtml)->toContain('Phòng ban')
-        ->and($ceoHtml)->toContain("font-family: 'Roboto', sans-serif")
-        ->and($ceoHtml)->toContain("vendor/dompdf/dompdf/lib/fonts/Roboto-Regular.ttf")
+        ->and($ceoHtml)->toContain("font-family: 'NotoSans', sans-serif")
+        ->and($ceoHtml)->toContain('NotoSans-Regular.ttf')
         ->and($ceoHtml)->not->toContain('<tr>a')
         ->and($ceoHtml)->not->toContain('bckground-color')
         ->and($leaderHtml)->toContain('Trạng thái / Duyệt')
         ->and($leaderHtml)->toContain('Chuyên viên vận hành')
-        ->and($leaderHtml)->toContain("font-family: 'Roboto', sans-serif")
+        ->and($leaderHtml)->toContain("font-family: 'NotoSans', sans-serif")
         ->and($picHtml)->toContain('Điểm thực tế')
         ->and($picHtml)->toContain('Ngày duyệt');
 });
