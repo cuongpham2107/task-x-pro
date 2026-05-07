@@ -553,7 +553,6 @@ new #[Title('KPI phòng ban')] class extends Component
         $title = 'Báo cáo KPI Phòng ban';
         $periodLabel = $this->periodLabel($this->periodType, $this->selectedYear, $this->selectedValue);
         $filename = 'kpi-team-'.$this->selectedValue.'-'.$this->selectedYear.'.'.($format === 'pdf' ? 'pdf' : 'xlsx');
-        $writer = $format === 'pdf' ? \Maatwebsite\Excel\Excel::DOMPDF : \Maatwebsite\Excel\Excel::XLSX;
 
         $this->dispatch('toast', message: 'Bắt đầu xuất file '.strtoupper($format), type: 'info');
 
@@ -563,7 +562,25 @@ new #[Title('KPI phòng ban')] class extends Component
             'formula' => 'Điểm = (% đúng hạn x 0.4) + (% SLA đạt x 0.4) + (sao x 0.2)',
         ];
 
-        return Excel::download(new KpiExport($scores, $title, $periodLabel, 'leader', $meta), $filename, $writer);
+        if ($format === 'pdf') {
+            $html = view('exports.kpi', [
+                'data' => $scores,
+                'title' => $title,
+                'periodLabel' => $periodLabel,
+                'exportType' => 'leader',
+                'meta' => $meta,
+            ])->render();
+
+            return Pdf::loadHtml($html)
+                ->format('a4')
+                ->download($filename);
+        }
+
+        return Excel::download(
+            new KpiExport($scores, $title, $periodLabel, 'leader', $meta),
+            $filename,
+            \Maatwebsite\Excel\Excel::XLSX
+        );
     }
 
     public function periodLabel(string $periodType, int $year, int $value): string
