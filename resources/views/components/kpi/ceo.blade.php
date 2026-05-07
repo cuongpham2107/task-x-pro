@@ -12,7 +12,8 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use Maatwebsite\Excel\Facades\Excel;
 
-new #[Title('KPI toàn công ty')] class extends Component {
+new #[Title('KPI toàn công ty')] class extends Component
+{
     use WithPagination;
 
     public string $periodType = KpiPeriodType::Monthly->value;
@@ -82,10 +83,10 @@ new #[Title('KPI toàn công ty')] class extends Component {
             return [1 => 'Cả năm'];
         }
         if ($this->periodType === KpiPeriodType::Quarterly->value) {
-            return collect(range(1, 4))->mapWithKeys(fn($v) => [$v => 'Quý ' . $v])->all();
+            return collect(range(1, 4))->mapWithKeys(fn ($v) => [$v => 'Quý '.$v])->all();
         }
 
-        return collect(range(1, 12))->mapWithKeys(fn($v) => [$v => 'Tháng ' . $v])->all();
+        return collect(range(1, 12))->mapWithKeys(fn ($v) => [$v => 'Tháng '.$v])->all();
     }
 
     public function getDepartmentsProperty()
@@ -295,7 +296,7 @@ new #[Title('KPI toàn công ty')] class extends Component {
         $prevYearData = KpiScore::query()->selectRaw('period_value, AVG(final_score) as avg_score')->where('period_type', KpiPeriodType::Monthly->value)->where('period_year', $prevYear)->groupBy('period_value')->orderBy('period_value')->pluck('avg_score', 'period_value')->all();
 
         $formatData = function ($data) {
-            return collect(range(1, 12))->map(fn($m) => (float) ($data[$m] ?? 0))->values()->all();
+            return collect(range(1, 12))->map(fn ($m) => (float) ($data[$m] ?? 0))->values()->all();
         };
 
         return [
@@ -316,7 +317,7 @@ new #[Title('KPI toàn công ty')] class extends Component {
             return [];
         }
 
-        return KpiScore::query()->where('period_type', $this->periodType)->where('period_year', $this->selectedYear)->where('period_value', $this->selectedValue)->whereIn('user_id', $userIds)->pluck('final_score', 'user_id')->map(fn(float|int|string $score): float => round((float) $score, 1))->all();
+        return KpiScore::query()->where('period_type', $this->periodType)->where('period_year', $this->selectedYear)->where('period_value', $this->selectedValue)->whereIn('user_id', $userIds)->pluck('final_score', 'user_id')->map(fn (float|int|string $score): float => round((float) $score, 1))->all();
     }
 
     /**
@@ -349,7 +350,7 @@ new #[Title('KPI toàn công ty')] class extends Component {
     public function taskApprovalMeta(Task $task): array
     {
         $latestLog = $task->approvalLogs->sortByDesc('id')->first();
-        if (!$latestLog) {
+        if (! $latestLog) {
             return [
                 'label' => 'Chưa gửi duyệt',
                 'class' => 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300',
@@ -390,7 +391,7 @@ new #[Title('KPI toàn công ty')] class extends Component {
 
     private function calcTrend($curr, $prev)
     {
-        if (!$prev) {
+        if (! $prev) {
             return ['value' => 0, 'direction' => 'neutral', 'label' => '-'];
         }
         $diff = $curr - $prev;
@@ -399,7 +400,7 @@ new #[Title('KPI toàn công ty')] class extends Component {
         return [
             'value' => abs(round($pct, 1)),
             'direction' => $diff > 0 ? 'up' : ($diff < 0 ? 'down' : 'neutral'),
-            'label' => ($diff > 0 ? '+' : '') . round($pct, 1) . '%',
+            'label' => ($diff > 0 ? '+' : '').round($pct, 1).'%',
         ];
     }
 
@@ -417,11 +418,11 @@ new #[Title('KPI toàn công ty')] class extends Component {
         return Department::query()
             ->with('head:id,name,job_title,avatar')
             ->withCount(['activeUsers as active_users_count'])
-            ->withAvg(['kpiScores as avg_final_score' => fn($q) => $this->applyPeriodFilter($q)], 'final_score')
-            ->withAvg(['kpiScores as avg_sla_rate' => fn($q) => $this->applyPeriodFilter($q)], 'sla_rate')
-            ->withAvg(['kpiScores as avg_on_time_rate' => fn($q) => $this->applyPeriodFilter($q)], 'on_time_rate')
-            ->withAvg(['kpiScores as avg_star' => fn($q) => $this->applyPeriodFilter($q)], 'avg_star')
-            ->when($this->selectedDepartmentId, fn($q) => $q->where('id', $this->selectedDepartmentId))
+            ->withAvg(['kpiScores as avg_final_score' => fn ($q) => $this->applyPeriodFilter($q)], 'final_score')
+            ->withAvg(['kpiScores as avg_sla_rate' => fn ($q) => $this->applyPeriodFilter($q)], 'sla_rate')
+            ->withAvg(['kpiScores as avg_on_time_rate' => fn ($q) => $this->applyPeriodFilter($q)], 'on_time_rate')
+            ->withAvg(['kpiScores as avg_star' => fn ($q) => $this->applyPeriodFilter($q)], 'avg_star')
+            ->when($this->selectedDepartmentId, fn ($q) => $q->where('id', $this->selectedDepartmentId))
             ->orderByDesc('avg_final_score')
             ->paginate($this->perPage);
     }
@@ -491,9 +492,9 @@ new #[Title('KPI toàn công ty')] class extends Component {
     public function periodLabel(string $periodType, int $year, int $value): string
     {
         return match ($periodType) {
-            KpiPeriodType::Quarterly->value => 'Quý ' . $value . '/' . $year,
-            KpiPeriodType::Yearly->value => 'Năm ' . $year,
-            default => 'Tháng ' . $value . '/' . $year,
+            KpiPeriodType::Quarterly->value => 'Quý '.$value.'/'.$year,
+            KpiPeriodType::Yearly->value => 'Năm '.$year,
+            default => 'Tháng '.$value.'/'.$year,
         };
     }
 
@@ -520,21 +521,19 @@ new #[Title('KPI toàn công ty')] class extends Component {
         $stats = Department::query()
             ->with('head:id,name,avatar')
             ->withCount(['activeUsers as active_users_count'])
-            ->withAvg(['kpiScores as avg_final_score' => fn($q) => $this->applyPeriodFilter($q)], 'final_score')
-            ->withAvg(['kpiScores as avg_sla_rate' => fn($q) => $this->applyPeriodFilter($q)], 'sla_rate')
-            ->withAvg(['kpiScores as avg_on_time_rate' => fn($q) => $this->applyPeriodFilter($q)], 'on_time_rate')
-            ->withAvg(['kpiScores as avg_star' => fn($q) => $this->applyPeriodFilter($q)], 'avg_star')
-            ->when($this->selectedDepartmentId, fn($q) => $q->where('id', $this->selectedDepartmentId))
+            ->withAvg(['kpiScores as avg_final_score' => fn ($q) => $this->applyPeriodFilter($q)], 'final_score')
+            ->withAvg(['kpiScores as avg_sla_rate' => fn ($q) => $this->applyPeriodFilter($q)], 'sla_rate')
+            ->withAvg(['kpiScores as avg_on_time_rate' => fn ($q) => $this->applyPeriodFilter($q)], 'on_time_rate')
+            ->withAvg(['kpiScores as avg_star' => fn ($q) => $this->applyPeriodFilter($q)], 'avg_star')
+            ->when($this->selectedDepartmentId, fn ($q) => $q->where('id', $this->selectedDepartmentId))
             ->orderByDesc('avg_final_score')
             ->get();
 
         $title = 'Báo cáo KPI Toàn công ty';
         $periodLabel = $this->periodLabel($this->periodType, $this->selectedYear, $this->selectedValue);
-        $filename = 'kpi-toan-cong-ty-' . $this->selectedValue . '-' . $this->selectedYear . '.' . ($format === 'pdf' ? 'pdf' : 'xlsx');
+        $filename = 'kpi-toan-cong-ty-'.$this->selectedValue.'-'.$this->selectedYear.'.'.($format === 'pdf' ? 'pdf' : 'xlsx');
 
-        $writer = $format === 'pdf' ? \Maatwebsite\Excel\Excel::DOMPDF : \Maatwebsite\Excel\Excel::XLSX;
-
-        $this->dispatch('toast', message: 'Bắt đầu xuất file ' . strtoupper($format), type: 'info');
+        $this->dispatch('toast', message: 'Bắt đầu xuất file '.strtoupper($format), type: 'info');
 
         $meta = [
             'generated_at' => now()->format('d/m/Y H:i'),
@@ -542,7 +541,25 @@ new #[Title('KPI toàn công ty')] class extends Component {
             'formula' => 'Điểm = (% đúng hạn x 0.4) + (% SLA đạt x 0.4) + (sao x 0.2)',
         ];
 
-        return Excel::download(new KpiExport($stats, $title, $periodLabel, 'ceo', $meta), $filename, $writer);
+        if ($format === 'pdf') {
+            $html = view('exports.kpi', [
+                'data' => $stats,
+                'title' => $title,
+                'periodLabel' => $periodLabel,
+                'exportType' => 'ceo',
+                'meta' => $meta,
+            ])->render();
+
+            return Pdf::loadHtml($html)
+                ->format('a4')
+                ->download($filename);
+        }
+
+        return Excel::download(
+            new KpiExport($stats, $title, $periodLabel, 'ceo', $meta),
+            $filename,
+            \Maatwebsite\Excel\Excel::XLSX
+        );
     }
 };
 ?>
