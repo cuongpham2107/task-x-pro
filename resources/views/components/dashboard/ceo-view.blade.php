@@ -43,10 +43,22 @@ new class extends Component
 
     public function exportReport(string $format = 'xlsx')
     {
-        $filename = 'dashboard-ceo-' . now()->format('Y-m-d-His') . '.' . ($format === 'pdf' ? 'pdf' : 'xlsx');
-        $writer = $format === 'pdf' ? \Maatwebsite\Excel\Excel::DOMPDF : \Maatwebsite\Excel\Excel::XLSX;
+        $filename = 'dashboard-ceo-'.now()->format('Y-m-d-His').'.'.($format === 'pdf' ? 'pdf' : 'xlsx');
 
         $this->dispatch('toast', message: 'Bắt đầu xuất báo cáo CEO', type: 'info');
+
+        if ($format === 'pdf') {
+            $html = view('exports.dashboard-report', [
+                'data' => $this->data,
+                'title' => 'Báo cáo dashboard CEO',
+                'periodLabel' => 'Toàn bộ công ty',
+                'generatedBy' => auth()->user()?->name ?? 'Hệ thống',
+            ])->render();
+
+            return Pdf::loadHtml($html)
+                ->format('a4')
+                ->download($filename);
+        }
 
         return Excel::download(
             new DashboardReportExport(
@@ -56,7 +68,7 @@ new class extends Component
                 auth()->user()?->name ?? 'Hệ thống',
             ),
             $filename,
-            $writer,
+            \Maatwebsite\Excel\Excel::XLSX
         );
     }
 
