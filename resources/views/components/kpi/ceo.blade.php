@@ -11,6 +11,7 @@ use Livewire\Attributes\Title;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Maatwebsite\Excel\Facades\Excel;
+use Spatie\LaravelPdf\Facades\Pdf;
 
 new #[Title('KPI toàn công ty')] class extends Component
 {
@@ -550,7 +551,7 @@ new #[Title('KPI toàn công ty')] class extends Component
                 'meta' => $meta,
             ])->render();
 
-            return Pdf::loadHtml($html)
+            return Pdf::html($html)
                 ->format('a4')
                 ->download($filename);
         }

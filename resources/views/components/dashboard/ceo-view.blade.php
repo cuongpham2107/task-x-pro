@@ -5,6 +5,7 @@ use App\Services\Dashboard\DashboardService;
 use Livewire\Attributes\On;
 use Livewire\Component;
 use Maatwebsite\Excel\Facades\Excel;
+use Spatie\LaravelPdf\Facades\Pdf;
 
 new class extends Component
 {
@@ -55,7 +56,7 @@ new class extends Component
                 'generatedBy' => auth()->user()?->name ?? 'Hệ thống',
             ])->render();
 
-            return Pdf::loadHtml($html)
+            return Pdf::html($html)
                 ->format('a4')
                 ->download($filename);
         }

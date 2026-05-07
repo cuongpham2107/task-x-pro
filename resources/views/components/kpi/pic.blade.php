@@ -10,6 +10,7 @@ use Illuminate\Support\Str;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Maatwebsite\Excel\Facades\Excel;
+use Spatie\LaravelPdf\Facades\Pdf;
 
 new class extends Component
 {
@@ -115,7 +116,7 @@ new class extends Component
                 'meta' => $meta,
             ])->render();
 
-            return Pdf::loadHtml($html)
+            return Pdf::html($html)
                 ->format('a4')
                 ->download($filename);
         }
