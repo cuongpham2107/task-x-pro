@@ -5,8 +5,6 @@ $app = require_once __DIR__.'/../bootstrap/app.php';
 $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
 $kernel->bootstrap();
 
-use Spatie\Pdf\Pdf;
-
 $data = collect([
     (object) [
         'name' => 'Ban Giam Đốc',
@@ -27,6 +25,6 @@ $html = view('exports.kpi', [
     'meta' => ['generated_at' => now()->format('d/m/Y H:i'), 'generated_by' => 'Nguyen Duc Minh'],
 ])->render();
 
-$pdf = app(Pdf::class)->loadHtml($html)->format('a4')->output();
+$pdf = app('pdf')->loadHtml($html)->format('a4')->output();
 file_put_contents(storage_path('app/kpi_test.pdf'), $pdf);
 echo storage_path('app/kpi_test.pdf').PHP_EOL;
