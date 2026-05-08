@@ -52,7 +52,7 @@
     {{-- Danh sách file cũ --}}
     @if (is_countable($existingAttachments) && count($existingAttachments) > 0)
         <div class="space-y-1.5">
-            <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Tệp đã tải lên</p>
+            <p class="text-2xs font-bold uppercase tracking-wider text-slate-400">Tệp đã tải lên</p>
             @foreach ($existingAttachments as $attachment)
                 @php
                     $attachmentUrl = null;
@@ -146,11 +146,17 @@
                         </a>
                     @endif
                     @if (!$disabled)
-                        <button class="shrink-0 text-slate-400 transition-colors hover:text-red-500" type="button"
-                            wire:click="deleteAttachment({{ $attachment->id }})"
-                            wire:confirm="Bạn có chắc chắn muốn xóa tệp này không?">
-                            <span class="material-symbols-outlined text-base">delete</span>
-                        </button>
+                        <div class="flex items-center gap-2">
+                            <button class="shrink-0 text-slate-400 transition-colors hover:text-primary" type="button"
+                                wire:click="openDocumentEditor({{ $attachment->id }})" title="Chỉnh sửa tài liệu">
+                                <span class="material-symbols-outlined text-base">edit</span>
+                            </button>
+                            <button class="shrink-0 text-slate-400 transition-colors hover:text-red-500" type="button"
+                                wire:click="deleteAttachment({{ $attachment->id }})"
+                                wire:confirm="Bạn có chắc chắn muốn xóa tệp này không?">
+                                <span class="material-symbols-outlined text-base">delete</span>
+                            </button>
+                        </div>
                     @endif
                 </div>
             @endforeach
@@ -160,7 +166,7 @@
     {{-- Danh sách file mới đang chờ --}}
     @if ($newFilesCount > 0)
         <div class="space-y-1.5">
-            <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Tệp mới chuẩn bị tải lên</p>
+            <p class="text-2xs font-bold uppercase tracking-wider text-slate-400">Tệp mới chuẩn bị tải lên</p>
             @foreach ($newFiles as $index => $file)
                 @if ($file !== null)
                     @php

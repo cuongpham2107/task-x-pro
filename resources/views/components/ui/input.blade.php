@@ -8,7 +8,8 @@
     'disabled' => false,
     'value' => null,
     'icon' => null,
-    'iconRight' => null,
+    'prefixIcon' => null,
+    'prefixUrl' => null,
 ])
 @php
     $id = $id ?? ($name ?? md5($attributes->wire('model')));
@@ -81,15 +82,17 @@
             {{ $inputAttributes->class([
                 'input-field' => !in_array($type, ['range', 'checkbox', 'radio', 'file']),
                 'pl-10' => $icon,
-                'pr-10' => $iconRight || isset($suffix),
+                'pr-10' => $prefixIcon || isset($prefixUrl),
                 'border-red-500 focus:border-red-500 focus:ring-red-500/20' => $hasError,
             ]) }}
         />
 
-        @if ($iconRight)
-            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-                <span class="material-symbols-outlined group-focus-within:text-primary text-[20px] text-slate-400 transition-colors">{{ $iconRight }}</span>
-            </div>
+        @if ($prefixIcon)
+            @if ($prefixUrl)
+                <a href="{{ $prefixUrl }}" target="_blank" rel="noopener noreferrer" class="pointer-events-auto absolute inset-y-0 right-0 flex items-center pr-3" title="{{ $prefixUrl }}">
+                    <span class="material-symbols-outlined group-focus-within:text-primary text-[20px] text-slate-400 transition-colors">{{ $prefixIcon }}</span>
+                </a>
+            @endif
         @endif
 
         @isset($suffix)

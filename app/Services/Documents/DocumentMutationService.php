@@ -61,7 +61,27 @@ class DocumentMutationService
         Gate::forUser($actor)->authorize('update', $version->document()->firstOrFail());
 
         DB::transaction(function () use ($version, $attributes): void {
+            // Handle an uploaded file (Livewire) if present in attributes.
+            $uploadedFile = null;
+            if (array_key_exists('uploaded_file', $attributes)) {
+                $uploadedFile = $attributes['uploaded_file'];
+                unset($attributes['uploaded_file']);
+            }
+
+            // Update metadata fields first
             $version->update($attributes);
+
+            // If a new file was uploaded, store it in the media collection and update stored_path/file_size
+            if ($uploadedFile instanceof \Illuminate\Http\UploadedFile) {
+                $media = $version->addMedia($uploadedFile)
+                    ->usingFileName($uploadedFile->hashName())
+                    ->toMediaCollection('version_file');
+
+                $version->forceFill([
+                    'stored_path' => $media->getPathRelativeToRoot(),
+                    'file_size_bytes' => $media->size,
+                ])->save();
+            }
 
             // Update document's current_version to the latest version number
             $latestVersionNumber = $version->document->versions()->max('version_number');
@@ -108,16 +128,19 @@ class DocumentMutationService
         Task $task,
         TaskAttachment $attachment,
         Media $attachmentMedia,
-        ?int $projectId
+        ?int $projectId,
+        ?array $meta = null
     ): Document {
         // No explicit permission check here as it's an automated background sync
         // triggered by an authorized task attachment upload.
 
-        return DB::transaction(function () use ($actor, $task, $attachment, $attachmentMedia, $projectId) {
+        return DB::transaction(function () use ($actor, $task, $attachment, $attachmentMedia, $projectId, $meta) {
+            $documentName = $meta['document_name'] ?? $attachment->original_name;
+
             $document = Document::query()->firstOrCreate(
                 [
                     'task_id' => $task->id,
-                    'name' => $attachment->original_name,
+                    'name' => $documentName,
                 ],
                 [
                     'project_id' => $projectId,
@@ -135,12 +158,14 @@ class DocumentMutationService
 
             $nextVersionNumber = (int) ($document->versions()->max('version_number') ?? 0) + 1;
 
+            $changeSummary = $meta['change_summary'] ?? 'Dong bo tu file upload trong task';
+
             $documentVersion = DocumentVersion::query()->create([
                 'document_id' => $document->id,
                 'version_number' => $nextVersionNumber,
                 'uploader_id' => $actor->id,
                 'stored_path' => $attachmentMedia->getPathRelativeToRoot(),
-                'change_summary' => 'Dong bo tu file upload trong task',
+                'change_summary' => $changeSummary,
                 'file_size_bytes' => $attachmentMedia->size,
             ]);
 

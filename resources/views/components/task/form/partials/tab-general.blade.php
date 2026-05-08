@@ -113,28 +113,42 @@ $isManager = $isLeader && !$isCeo && $status !== 'waiting_approval';
     <x-ui.range-slider label="Tiến độ công việc" name="progress" wire:model="progress" icon="trending_up"
         start-label="Bắt đầu (0%)" end-label="Hoàn thành (100%)" :disabled="!$canEditProgressFields || $status === 'pending' || ($this->phase?->status === 'pending')" />
 
-      {{-- Link sản phẩm --}}
-      <div class="col-span-full">
-          <div class="relative">
-              <x-ui.input label="Link sản phẩm (Drive/Figma/...)" name="deliverable_url" type="url"
-                  placeholder="https://..." wire:model="deliverable_url" icon="link" :disabled="$isCeo || (!$isManager && !($isPic && $isTaskStarted))" />
-              @if($deliverable_url)
-                  <div class="absolute right-3 top-8 flex gap-1">
-                      <button type="button"
-                          onclick="navigator.clipboard.writeText(@js($deliverable_url)).then(() => { Livewire.emit('toast', { message: 'Đã copy link!', type: 'success' }); }).catch(() => { Livewire.emit('toast', { message: 'Copy failed', type: 'error' }); })"
-                          class="text-gray-400 hover:text-blue-600 transition-colors p-1 rounded hover:bg-gray-100"
-                          title="Copy link">
-                          <flux:icon clipboard class="size-4" />
-                      </button>
-                      <a href="{{ $deliverable_url }}" target="_blank" rel="noopener noreferrer"
-                          class="text-gray-400 hover:text-blue-600 transition-colors p-1 rounded hover:bg-gray-100"
-                          title="Mở link">
-                          <flux:icon arrow-top-right-on-square class="size-4" />
-                      </a>
-                  </div>
-              @endif
-          </div>
-      </div>
+     {{-- Link sản phẩm --}}
+     <div class="col-span-full">
+         <label class="label-text">
+             <span class="flex items-center gap-1.5">
+                 <span class="material-symbols-outlined text-base text-slate-400">link</span>
+                 Link sản phẩm (Drive/Figma/...)
+             </span>
+         </label>
+
+         <div class="mt-1 flex items-center gap-2">
+            <x-ui.input name="deliverable_url_input" type="url"
+                placeholder="https://..." wire:model.defer="deliverable_url_input" icon="link"
+                wire:keydown.enter.prevent="addDeliverableUrl"
+                :disabled="$isCeo || (!$isManager && !($isPic && $isTaskStarted))" />
+             <button type="button" wire:click="addDeliverableUrl"
+                 class="inline-flex items-center gap-2 rounded-md bg-primary px-3 py-2 text-white hover:opacity-90"
+                 @if($isCeo || (!$isManager && !($isPic && $isTaskStarted))) disabled @endif>
+                 Thêm
+             </button>
+         </div>
+
+         <div class="mt-2 space-y-2">
+             @foreach ($deliverable_urls as $i => $url)
+                 <div class="flex items-center justify-between gap-3 bg-slate-50 px-3 py-2 rounded-md">
+                     <a href="{{ $url }}" target="_blank" rel="noopener noreferrer"
+                         class="text-sm text-primary underline break-all">{{ $url }}</a>
+                     <button type="button" wire:click="removeDeliverableUrl({{ $i }})"
+                             class="text-red-500 hover:text-red-700">
+                         <span class="material-symbols-outlined">close</span>
+                     </button>
+                 </div>
+             @endforeach
+         </div>
+
+         <x-ui.field-error field="deliverable_urls" />
+     </div>
 
      {{-- Phụ thuộc công việc --}}
     <div class="col-span-full space-y-2 text-slate-600" x-data="{

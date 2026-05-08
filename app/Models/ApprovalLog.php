@@ -11,7 +11,7 @@ class ApprovalLog extends Model
     use HasFactory;
 
     public const UPDATED_AT = null;
-    
+
     /**
      * Tu dong dong bo KPI khi co approval log moi.
      */

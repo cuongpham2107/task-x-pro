@@ -141,6 +141,76 @@ Route::middleware('auth')->group(function () {
             Route::livewire('/', 'pages::kpi-scores.index')->name('index');
         });
 
+    // Serve document version files (view inline). Authorized route.
+    Route::get('documents/version/{version}/file', function (\App\Models\DocumentVersion $version) {
+        $actor = auth()->user();
+        \Illuminate\Support\Facades\Gate::forUser($actor)->authorize('view', $version->document);
+
+        $media = $version->getFirstMedia('version_file');
+        if ($media) {
+            try {
+                $path = $media->getPath();
+                $mime = $media->mime_type ?? null;
+
+                return response()->file($path, ['Content-Type' => $mime ?? 'application/octet-stream']);
+            } catch (\Throwable) {
+                // fall through to other handlers
+            }
+        }
+
+        $storedPath = trim((string) $version->stored_path);
+        if ($storedPath === '') {
+            abort(404);
+        }
+
+        $disk = config('media-library.disk_name');
+        $diskInstance = \Illuminate\Support\Facades\Storage::disk($disk);
+
+        if (! $diskInstance->exists($storedPath)) {
+            abort(404);
+        }
+
+        // If disk supports temporaryUrl (S3), redirect to it
+        if (method_exists($diskInstance, 'temporaryUrl')) {
+            try {
+                return redirect($diskInstance->temporaryUrl($storedPath, now()->addMinutes(10)));
+            } catch (\Throwable) {
+                // ignore and continue
+            }
+        }
+
+        // If disk exposes a public URL, redirect
+        if (method_exists($diskInstance, 'url')) {
+            try {
+                return redirect($diskInstance->url($storedPath));
+            } catch (\Throwable) {
+                // ignore and continue
+            }
+        }
+
+        // Try to resolve a local filesystem path and serve it
+        try {
+            $fullPath = $diskInstance->path($storedPath);
+            $mime = method_exists($diskInstance, 'mimeType') ? $diskInstance->mimeType($storedPath) : null;
+
+            return response()->file($fullPath, ['Content-Type' => $mime ?? 'application/octet-stream']);
+        } catch (\Throwable) {
+            // fallback to stream
+        }
+
+        $stream = $diskInstance->readStream($storedPath);
+        if ($stream === false) {
+            abort(404);
+        }
+
+        return response()->stream(function () use ($stream) {
+            fpassthru($stream);
+        }, 200, [
+            'Content-Type' => (method_exists($diskInstance, 'mimeType') ? $diskInstance->mimeType($storedPath) : 'application/octet-stream'),
+            'Content-Disposition' => 'inline; filename="'.basename($storedPath).'"',
+        ]);
+    })->name('documents.version.file');
+
     Route::get('/api/search', \App\Http\Controllers\Api\GlobalSearchController::class)->name('api.search');
 });
 

@@ -67,7 +67,7 @@ class TaskFactory extends Factory
             'deadline' => $deadline,
             'started_at' => $startedAt,
             'completed_at' => $completedAt,
-            'deliverable_url' => fake()->optional(0.45)->url(),
+            'deliverable_urls' => ($u = fake()->optional(0.45)->url()) ? [$u] : null,
             'issue_note' => fake()->optional(0.35)->sentence(),
             'recommendation' => fake()->optional(0.35)->sentence(),
             'workflow_type' => fake()->randomElement(['single', 'double']),

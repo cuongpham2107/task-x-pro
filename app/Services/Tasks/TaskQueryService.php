@@ -307,25 +307,25 @@ class TaskQueryService
                 case 'this_week':
                     $query->whereBetween('tasks.deadline', [
                         $now->copy()->startOfWeek()->startOfDay(),
-                        $now->copy()->endOfWeek()->endOfDay()
+                        $now->copy()->endOfWeek()->endOfDay(),
                     ]);
                     break;
                 case 'this_month':
                     $query->whereBetween('tasks.deadline', [
                         $now->copy()->startOfMonth()->startOfDay(),
-                        $now->copy()->endOfMonth()->endOfDay()
+                        $now->copy()->endOfMonth()->endOfDay(),
                     ]);
                     break;
                 case 'this_quarter':
                     $query->whereBetween('tasks.deadline', [
                         $now->copy()->startOfQuarter()->startOfDay(),
-                        $now->copy()->endOfQuarter()->endOfDay()
+                        $now->copy()->endOfQuarter()->endOfDay(),
                     ]);
                     break;
                 case 'this_year':
                     $query->whereBetween('tasks.deadline', [
                         $now->copy()->startOfYear()->startOfDay(),
-                        $now->copy()->endOfYear()->endOfDay()
+                        $now->copy()->endOfYear()->endOfDay(),
                     ]);
                     break;
             }

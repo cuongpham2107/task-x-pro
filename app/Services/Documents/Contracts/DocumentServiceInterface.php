@@ -126,12 +126,14 @@ interface DocumentServiceInterface
      * @param  TaskAttachment  $attachment  The task attachment record.
      * @param  Media  $attachmentMedia  The media object of the attachment.
      * @param  int|null  $projectId  The project ID.
+     * @param  array|null  $meta  Optional per-attachment metadata (document_name, change_summary, ...)
      */
     public function createFromTaskAttachment(
         User $actor,
         Task $task,
         TaskAttachment $attachment,
         Media $attachmentMedia,
-        ?int $projectId
+        ?int $projectId,
+        ?array $meta = null
     ): Document;
 }

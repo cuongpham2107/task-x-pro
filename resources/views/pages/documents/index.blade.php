@@ -7,6 +7,7 @@ use App\Models\DocumentVersion;
 use App\Models\Project;
 use App\Services\Documents\Contracts\DocumentServiceInterface;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
@@ -16,10 +17,12 @@ use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 use Livewire\WithPagination;
 
-new #[Title('Tài liệu')] class extends Component {
-    use WithPagination;
+new #[Title('Tài liệu')] class extends Component
+{
+    use WithFileUploads, WithPagination;
 
     protected DocumentServiceInterface $documentService;
 
@@ -85,6 +88,8 @@ new #[Title('Tài liệu')] class extends Component {
 
     #[Validate(['nullable', 'integer', 'min:0'])]
     public ?string $fileSizeBytes = null;
+
+    public ?UploadedFile $versionFile = null;
 
     public bool $showDeleteDocumentModal = false;
 
@@ -163,7 +168,8 @@ new #[Title('Tài liệu')] class extends Component {
     protected function versionRules(): array
     {
         return [
-            'versionNumber' => ['required', 'integer', 'min:1', 'max:9999', Rule::unique('document_versions', 'version_number')->where(fn($query) => $query->where('document_id', $this->editingVersionDocumentId))->ignore($this->editingVersionId)],
+            'versionNumber' => ['required', 'integer', 'min:1', 'max:9999', Rule::unique('document_versions', 'version_number')->where(fn ($query) => $query->where('document_id', $this->editingVersionDocumentId))->ignore($this->editingVersionId)],
+            'versionFile' => ['nullable', 'file', 'mimes:png,jpg,pdf,doc,docx,xls,xlsx,zip', 'max:102400'],
         ];
     }
 
@@ -282,7 +288,7 @@ new #[Title('Tài liệu')] class extends Component {
         } catch (ValidationException $e) {
             $this->setErrorBag($e->validator->errors());
         } catch (\Exception $e) {
-            $message = 'Khong the cap nhat tai lieu: ' . $e->getMessage();
+            $message = 'Khong the cap nhat tai lieu: '.$e->getMessage();
             session()->flash('error', $message);
             $this->dispatch('toast', message: $message, type: 'error');
         }
@@ -325,6 +331,7 @@ new #[Title('Tài liệu')] class extends Component {
         $this->changeSummary = '';
         $this->fileSizeBytes = null;
         $this->versionNumber = 1;
+        $this->versionFile = null;
         $this->resetValidation();
     }
 
@@ -349,9 +356,17 @@ new #[Title('Tài liệu')] class extends Component {
             'file_size_bytes' => $this->fileSizeBytes,
         ];
 
+        if ($this->versionFile instanceof UploadedFile) {
+            $payload['uploaded_file'] = $this->versionFile;
+        }
+
         try {
             $version = $this->documentService->findVersionForEdit($actor, $this->editingVersionId);
             $this->documentService->updateVersion($actor, $version, $payload);
+
+            // Clear temporary uploaded file and validation after successful save
+            $this->versionFile = null;
+            $this->resetValidation('versionFile');
 
             $this->closeVersionFormModal();
             unset($this->projects); // Refresh data
@@ -362,7 +377,7 @@ new #[Title('Tài liệu')] class extends Component {
         } catch (ValidationException $e) {
             $this->setErrorBag($e->validator->errors());
         } catch (\Exception $e) {
-            $message = 'Khong the cap nhat phien ban: ' . $e->getMessage();
+            $message = 'Khong the cap nhat phien ban: '.$e->getMessage();
             session()->flash('error', $message);
             $this->dispatch('toast', message: $message, type: 'error');
         }
@@ -411,7 +426,7 @@ new #[Title('Tài liệu')] class extends Component {
             session()->flash('success', $message);
             $this->dispatch('toast', message: $message, type: 'success');
         } catch (\Exception $e) {
-            $message = 'Khong the xoa tai lieu: ' . $e->getMessage();
+            $message = 'Khong the xoa tai lieu: '.$e->getMessage();
             session()->flash('error', $message);
             $this->dispatch('toast', message: $message, type: 'error');
         }
@@ -427,7 +442,7 @@ new #[Title('Tài liệu')] class extends Component {
         $version = $this->documentService->findVersionForDelete($actor, $versionId);
 
         $this->pendingDeleteVersionId = $version->id;
-        $this->pendingDeleteVersionName = $version->document->name . ' - v' . $version->version_number;
+        $this->pendingDeleteVersionName = $version->document->name.' - v'.$version->version_number;
         $this->showDeleteVersionModal = true;
     }
 
@@ -457,15 +472,17 @@ new #[Title('Tài liệu')] class extends Component {
 
         $latestVersion = $document->versions->first();
 
-        if (!$latestVersion) {
+        if (! $latestVersion) {
             $this->dispatch('toast', message: 'Tai lieu chua co phien ban nao', type: 'error');
+
             return null;
         }
 
         $media = $latestVersion->getFirstMedia('version_file');
 
-        if (!$media) {
+        if (! $media) {
             $this->dispatch('toast', message: 'Khong tim thay tep tin', type: 'error');
+
             return null;
         }
 
@@ -494,7 +511,7 @@ new #[Title('Tài liệu')] class extends Component {
             session()->flash('success', $message);
             $this->dispatch('toast', message: $message, type: 'success');
         } catch (\Exception $e) {
-            $message = 'Khong the xoa phien ban: ' . $e->getMessage();
+            $message = 'Khong the xoa phien ban: '.$e->getMessage();
             session()->flash('error', $message);
             $this->dispatch('toast', message: $message, type: 'error');
         }
@@ -507,18 +524,18 @@ new #[Title('Tài liệu')] class extends Component {
         }
 
         if ($bytes < 1024) {
-            return $bytes . ' B';
+            return $bytes.' B';
         }
 
         if ($bytes < 1024 * 1024) {
-            return number_format($bytes / 1024, 2) . ' KB';
+            return number_format($bytes / 1024, 2).' KB';
         }
 
         if ($bytes < 1024 * 1024 * 1024) {
-            return number_format($bytes / (1024 * 1024), 2) . ' MB';
+            return number_format($bytes / (1024 * 1024), 2).' MB';
         }
 
-        return number_format($bytes / (1024 * 1024 * 1024), 2) . ' GB';
+        return number_format($bytes / (1024 * 1024 * 1024), 2).' GB';
     }
 
     public function versionFileUrl(DocumentVersion $version): ?string
@@ -536,7 +553,7 @@ new #[Title('Tài liệu')] class extends Component {
         $disk = config('media-library.disk_name');
         $diskInstance = Storage::disk($disk);
 
-        if (!$diskInstance->exists($storedPath)) {
+        if (! $diskInstance->exists($storedPath)) {
             return null;
         }
 
@@ -622,7 +639,7 @@ new #[Title('Tài liệu')] class extends Component {
         ]);
 
         // Scope Visibility Logic
-        if ($actor && !$actor->hasAnyRole(['super_admin', 'ceo'])) {
+        if ($actor && ! $actor->hasAnyRole(['super_admin', 'ceo'])) {
             $query->where(function (Builder $builder) use ($actor) {
                 $builder
                     ->where('projects.created_by', $actor->id)
@@ -641,7 +658,7 @@ new #[Title('Tài liệu')] class extends Component {
 
         // Apply filters
         if ($this->filterSearch) {
-            $query->where('name', 'like', '%' . $this->filterSearch . '%');
+            $query->where('name', 'like', '%'.$this->filterSearch.'%');
         }
 
         return $query->orderBy('created_at', 'desc')->paginate(10);
@@ -914,7 +931,7 @@ new #[Title('Tài liệu')] class extends Component {
                                                                 {{ $document->name }}
                                                             </span>
                                                         @endcan
-                                                        <p class="mt-0.5 text-[10px] text-slate-400">Cập nhật
+                                                        <p class="mt-0.5 text-2xs text-slate-400">Cập nhật
                                                             {{ $document->updated_at->diffForHumans() }}</p>
                                                     </div>
                                                 </div>
@@ -942,6 +959,27 @@ new #[Title('Tài liệu')] class extends Component {
                                                 </div>
                                             </x-ui.table.cell>
                                             <x-ui.table.cell class="px-6 py-3" align="right">
+                                                @php
+                                                    $fileUrl = $latestVersion ? $this->versionFileUrl($latestVersion) : null;
+                                                    $viewUrl = $latestVersion ? route('documents.version.file', $latestVersion->id) : null;
+                                                @endphp
+                                                
+                                                @if ($viewUrl)
+                                                    <a href="{{ $viewUrl }}" target="_blank" rel="noopener noreferrer"
+                                                        class="rounded p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-700 dark:hover:text-slate-300 mr-2"
+                                                        title="Xem (mở trong tab mới)">
+                                                        <span class="material-symbols-outlined text-lg">open_in_new</span>
+                                                    </a>
+                                                @endif
+
+                                                @if ($latestVersion)
+                                                    <button type="button" wire:click="openEditVersionModal({{ $latestVersion->id }})"
+                                                        class="rounded p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-700 dark:hover:text-slate-300 mr-2"
+                                                        title="Quản lý phiên bản">
+                                                        <span class="material-symbols-outlined text-lg">history</span>
+                                                    </button>
+                                                @endif
+
                                                 <button wire:click="download({{ $document->id }})"
                                                     class="rounded p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-700 dark:hover:text-slate-300"
                                                     title="Tải xuống">
@@ -1078,6 +1116,48 @@ new #[Title('Tài liệu')] class extends Component {
 
                     <x-ui.input label="Google Drive URL" name="googleDriveUrl" wire:model="googleDriveUrl"
                         placeholder="https://drive.google.com/..." />
+
+                    @php
+                        $latestVersionForModal = null;
+                        $viewUrlForModal = null;
+                        if (! empty($editingDocumentId)) {
+                            try {
+                                $docForEdit = $this->documentService->findDocumentForEdit(auth()->user(), $editingDocumentId);
+                                $latestVersionForModal = $docForEdit->versions->first();
+                                $viewUrlForModal = $latestVersionForModal ? route('documents.version.file', $latestVersionForModal->id) : null;
+                            } catch (\Throwable) {
+                                $latestVersionForModal = null;
+                                $viewUrlForModal = null;
+                            }
+                        }
+                    @endphp
+
+                    @if ($latestVersionForModal)
+                        <div class="flex items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 dark:border-slate-700 dark:bg-slate-800">
+                            <div class="shrink-0 h-10 w-10 flex items-center justify-center rounded-md bg-white/60 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300">
+                                <span class="material-symbols-outlined text-lg">{{ $this->versionFileIcon($latestVersionForModal) }}</span>
+                            </div>
+
+                            <div class="min-w-0 flex-1">
+                                <div class="text-sm font-medium text-slate-700 dark:text-slate-200 truncate">{{ $this->versionFileName($latestVersionForModal) }}</div>
+                                <div class="text-2xs text-slate-500 dark:text-slate-400 mt-0.5">v{{ $latestVersionForModal->version_number }} • {{ $this->formatFileSize($latestVersionForModal->file_size_bytes) }}</div>
+                            </div>
+
+                            <div class="flex items-center gap-2">
+                                @if ($viewUrlForModal)
+                                    <a href="{{ $viewUrlForModal }}" target="_blank" rel="noopener noreferrer" title="Xem" class="inline-flex items-center justify-center rounded-md p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-700/60 dark:text-slate-300">
+                                        <span class="material-symbols-outlined text-lg">open_in_new</span>
+                                    </a>
+                                @endif
+
+                                <button wire:click="download({{ $editingDocumentId }})" type="button" title="Tải xuống" class="inline-flex items-center justify-center rounded-md p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-700/60 dark:text-slate-300">
+                                    <span class="material-symbols-outlined text-lg">download</span>
+                                </button>
+                            </div>
+                        </div>
+                    @else
+                        <div class="text-sm text-slate-500 dark:text-slate-400">Chưa có tệp đính kèm cho tài liệu này.</div>
+                    @endif
                 </div>
             </div>
         </form>
@@ -1091,4 +1171,113 @@ new #[Title('Tài liệu')] class extends Component {
             </x-ui.button>
         </x-slot>
     </x-ui.slide-panel>
+    
+        <!-- Version Modal -->
+        <x-ui.slide-panel wire:model="showVersionFormModal" maxWidth="lg">
+            <x-slot name="header">
+                <x-ui.form.heading icon="history" title="Quản lý phiên bản" description="Chỉnh sửa thông tin phiên bản tài liệu." />
+            </x-slot>
+
+            <form id="version-form" wire:submit="saveVersion" class="space-y-6">
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <x-ui.input label="Số phiên bản" name="versionNumber" type="number" min="1" wire:model="versionNumber" required />
+
+                    <x-ui.input label="Đường dẫn lưu trữ" name="storedPath" wire:model="storedPath" required placeholder="storage/...." />
+                </div>
+
+                <div>
+                    <x-ui.input label="Google Drive Revision ID" name="googleDriveRevisionId" wire:model="googleDriveRevisionId" />
+                </div>
+
+                <div>
+                    <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Tóm tắt thay đổi</label>
+                    <textarea rows="3" wire:model="changeSummary" class="focus:border-primary focus:ring-primary/20 w-full rounded-xl border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-600 shadow-sm transition-colors placeholder:text-slate-400 focus:ring-2 dark:border-slate-700 dark:bg-slate-800 dark:text-white" placeholder="Mô tả thay đổi..."></textarea>
+                    <x-ui.field-error field="changeSummary" />
+                </div>
+
+                @php
+                    $versionForModal = null;
+                    $viewUrlForVersion = null;
+                    if (! empty($editingVersionId)) {
+                        try {
+                            $versionForModal = $this->documentService->findVersionForEdit(auth()->user(), $editingVersionId);
+                            $viewUrlForVersion = $versionForModal ? route('documents.version.file', $versionForModal->id) : null;
+                        } catch (\Throwable) {
+                            $versionForModal = null;
+                            $viewUrlForVersion = null;
+                        }
+                    }
+                @endphp
+
+                <div>
+                    <p class="text-2xs font-bold uppercase tracking-wider text-slate-400">Tệp hiện tại</p>
+                    @if ($versionForModal)
+                        <div class="mt-2 flex items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 dark:border-slate-700 dark:bg-slate-800">
+                            <div class="shrink-0 h-10 w-10 flex items-center justify-center rounded-md bg-white/60 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300">
+                                <span class="material-symbols-outlined text-lg">{{ $this->versionFileIcon($versionForModal) }}</span>
+                            </div>
+
+                            <div class="min-w-0 flex-1">
+                                <div class="text-sm font-medium text-slate-700 dark:text-slate-200 truncate">{{ $this->versionFileName($versionForModal) }}</div>
+                                <div class="text-2xs text-slate-500 dark:text-slate-400 mt-0.5">v{{ $versionForModal->version_number }} • {{ $this->formatFileSize($versionForModal->file_size_bytes) }}</div>
+                            </div>
+
+                            <div class="flex items-center gap-2">
+                                @if ($viewUrlForVersion)
+                                    <a href="{{ $viewUrlForVersion }}" target="_blank" rel="noopener noreferrer" title="Xem" class="inline-flex items-center justify-center rounded-md p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-700/60 dark:text-slate-300">
+                                        <span class="material-symbols-outlined text-lg">open_in_new</span>
+                                    </a>
+                                @endif
+
+                                <button type="button" wire:click="download({{ $versionForModal->document_id }})" title="Tải xuống" class="inline-flex items-center justify-center rounded-md p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-700/60 dark:text-slate-300">
+                                    <span class="material-symbols-outlined text-lg">download</span>
+                                </button>
+                            </div>
+                        </div>
+                    @else
+                        <div class="mt-2 text-sm text-slate-500 dark:text-slate-400">Chưa có tệp đính kèm cho phiên bản này.</div>
+                    @endif
+                </div>
+
+                <div class="mt-4">
+                    <label class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Tải lên tệp mới</label>
+                    <div class="flex items-start gap-3">
+                        <label
+                            class="inline-flex items-center gap-2 cursor-pointer rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-white">
+                            <span class="material-symbols-outlined">attach_file</span>
+                            <span>Chọn tệp</span>
+                            <input type="file" wire:model="versionFile" class="sr-only" />
+                        </label>
+
+                        <div class="flex-1 min-w-0">
+                            @if ($versionFile)
+                                <div class="flex items-center justify-between gap-2">
+                                    <div class="truncate text-sm text-slate-700 dark:text-slate-200">
+                                        {{ $versionFile->getClientOriginalName() }}
+                                        <span class="text-2xs text-slate-500">({{ $this->formatFileSize($versionFile->getSize()) }})</span>
+                                    </div>
+                                    <button type="button" wire:click="$set('versionFile', null)"
+                                        class="inline-flex items-center rounded-md bg-red-50 px-2 py-1 text-2xs text-red-600 hover:bg-red-100">
+                                        Hủy
+                                    </button>
+                                </div>
+                            @else
+                                <div class="text-sm text-slate-500">Chưa chọn tệp</div>
+                            @endif
+
+                            <x-ui.field-error field="versionFile" />
+                            <div wire:loading wire:target="versionFile" class="text-2xs text-slate-500 mt-2">Đang tải lên...</div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+
+            <x-slot name="footer">
+                <x-ui.button variant="secondary" wire:click="closeVersionFormModal">Hủy</x-ui.button>
+                <x-ui.button type="submit" form="version-form">Lưu phiên bản</x-ui.button>
+                @if (! empty($editingVersionId))
+                    <x-ui.button variant="danger" wire:click="confirmDeleteVersion({{ $editingVersionId }})">Xóa phiên bản</x-ui.button>
+                @endif
+            </x-slot>
+        </x-ui.slide-panel>
 </div>

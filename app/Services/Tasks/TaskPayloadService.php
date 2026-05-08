@@ -35,7 +35,7 @@ class TaskPayloadService
             'deadline',
             'started_at',
             'completed_at',
-            'deliverable_url',
+            'deliverable_urls',
             'issue_note',
             'recommendation',
             'workflow_type',
@@ -147,6 +147,25 @@ class TaskPayloadService
             $payload[$field] = $payload[$field] instanceof Carbon
                 ? $payload[$field]
                 : Carbon::parse((string) $payload[$field]);
+        }
+
+        // Normalize deliverable_urls: accept JSON string, newline/comma-separated or array
+        if (array_key_exists('deliverable_urls', $payload)) {
+            if ($payload['deliverable_urls'] === '' || $payload['deliverable_urls'] === null) {
+                $payload['deliverable_urls'] = [];
+            } elseif (is_string($payload['deliverable_urls'])) {
+                $decoded = json_decode($payload['deliverable_urls'], true);
+                if (is_array($decoded)) {
+                    $payload['deliverable_urls'] = array_values(array_filter(array_map('trim', $decoded)));
+                } else {
+                    $lines = preg_split('/\r\n|\r|\n|,/', (string) $payload['deliverable_urls']);
+                    $payload['deliverable_urls'] = array_values(array_filter(array_map('trim', $lines)));
+                }
+            } elseif (! is_array($payload['deliverable_urls'])) {
+                $payload['deliverable_urls'] = [];
+            } else {
+                $payload['deliverable_urls'] = array_values(array_filter(array_map('trim', $payload['deliverable_urls'])));
+            }
         }
 
         if (array_key_exists('deadline', $payload) && $payload['deadline'] === null) {

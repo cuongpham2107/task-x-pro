@@ -6,21 +6,21 @@ use PhpOffice\PhpSpreadsheet\Reader\Csv;
 return [
     'exports' => [
         'pdf' => [
-            'driver'       => 'dompdf',
-            'orientation'  => 'portrait',
-            'font_size'    => 11,
-            'font'         => 'NotoSans',
-            'margin_top'   => 10,
+            'driver' => 'dompdf',
+            'orientation' => 'portrait',
+            'font_size' => 11,
+            'font' => 'NotoSans',
+            'margin_top' => 10,
             'margin_right' => 10,
-            'margin_bottom'=> 10,
-            'margin_left'  => 10,
+            'margin_bottom' => 10,
+            'margin_left' => 10,
             'options' => [
-                'font_dir'             => storage_path('fonts/'),   // ← trỏ đúng thư mục
-                'font_cache'           => storage_path('fonts/'),
-                'chroot'               => realpath(base_path()),
+                'font_dir' => storage_path('fonts/'),   // ← trỏ đúng thư mục
+                'font_cache' => storage_path('fonts/'),
+                'chroot' => realpath(base_path()),
                 'isHtml5ParserEnabled' => true,
-                'isRemoteEnabled'      => false,
-                'defaultFont'          => 'NotoSans',
+                'isRemoteEnabled' => false,
+                'defaultFont' => 'NotoSans',
             ],
         ],
         /*
@@ -32,7 +32,7 @@ return [
         | Here you can specify how big the chunk should be.
         |
         */
-        'chunk_size'             => 1000,
+        'chunk_size' => 1000,
 
         /*
         |--------------------------------------------------------------------------
@@ -59,15 +59,15 @@ return [
         | Configure e.g. delimiter, enclosure and line ending for CSV exports.
         |
         */
-        'csv'                    => [
-            'delimiter'              => ',',
-            'enclosure'              => '"',
-            'line_ending'            => PHP_EOL,
-            'use_bom'                => false,
+        'csv' => [
+            'delimiter' => ',',
+            'enclosure' => '"',
+            'line_ending' => PHP_EOL,
+            'use_bom' => false,
             'include_separator_line' => false,
-            'excel_compatibility'    => false,
-            'output_encoding'        => '',
-            'test_auto_detect'       => true,
+            'excel_compatibility' => false,
+            'output_encoding' => '',
+            'test_auto_detect' => true,
         ],
 
         /*
@@ -78,20 +78,20 @@ return [
         | Configure e.g. default title, creator, subject,...
         |
         */
-        'properties'             => [
-            'creator'        => '',
+        'properties' => [
+            'creator' => '',
             'lastModifiedBy' => '',
-            'title'          => '',
-            'description'    => '',
-            'subject'        => '',
-            'keywords'       => '',
-            'category'       => '',
-            'manager'        => '',
-            'company'        => '',
+            'title' => '',
+            'description' => '',
+            'subject' => '',
+            'keywords' => '',
+            'category' => '',
+            'manager' => '',
+            'company' => '',
         ],
     ],
 
-    'imports'            => [
+    'imports' => [
 
         /*
         |--------------------------------------------------------------------------
@@ -104,7 +104,7 @@ return [
         | you can enable it by setting read_only to false.
         |
         */
-        'read_only'    => true,
+        'read_only' => true,
 
         /*
         |--------------------------------------------------------------------------
@@ -128,7 +128,7 @@ return [
         | Available options: none|slug|custom
         |
         */
-        'heading_row'  => [
+        'heading_row' => [
             'formatter' => 'slug',
         ],
 
@@ -140,12 +140,12 @@ return [
         | Configure e.g. delimiter, enclosure and line ending for CSV imports.
         |
         */
-        'csv'          => [
-            'delimiter'        => null,
-            'enclosure'        => '"',
+        'csv' => [
+            'delimiter' => null,
+            'enclosure' => '"',
             'escape_character' => '\\',
-            'contiguous'       => false,
-            'input_encoding'   => Csv::GUESS_ENCODING,
+            'contiguous' => false,
+            'input_encoding' => Csv::GUESS_ENCODING,
         ],
 
         /*
@@ -156,16 +156,16 @@ return [
         | Configure e.g. default title, creator, subject,...
         |
         */
-        'properties'   => [
-            'creator'        => '',
+        'properties' => [
+            'creator' => '',
             'lastModifiedBy' => '',
-            'title'          => '',
-            'description'    => '',
-            'subject'        => '',
-            'keywords'       => '',
-            'category'       => '',
-            'manager'        => '',
-            'company'        => '',
+            'title' => '',
+            'description' => '',
+            'subject' => '',
+            'keywords' => '',
+            'category' => '',
+            'manager' => '',
+            'company' => '',
         ],
 
         /*
@@ -176,10 +176,10 @@ return [
        | Configure middleware that is executed on getting a cell value
        |
        */
-        'cells'        => [
+        'cells' => [
             'middleware' => [
-                //\Maatwebsite\Excel\Middleware\TrimCellValue::class,
-                //\Maatwebsite\Excel\Middleware\ConvertEmptyCellValuesToNull::class,
+                // \Maatwebsite\Excel\Middleware\TrimCellValue::class,
+                // \Maatwebsite\Excel\Middleware\ConvertEmptyCellValuesToNull::class,
             ],
         ],
 
@@ -195,21 +195,21 @@ return [
     |
     */
     'extension_detector' => [
-        'xlsx'     => Excel::XLSX,
-        'xlsm'     => Excel::XLSX,
-        'xltx'     => Excel::XLSX,
-        'xltm'     => Excel::XLSX,
-        'xls'      => Excel::XLS,
-        'xlt'      => Excel::XLS,
-        'ods'      => Excel::ODS,
-        'ots'      => Excel::ODS,
-        'slk'      => Excel::SLK,
-        'xml'      => Excel::XML,
+        'xlsx' => Excel::XLSX,
+        'xlsm' => Excel::XLSX,
+        'xltx' => Excel::XLSX,
+        'xltm' => Excel::XLSX,
+        'xls' => Excel::XLS,
+        'xlt' => Excel::XLS,
+        'ods' => Excel::ODS,
+        'ots' => Excel::ODS,
+        'slk' => Excel::SLK,
+        'xml' => Excel::XML,
         'gnumeric' => Excel::GNUMERIC,
-        'htm'      => Excel::HTML,
-        'html'     => Excel::HTML,
-        'csv'      => Excel::CSV,
-        'tsv'      => Excel::TSV,
+        'htm' => Excel::HTML,
+        'html' => Excel::HTML,
+        'csv' => Excel::CSV,
+        'tsv' => Excel::TSV,
 
         /*
         |--------------------------------------------------------------------------
@@ -220,7 +220,7 @@ return [
         | Available options: Excel::MPDF | Excel::TCPDF | Excel::DOMPDF
         |
         */
-        'pdf'      => Excel::DOMPDF,
+        'pdf' => Excel::DOMPDF,
     ],
 
     /*
@@ -240,11 +240,11 @@ return [
     | [x] PhpOffice\PhpSpreadsheet\Cell\AdvancedValueBinder::class
     |
     */
-    'value_binder'       => [
+    'value_binder' => [
         'default' => Maatwebsite\Excel\DefaultValueBinder::class,
     ],
 
-    'cache'        => [
+    'cache' => [
         /*
         |--------------------------------------------------------------------------
         | Default cell caching driver
@@ -261,7 +261,7 @@ return [
         | Drivers: memory|illuminate|batch
         |
         */
-        'driver'      => 'memory',
+        'driver' => 'memory',
 
         /*
         |--------------------------------------------------------------------------
@@ -273,7 +273,7 @@ return [
         | Here you can tweak the memory limit to your liking.
         |
         */
-        'batch'       => [
+        'batch' => [
             'memory_limit' => 60000,
         ],
 
@@ -289,7 +289,7 @@ return [
         | at "null" it will use the default store.
         |
         */
-        'illuminate'  => [
+        'illuminate' => [
             'store' => null,
         ],
 
@@ -325,7 +325,7 @@ return [
     */
     'transactions' => [
         'handler' => 'db',
-        'db'      => [
+        'db' => [
             'connection' => null,
         ],
     ],
@@ -343,7 +343,7 @@ return [
         | and the create file (file).
         |
         */
-        'local_path'          => storage_path('framework/cache/laravel-excel'),
+        'local_path' => storage_path('framework/cache/laravel-excel'),
 
         /*
         |--------------------------------------------------------------------------
@@ -355,7 +355,7 @@ return [
         | If omitted the default permissions of the filesystem will be used.
         |
         */
-        'local_permissions'   => [
+        'local_permissions' => [
             // 'dir'  => 0755,
             // 'file' => 0644,
         ],
@@ -374,8 +374,8 @@ return [
         | in conjunction with queued imports and exports.
         |
         */
-        'remote_disk'         => null,
-        'remote_prefix'       => null,
+        'remote_disk' => null,
+        'remote_prefix' => null,
 
         /*
         |--------------------------------------------------------------------------

@@ -104,7 +104,7 @@ class TaskService
             return new TaskMutationResult(
                 task: $this->queryService->hydrateTask($task->refresh()),
                 overloadWarning: $overloadWarning,
-                attachments: $this->addAttachments($actor, $task, $attributes['attachments'] ?? []),
+                attachments: $this->addAttachments($actor, $task, $attributes['attachments'] ?? [], $attributes['attachment_meta'] ?? []),
             );
         });
     }
@@ -288,7 +288,7 @@ class TaskService
             return new TaskMutationResult(
                 task: $this->queryService->hydrateTask($task->refresh()),
                 overloadWarning: $overloadWarning,
-                attachments: $this->addAttachments($actor, $task, $attributes['attachments'] ?? []),
+                attachments: $this->addAttachments($actor, $task, $attributes['attachments'] ?? [], $attributes['attachment_meta'] ?? []),
             );
         });
     }
@@ -520,13 +520,13 @@ class TaskService
      * @param  array<int, \Illuminate\Http\UploadedFile>  $files
      * @return Collection<int, TaskAttachment>
      */
-    public function addAttachments(User $actor, Task $task, array $files): Collection
+    public function addAttachments(User $actor, Task $task, array $files, array $attachmentMeta = []): Collection
     {
+        // Keep original keys so we can match metadata entries by the original file index
         $files = collect($files)
             ->filter(function (mixed $file): bool {
                 return $file instanceof UploadedFile;
             })
-            ->values()
             ->all();
 
         if ($files === []) {
@@ -536,7 +536,9 @@ class TaskService
         $projectId = $task->phase()->value('project_id');
         $currentMaxAttachmentVersion = (int) ($task->attachments()->max('version') ?? 0);
 
-        return collect($files)->values()->map(function ($file, int $index) use ($actor, $task, $projectId, $currentMaxAttachmentVersion) {
+        $counter = 0;
+
+        return collect($files)->map(function ($file, $origIndex) use ($actor, $task, $projectId, $currentMaxAttachmentVersion, $attachmentMeta, &$counter) {
             $attachment = TaskAttachment::create([
                 'task_id' => $task->id,
                 'uploader_id' => $actor->id,
@@ -545,8 +547,9 @@ class TaskService
                 'mime_type' => $file->getMimeType(),
                 'size_bytes' => $file->getSize(),
                 'disk' => config('media-library.disk_name'),
-                'version' => $currentMaxAttachmentVersion + $index + 1,
+                'version' => $currentMaxAttachmentVersion + $counter + 1,
             ]);
+            $counter++;
 
             $attachmentMedia = $attachment->addMedia($file)
                 ->usingFileName($file->hashName())
@@ -559,16 +562,19 @@ class TaskService
                 'size_bytes' => $attachmentMedia->size,
             ])->save();
 
+            $meta = is_array($attachmentMeta) && array_key_exists($origIndex, $attachmentMeta) ? $attachmentMeta[$origIndex] : null;
+
             $this->syncTaskAttachmentToDocument(
                 actor: $actor,
                 task: $task,
                 attachment: $attachment,
                 attachmentMedia: $attachmentMedia,
                 projectId: $projectId,
+                meta: $meta,
             );
 
             return $attachment->refresh();
-        });
+        })->values();
     }
 
     /**
@@ -829,7 +835,8 @@ class TaskService
         TaskAttachment $attachment,
         Media $attachmentMedia,
         ?int $projectId,
+        ?array $meta = null,
     ): void {
-        $this->documentService->createFromTaskAttachment($actor, $task, $attachment, $attachmentMedia, $projectId);
+        $this->documentService->createFromTaskAttachment($actor, $task, $attachment, $attachmentMedia, $projectId, $meta);
     }
 }

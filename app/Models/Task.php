@@ -33,7 +33,7 @@ class Task extends Model
         'deadline',
         'started_at',
         'completed_at',
-        'deliverable_url',
+        'deliverable_urls',
         'issue_note',
         'recommendation',
         'workflow_type',
@@ -64,7 +64,7 @@ class Task extends Model
 
         static::saved(function (Task $task): void {
             $task->syncPhaseAndProjectProgress();
-            
+
             if ($task->pic_id) {
                 KpiScore::syncForUser($task->pic_id);
             }
@@ -76,7 +76,7 @@ class Task extends Model
 
         static::deleted(function (Task $task): void {
             $task->syncPhaseAndProjectProgress();
-            
+
             if ($task->pic_id) {
                 KpiScore::syncForUser($task->pic_id);
             }
@@ -84,7 +84,7 @@ class Task extends Model
 
         static::restored(function (Task $task): void {
             $task->syncPhaseAndProjectProgress();
-            
+
             if ($task->pic_id) {
                 KpiScore::syncForUser($task->pic_id);
             }
@@ -161,6 +161,7 @@ class Task extends Model
             'sla_met' => 'boolean',
             'delay_days' => 'decimal:2',
             'workflow_type' => \App\Enums\TaskWorkflowType::class,
+            'deliverable_urls' => 'array',
         ];
     }
 

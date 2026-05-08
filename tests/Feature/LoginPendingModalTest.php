@@ -1,7 +1,5 @@
 <?php
 
-use App\Models\User;
-use App\Enums\UserStatus;
 use Livewire\Volt\Volt;
 
 it('shows pending popup when session has showPendingPopup', function () {

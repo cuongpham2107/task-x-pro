@@ -1,7 +1,5 @@
 <?php
 
-use App\Models\Phase;
-use App\Models\Project;
 use App\Models\Task;
 use App\Models\User;
 use Database\Seeders\TaskXProSeeder;

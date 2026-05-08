@@ -1,10 +1,14 @@
 <?php
 
+use App\Models\Document;
 use App\Models\Phase;
 use App\Models\Project;
 use App\Models\Task;
+use App\Models\TaskAttachment;
+use App\Services\Documents\Contracts\DocumentServiceInterface;
 use App\Services\Tasks\TaskCommentService;
 use App\Services\Tasks\TaskService;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
@@ -15,7 +19,8 @@ use Livewire\Attributes\On;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
-new class extends Component {
+new class extends Component
+{
     use WithFileUploads;
 
     public ?Project $project = null;
@@ -39,6 +44,20 @@ new class extends Component {
     public bool $showCompletionRatingModal = false;
 
     public bool $showRejectReasonModal = false;
+
+    // Modal for editing/adding document versions from an attachment
+    public bool $showEditDocumentModal = false;
+
+    public ?int $editingAttachmentForDocument = null;
+
+    public ?int $editingDocumentId = null;
+
+    public string $editingDocumentName = '';
+
+    public string $editingChangeSummary = '';
+
+    /** @var UploadedFile|null */
+    public $editingNewVersionFile = null;
 
     public ?int $completionStarRating = null;
 
@@ -76,7 +95,10 @@ new class extends Component {
 
     public string $recommendation = '';
 
-    public string $deliverable_url = '';
+    // New: support multiple deliverable links via add/remove list input
+    public array $deliverable_urls = [];
+
+    public string $deliverable_url_input = '';
 
     public int $progress = 0;
 
@@ -87,6 +109,14 @@ new class extends Component {
     public string $newComment = '';
 
     public array $co_pic_ids = [];
+
+    /**
+     * Per-upload metadata collected from the UI: keyed by the file index in `$files`.
+     * Example: [0 => ['document_name' => 'Spec', 'change_summary' => 'v1.0'], ...]
+     *
+     * @var array<int, array<string, string>>
+     */
+    public array $file_document_meta = [];
 
     /** @var array<int, \Illuminate\Http\UploadedFile> */
     public $files = [];
@@ -161,7 +191,7 @@ new class extends Component {
 
         $this->dependencyTaskOptions = Task::query()
             ->where('phase_id', $phaseId)
-            ->when($this->editing_task_id, fn($q) => $q->where('id', '!=', $this->editing_task_id))
+            ->when($this->editing_task_id, fn ($q) => $q->where('id', '!=', $this->editing_task_id))
             ->select(['id', 'name', 'status'])
             ->orderBy('name')
             ->get();
@@ -200,7 +230,7 @@ new class extends Component {
         }
 
         $actor = auth()->user();
-        if (!$actor) {
+        if (! $actor) {
             return false;
         }
 
@@ -213,11 +243,11 @@ new class extends Component {
     public function isPhaseStarted(): bool
     {
         // If we have a phase_id but no phase model or start_date yet, fetch it fresh and SYNC it to the property
-        if ($this->phase_id && (!$this->phase || !$this->phase->start_date)) {
+        if ($this->phase_id && (! $this->phase || ! $this->phase->start_date)) {
             $this->phase = Phase::find($this->phase_id);
         }
 
-        if (!$this->phase || !$this->phase->start_date) {
+        if (! $this->phase || ! $this->phase->start_date) {
             return true;
         }
 
@@ -230,7 +260,7 @@ new class extends Component {
     #[Computed]
     public function projectSelectOptions(): array
     {
-        return $this->projectOptions->mapWithKeys(fn($project): array => [(string) $project->id => $project->name])->all();
+        return $this->projectOptions->mapWithKeys(fn ($project): array => [(string) $project->id => $project->name])->all();
     }
 
     /**
@@ -246,7 +276,7 @@ new class extends Component {
             $phases = $phases->where('project_id', (int) $projectId);
         }
 
-        return $phases->mapWithKeys(fn($phase): array => [(string) $phase->id => $phase->name])->all();
+        return $phases->mapWithKeys(fn ($phase): array => [(string) $phase->id => $phase->name])->all();
     }
 
     #[On('task-create-requested')]
@@ -279,7 +309,7 @@ new class extends Component {
             $this->dispatch('toast', message: 'Công việc không tồn tại hoặc đã bị xóa.', type: 'error');
         } catch (\Exception $e) {
             $this->showFormModal = false;
-            $this->dispatch('toast', message: 'Lỗi: ' . $e->getMessage(), type: 'error');
+            $this->dispatch('toast', message: 'Lỗi: '.$e->getMessage(), type: 'error');
         }
     }
 
@@ -287,7 +317,7 @@ new class extends Component {
     {
         $this->reset(['files']);
 
-        if (!$this->editing_task_id) {
+        if (! $this->editing_task_id) {
             return;
         }
 
@@ -305,7 +335,9 @@ new class extends Component {
         $this->workflow_type = $task->workflow_type instanceof \BackedEnum ? (string) $task->workflow_type->value : (string) $task->workflow_type;
         $this->deadline = $task->deadline instanceof Carbon ? $task->deadline->toDateString() : '';
         $this->description = (string) ($task->description ?? '');
-        $this->deliverable_url = (string) ($task->deliverable_url ?? '');
+        // Load deliverable_urls (casted by model)
+        $this->deliverable_urls = is_array($task->deliverable_urls) ? $task->deliverable_urls : ($task->deliverable_urls ? (array) $task->deliverable_urls : []);
+        $this->deliverable_url_input = '';
         $this->progress = (int) ($task->progress ?? 0);
         $this->issue_note = (string) ($task->issue_note ?? '');
         $this->recommendation = (string) ($task->recommendation ?? '');
@@ -356,7 +388,7 @@ new class extends Component {
 
     public function resetFormModal(): void
     {
-        $this->reset(['name', 'type', 'status', 'priority', 'workflow_type', 'deadline', 'description', 'deliverable_url', 'progress', 'issue_note', 'recommendation', 'pic_id', 'dependency_task_id', 'project_id', 'phase_id', 'newComment', 'co_pic_ids', 'editing_task_id', 'files', 'existing_attachments', 'hasDependencyBlock', 'dependencyTaskName', 'activeTab', 'showCompletionRatingModal', 'completionStarRating', 'completionApprovalComment', 'completionTaskName', 'showRejectReasonModal', 'rejectReason', 'original_status', 'isResponsibleLeader', 'isTaskStarted', 'canCancel']);
+        $this->reset(['name', 'type', 'status', 'priority', 'workflow_type', 'deadline', 'description', 'deliverable_urls', 'deliverable_url_input', 'progress', 'issue_note', 'recommendation', 'pic_id', 'dependency_task_id', 'project_id', 'phase_id', 'newComment', 'co_pic_ids', 'editing_task_id', 'files', 'file_document_meta', 'existing_attachments', 'hasDependencyBlock', 'dependencyTaskName', 'activeTab', 'showCompletionRatingModal', 'completionStarRating', 'completionApprovalComment', 'completionTaskName', 'showRejectReasonModal', 'rejectReason', 'showEditDocumentModal', 'editingAttachmentForDocument', 'editingDocumentId', 'editingDocumentName', 'editingChangeSummary', 'editingNewVersionFile', 'original_status', 'isResponsibleLeader', 'isTaskStarted', 'canCancel']);
         $this->existing_attachments = collect();
         $this->taskComments = collect();
         $this->activeTab = 'general';
@@ -365,10 +397,54 @@ new class extends Component {
         $this->original_status = 'pending';
         $this->priority = 'medium';
         $this->workflow_type = 'single';
+
         $this->mode = 'create';
         $this->project_id = $this->project?->id;
         $this->phase_id = $this->phase?->id;
         $this->resetValidation();
+    }
+
+    public function addDeliverableUrl(): void
+    {
+        if ($this->isCompletedLocked()) {
+            return;
+        }
+
+        $value = trim((string) $this->deliverable_url_input);
+        if ($value === '') {
+            return;
+        }
+
+        if (! filter_var($value, FILTER_VALIDATE_URL)) {
+            $this->addError('deliverable_urls', 'Link sản phẩm phải là một URL hợp lệ.');
+
+            return;
+        }
+
+        if (mb_strlen($value) > 1000) {
+            $this->addError('deliverable_urls', 'Link sản phẩm không được vượt quá 1000 ký tự.');
+
+            return;
+        }
+
+        if (in_array($value, $this->deliverable_urls, true)) {
+            $this->addError('deliverable_urls', 'Link đã tồn tại trong danh sách.');
+
+            return;
+        }
+
+        $this->deliverable_urls[] = $value;
+        $this->deliverable_url_input = '';
+        $this->resetErrorBag('deliverable_urls');
+    }
+
+    public function removeDeliverableUrl(int $index): void
+    {
+        if (! isset($this->deliverable_urls[$index])) {
+            return;
+        }
+
+        array_splice($this->deliverable_urls, $index, 1);
     }
 
     public function rules(): array
@@ -384,7 +460,8 @@ new class extends Component {
             'description' => 'nullable|string|max:5000',
             'issue_note' => 'nullable|string|max:5000',
             'recommendation' => 'nullable|string|max:5000',
-            'deliverable_url' => 'nullable|url|max:255',
+            'deliverable_urls' => 'nullable|array',
+            'deliverable_urls.*' => 'nullable|url|max:1000',
             'progress' => 'required|integer|min:0|max:100',
             'pic_id' => 'required|integer|exists:users,id',
             'dependency_task_id' => 'nullable|integer|exists:tasks,id',
@@ -432,8 +509,8 @@ new class extends Component {
             'progress.integer' => 'Tiến độ phải là số nguyên.',
             'progress.min' => 'Tiến độ không được nhỏ hơn 0%.',
             'progress.max' => 'Tiến độ không được lớn hơn 100%.',
-            'deliverable_url.url' => 'Link sản phẩm phải là một URL hợp lệ.',
-            'deliverable_url.max' => 'Link sản phẩm không được vượt quá 255 ký tự.',
+            'deliverable_urls.*.url' => 'Link sản phẩm phải là một URL hợp lệ.',
+            'deliverable_urls.*.max' => 'Link sản phẩm không được vượt quá 1000 ký tự.',
             'description.max' => 'Mô tả không được vượt quá 5000 ký tự.',
             'issue_note.max' => 'Ghi chú vấn đề không được vượt quá 5000 ký tự.',
             'recommendation.max' => 'Kiến nghị không được vượt quá 5000 ký tự.',
@@ -464,7 +541,7 @@ new class extends Component {
 
     public function openRejectReasonModal(): void
     {
-        if (!$this->canApproveTask()) {
+        if (! $this->canApproveTask()) {
             return;
         }
 
@@ -496,6 +573,7 @@ new class extends Component {
             $this->phase_id = $this->phase->id;
         }
         try {
+            // deliverable_urls is managed by add/remove UI; just validate the current state
             $this->validate();
             $taskService = app(TaskService::class);
             $attributes = [
@@ -507,13 +585,15 @@ new class extends Component {
                 'workflow_type' => $this->workflow_type,
                 'deadline' => $this->deadline ?: null,
                 'description' => $this->description ?: null,
-                'deliverable_url' => $this->deliverable_url ?: null,
+                'deliverable_urls' => $this->deliverable_urls ?: null,
                 'progress' => $this->progress,
                 'issue_note' => $this->issue_note ?: null,
                 'recommendation' => $this->recommendation ?: null,
                 'pic_id' => $this->pic_id,
                 'dependency_task_id' => $this->dependency_task_id,
                 'attachments' => $this->files,
+                // Pass per-file metadata for Document creation, keyed by original file index
+                'attachment_meta' => $this->file_document_meta ?: null,
             ];
 
             $savedName = $this->name;
@@ -567,15 +647,15 @@ new class extends Component {
             $this->dispatch('toast', message: $toastMessage, type: 'success');
             $this->dispatch('task-saved', taskTitle: $savedName);
         } catch (ValidationException $e) {
-            $this->dispatch('toast', message: 'Lỗi hệ thống: ' . $e->getMessage(), type: 'error');
+            $this->dispatch('toast', message: 'Lỗi hệ thống: '.$e->getMessage(), type: 'error');
         } catch (\Exception $e) {
-            $this->dispatch('toast', message: 'Lỗi hệ thống: ' . $e->getMessage(), type: 'error');
+            $this->dispatch('toast', message: 'Lỗi hệ thống: '.$e->getMessage(), type: 'error');
         }
     }
 
     public function approveTask(): void
     {
-        if (!$this->canApproveTask()) {
+        if (! $this->canApproveTask()) {
             return;
         }
 
@@ -604,7 +684,7 @@ new class extends Component {
             $firstError = collect($e->errors())->flatten()->first();
             $this->dispatch('toast', message: (string) ($firstError ?? 'Không thể phê duyệt task.'), type: 'error');
         } catch (\Exception $e) {
-            $this->dispatch('toast', message: 'Lỗi: ' . $e->getMessage(), type: 'error');
+            $this->dispatch('toast', message: 'Lỗi: '.$e->getMessage(), type: 'error');
         }
     }
 
@@ -626,7 +706,7 @@ new class extends Component {
 
     public function rejectTask(): void
     {
-        if (!$this->canApproveTask() || $this->editing_task_id === null) {
+        if (! $this->canApproveTask() || $this->editing_task_id === null) {
             return;
         }
 
@@ -654,7 +734,7 @@ new class extends Component {
             $firstError = collect($e->errors())->flatten()->first();
             $this->addError('rejectReason', (string) ($firstError ?? 'Không thể từ chối duyệt task.'));
         } catch (\Exception $e) {
-            $this->addError('rejectReason', 'Lỗi: ' . $e->getMessage());
+            $this->addError('rejectReason', 'Lỗi: '.$e->getMessage());
         }
     }
 
@@ -674,7 +754,7 @@ new class extends Component {
     private function shouldPromptRatingForApproval(Task $task): bool
     {
         $actor = auth()->user();
-        if (!$actor) {
+        if (! $actor) {
             return false;
         }
 
@@ -693,7 +773,7 @@ new class extends Component {
         }
 
         $actor = auth()->user();
-        if (!$actor) {
+        if (! $actor) {
             return false;
         }
 
@@ -724,7 +804,7 @@ new class extends Component {
             return true;
         }
 
-        return in_array((int) $actor->id, collect($this->co_pic_ids)->map(fn($id): int => (int) $id)->all(), true);
+        return in_array((int) $actor->id, collect($this->co_pic_ids)->map(fn ($id): int => (int) $id)->all(), true);
     }
 
     /**
@@ -769,7 +849,7 @@ new class extends Component {
         } catch (ValidationException $e) {
             $this->setErrorBag($e->validator->errors());
         } catch (\Exception $e) {
-            $this->addError('newComment', 'Khong the gui binh luan: ' . $e->getMessage());
+            $this->addError('newComment', 'Khong the gui binh luan: '.$e->getMessage());
         }
     }
 
@@ -806,10 +886,111 @@ new class extends Component {
             $attachment = \App\Models\TaskAttachment::findOrFail($attachmentId);
             app(TaskService::class)->deleteAttachment(auth()->user(), $attachment);
 
-            $this->existing_attachments = $this->existing_attachments->reject(fn($a) => $a->id === $attachmentId);
+            $this->existing_attachments = $this->existing_attachments->reject(fn ($a) => $a->id === $attachmentId);
             $this->dispatch('toast', message: 'Đã xóa tệp đính kèm.', type: 'info');
         } catch (\Exception $e) {
-            $this->dispatch('toast', message: 'Lỗi khi xóa tệp: ' . $e->getMessage(), type: 'error');
+            $this->dispatch('toast', message: 'Lỗi khi xóa tệp: '.$e->getMessage(), type: 'error');
+        }
+    }
+
+    public function openDocumentEditor(int $attachmentId): void
+    {
+        try {
+            $attachment = TaskAttachment::with('task')->findOrFail($attachmentId);
+
+            $this->editingAttachmentForDocument = $attachment->id;
+            $this->editingDocumentName = (string) ($attachment->original_name ?? '');
+            $this->editingChangeSummary = '';
+            $this->editingNewVersionFile = null;
+
+            // Try to find an existing document for this task and original name
+            $document = Document::query()
+                ->where('task_id', $attachment->task_id)
+                ->where('name', $attachment->original_name)
+                ->first();
+
+            $this->editingDocumentId = $document ? $document->id : null;
+
+            // Hide main form and show modal
+            $this->showFormModal = false;
+            $this->showEditDocumentModal = true;
+            $this->resetErrorBag(['editingDocumentName', 'editingChangeSummary', 'editingNewVersionFile']);
+        } catch (\Exception $e) {
+            $this->dispatch('toast', message: 'Không thể mở trình chỉnh sửa tài liệu: '.$e->getMessage(), type: 'error');
+        }
+    }
+
+    public function closeEditDocumentModal(): void
+    {
+        $this->showEditDocumentModal = false;
+        $this->editingAttachmentForDocument = null;
+        $this->editingDocumentId = null;
+        $this->editingDocumentName = '';
+        $this->editingChangeSummary = '';
+        $this->editingNewVersionFile = null;
+        if ($this->mode === 'edit' && $this->editing_task_id !== null) {
+            $this->showFormModal = true;
+        }
+        $this->resetErrorBag(['editingDocumentName', 'editingChangeSummary', 'editingNewVersionFile']);
+    }
+
+    public function saveDocumentModal(): void
+    {
+        try {
+            $this->validate([
+                'editingDocumentName' => 'nullable|string|max:255',
+                'editingChangeSummary' => 'nullable|string|max:1000',
+                'editingNewVersionFile' => 'nullable|file|mimes:png,jpg,pdf|max:102400',
+            ]);
+
+            $actor = auth()->user();
+
+            // If user uploaded a new file, create a new TaskAttachment (and DocumentVersion) via TaskService
+            if ($this->editingNewVersionFile instanceof UploadedFile) {
+                if ($this->editing_task_id === null) {
+                    $this->addError('editingNewVersionFile', 'Không thể thêm phiên bản mới cho task chưa lưu.');
+
+                    return;
+                }
+
+                $task = Task::findOrFail($this->editing_task_id);
+
+                $meta = [
+                    0 => [
+                        'document_name' => $this->editingDocumentName ?: null,
+                        'change_summary' => $this->editingChangeSummary ?: null,
+                    ],
+                ];
+
+                app(TaskService::class)->addAttachments($actor, $task, [$this->editingNewVersionFile], $meta);
+
+                $this->dispatch('toast', message: 'Phiên bản mới đã được tải lên.', type: 'success');
+                $this->loadTaskDataIntoForm();
+                $this->closeEditDocumentModal();
+
+                return;
+            }
+
+            // Otherwise update existing document metadata if available
+            if ($this->editingDocumentId !== null) {
+                $document = Document::findOrFail($this->editingDocumentId);
+                app(DocumentServiceInterface::class)->updateDocument($actor, $document, [
+                    'name' => $this->editingDocumentName ?: $document->name,
+                    'description' => $this->editingChangeSummary ?: $document->description,
+                ]);
+
+                $this->dispatch('toast', message: 'Thông tin tài liệu đã được cập nhật.', type: 'success');
+                $this->loadTaskDataIntoForm();
+                $this->closeEditDocumentModal();
+
+                return;
+            }
+
+            $this->dispatch('toast', message: 'Không có tài liệu liên quan để cập nhật.', type: 'warning');
+        } catch (ValidationException $e) {
+            $this->setErrorBag($e->validator->errors());
+        } catch (\Exception $e) {
+            $this->dispatch('toast', message: 'Lỗi: '.$e->getMessage(), type: 'error');
         }
     }
 
@@ -830,7 +1011,7 @@ new class extends Component {
         } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
             $this->dispatch('toast', message: 'Lỗi: Chỉ PIC của task mới có thể bắt đầu công việc.', type: 'error');
         } catch (\Exception $e) {
-            $this->dispatch('toast', message: 'Lỗi: ' . $e->getMessage(), type: 'error');
+            $this->dispatch('toast', message: 'Lỗi: '.$e->getMessage(), type: 'error');
         }
     }
 
@@ -847,7 +1028,7 @@ new class extends Component {
             $actor = auth()->user();
             $isCreator = (int) $task->created_by === (int) $actor->id;
 
-            if (!$actor->hasRole('super_admin') && !$this->isResponsibleLeader && !$isCreator) {
+            if (! $actor->hasRole('super_admin') && ! $this->isResponsibleLeader && ! $isCreator) {
                 $this->dispatch('toast', message: 'Bạn không có quyền hủy công việc này.', type: 'error');
 
                 return;
@@ -871,7 +1052,7 @@ new class extends Component {
             $this->dispatch('toast', message: 'Đã hủy công việc thành công.', type: 'success');
             $this->dispatch('task-updated', taskId: $task->id);
         } catch (\Exception $e) {
-            $this->dispatch('toast', message: 'Lỗi hệ thống: ' . $e->getMessage(), type: 'error');
+            $this->dispatch('toast', message: 'Lỗi hệ thống: '.$e->getMessage(), type: 'error');
         }
     }
 
@@ -898,20 +1079,20 @@ new class extends Component {
             $firstError = collect($e->errors())->flatten()->first();
             $this->dispatch('toast', message: (string) ($firstError ?? 'Không thể gửi duyệt công việc.'), type: 'error');
         } catch (\Exception $e) {
-            $this->dispatch('toast', message: 'Lỗi: ' . $e->getMessage(), type: 'error');
+            $this->dispatch('toast', message: 'Lỗi: '.$e->getMessage(), type: 'error');
         }
     }
 
     #[Computed]
     public function logs(): Collection
     {
-        if (!$this->editing_task_id) {
+        if (! $this->editing_task_id) {
             return collect();
         }
 
         $task = Task::with(['approvalLogs.reviewer:id,name', 'activityLogs.user:id,name'])->find($this->editing_task_id);
 
-        if (!$task) {
+        if (! $task) {
             return collect();
         }
 
@@ -919,7 +1100,7 @@ new class extends Component {
             $action = \App\Enums\ApprovalAction::tryFrom($log->action);
 
             return (object) [
-                'id' => 'approval-' . $log->id,
+                'id' => 'approval-'.$log->id,
                 'type' => 'approval',
                 'action' => $log->action,
                 'action_label' => $action ? $action->label() : $log->action,
@@ -943,9 +1124,9 @@ new class extends Component {
             ];
         });
 
-        $activityLogs = $task->activityLogs->reject(fn($log) => $log->action === 'approval_rejected')->map(function ($log) {
+        $activityLogs = $task->activityLogs->reject(fn ($log) => $log->action === 'approval_rejected')->map(function ($log) {
             return (object) [
-                'id' => 'activity-' . $log->id,
+                'id' => 'activity-'.$log->id,
                 'type' => 'activity',
                 'action' => $log->action,
                 'action_label' => match ($log->action) {
@@ -975,11 +1156,11 @@ new class extends Component {
     #[Computed]
     public function hasLeaderApproved(): bool
     {
-        if (!$this->editing_task_id) {
+        if (! $this->editing_task_id) {
             return false;
         }
         $task = Task::find($this->editing_task_id);
-        if (!$task) {
+        if (! $task) {
             return false;
         }
 
@@ -998,11 +1179,11 @@ new class extends Component {
     #[Computed]
     public function hasCeoApproved(): bool
     {
-        if (!$this->editing_task_id) {
+        if (! $this->editing_task_id) {
             return false;
         }
         $task = Task::find($this->editing_task_id);
-        if (!$task) {
+        if (! $task) {
             return false;
         }
 
@@ -1064,6 +1245,50 @@ new class extends Component {
         <x-slot name="footer">
             @include('components.task.form.partials.panel-footer')
         </x-slot>
+    </x-ui.slide-panel>
+
+    <x-ui.slide-panel wire:model="showEditDocumentModal" maxWidth="lg">
+        <x-slot name="header">
+            <x-ui.form.heading icon="edit_square" title="Chỉnh sửa tài liệu"
+                description="Chỉnh sửa thông tin tài liệu hoặc tải lên phiên bản mới." />
+        </x-slot>
+
+        <form wire:submit.prevent="saveDocumentModal" class="p-4 space-y-4">
+            <div class="grid grid-cols-1 gap-3">
+                <x-ui.input label="Tên tài liệu" wire:model.defer="editingDocumentName" />
+
+                <x-ui.textarea label="Ghi chú / Mô tả" wire:model.defer="editingChangeSummary" />
+
+                <div x-data="{ fileName: '' }">
+                    <label class="block text-sm font-medium text-slate-700">Tải lên phiên bản mới (tùy chọn)</label>
+                    <div class="mt-2 flex items-center gap-3">
+                        <label
+                            class="inline-flex items-center gap-2 cursor-pointer rounded-md bg-white border px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
+                            <span class="material-symbols-outlined">upload_file</span>
+                            <span>Chọn tệp</span>
+                            <input type="file" wire:model="editingNewVersionFile"
+                                @change="fileName = $event.target.files[0] ? $event.target.files[0].name : ''"
+                                class="hidden" />
+                        </label>
+
+                        <div class="text-sm text-slate-500 truncate max-w-[36ch]">
+                            <span x-text="fileName ? fileName : 'Chưa chọn tệp'"></span>
+                        </div>
+                    </div>
+
+                    @error('editingNewVersionFile')
+                        <div class="text-xs text-red-500">{{ $message }}</div>
+                    @enderror
+                </div>
+            </div>
+
+            <div class="mt-4 flex justify-end gap-2">
+                <button type="button" wire:click="closeEditDocumentModal"
+                    class="rounded-md bg-slate-100 px-4 py-2 text-sm font-medium text-slate-700">Hủy</button>
+                <button type="button" wire:click="saveDocumentModal"
+                    class="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white">Lưu</button>
+            </div>
+        </form>
     </x-ui.slide-panel>
 
     @include('components.task.form.partials.modal-reject-reason')

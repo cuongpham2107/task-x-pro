@@ -10,13 +10,14 @@ use Illuminate\Console\Command;
 class RegisterDompdfFonts extends Command
 {
     protected $signature = 'dompdf:register-fonts';
+
     protected $description = 'Register custom fonts for dompdf';
 
     public function handle(): void
     {
         $fontDir = storage_path('fonts/');
 
-        $options = new Options();
+        $options = new Options;
         $options->setFontDir($fontDir);
         $options->setFontCache($fontDir);
 
@@ -26,17 +27,18 @@ class RegisterDompdfFonts extends Command
 
         $fonts = [
             'NotoSans' => [
-                'normal'      => $fontDir . 'NotoSans-Regular.ttf',
-                'bold'        => $fontDir . 'NotoSans-Bold.ttf',
-                'italic'      => $fontDir . 'NotoSans-Italic.ttf',
-                'bold_italic' => $fontDir . 'NotoSans-BoldItalic.ttf',
+                'normal' => $fontDir.'NotoSans-Regular.ttf',
+                'bold' => $fontDir.'NotoSans-Bold.ttf',
+                'italic' => $fontDir.'NotoSans-Italic.ttf',
+                'bold_italic' => $fontDir.'NotoSans-BoldItalic.ttf',
             ],
         ];
 
         foreach ($fonts as $family => $variants) {
             foreach ($variants as $style => $path) {
-                if (!file_exists($path)) {
+                if (! file_exists($path)) {
                     $this->warn("File không tồn tại: {$path}");
+
                     continue;
                 }
 

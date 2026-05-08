@@ -32,7 +32,7 @@ it('transitions phase status to active when a task starts even with zero progres
 
     $pic = User::factory()->create();
     $pic->assignRole('pic');
-    
+
     $task = Task::factory()->create([
         'phase_id' => $phase->id,
         'pic_id' => $pic->id,

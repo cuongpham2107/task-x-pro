@@ -195,8 +195,9 @@ class DocumentService implements DocumentServiceInterface
         Task $task,
         TaskAttachment $attachment,
         Media $attachmentMedia,
-        ?int $projectId
+        ?int $projectId,
+        ?array $meta = null
     ): Document {
-        return $this->mutationService->createFromTaskAttachment($actor, $task, $attachment, $attachmentMedia, $projectId);
+        return $this->mutationService->createFromTaskAttachment($actor, $task, $attachment, $attachmentMedia, $projectId, $meta);
     }
 }
