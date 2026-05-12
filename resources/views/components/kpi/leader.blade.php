@@ -1,4 +1,5 @@
 <?php
+use App\Helpers\PdfHelper;
 
 use App\Enums\KpiPeriodType;
 use App\Exports\KpiExport;
@@ -573,6 +574,7 @@ new #[Title('KPI phòng ban')] class extends Component
             ])->render();
 
             $pdf = Pdf::html($html)->format('a4');
+            $pdf = PdfHelper::fromHtml($html, 'a4');
             $tempFile = tempnam(sys_get_temp_dir(), 'pdf_').'.pdf';
             $pdf->save($tempFile);
 

@@ -67,7 +67,13 @@ RUN apk add --no-cache \
     libxml2 \
     icu \
     sqlite \
-    git
+    git \
+    nodejs \
+    npm \
+    chromium
+
+# Create Puppeteer cache directory with proper permissions
+RUN mkdir -p /tmp/puppeteer-cache && chmod 777 /tmp/puppeteer-cache
 
 # Copy extensions from composer-builder stage
 COPY --from=composer-builder /usr/local/lib/php/extensions /usr/local/lib/php/extensions
@@ -84,6 +90,15 @@ COPY --from=assets-builder /app/public/build ./public/build
 
 # Final composer optimization
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# Set Puppeteer environment variables
+ENV PUPPETEER_CACHE_DIR=/tmp/puppeteer-cache \
+    PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=false
+
+# Install Puppeteer and download Chrome
+RUN npm install puppeteer -g && \
+    npx puppeteer browsers install chrome
+
 RUN composer dump-autoload --optimize --no-dev
 
 # Set permissions for Laravel

@@ -1,4 +1,5 @@
 <?php
+use App\Helpers\PdfHelper;
 use App\Exports\DashboardReportExport;
 use App\Models\ActivityLog;
 use App\Services\Dashboard\DashboardService;
@@ -56,7 +57,7 @@ new class extends Component
                 'generatedBy' => auth()->user()?->name ?? 'Hệ thống',
             ])->render();
 
-            $pdf = Pdf::html($html)->format('a4');
+            $pdf = PdfHelper::fromHtml($html, 'a4');
             $tempFile = tempnam(sys_get_temp_dir(), 'pdf_').'.pdf';
             $pdf->save($tempFile);
 
