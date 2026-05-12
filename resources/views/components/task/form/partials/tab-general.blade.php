@@ -122,12 +122,12 @@ $isManager = $isLeader && !$isCeo && $status !== 'waiting_approval';
              </span>
          </label>
 
-         <div class="mt-1 flex items-center gap-2">
+         <div class="mt-1 flex items-center gap-2" x-data="{ deliverable_url_input: @entangle('deliverable_url_input') }">
             <x-ui.input name="deliverable_url_input" type="url"
-                placeholder="https://..." wire:model.defer="deliverable_url_input" icon="link"
+                placeholder="https://..." x-model="deliverable_url_input" icon="link"
                 wire:keydown.enter.prevent="addDeliverableUrl"
                 :disabled="$isCeo || (!$isManager && !($isPic && $isTaskStarted))" />
-             <button type="button" wire:click="addDeliverableUrl"
+             <button type="button" wire:click="addDeliverableUrl" x-show="deliverable_url_input && deliverable_url_input.trim().length > 0"
                  class="inline-flex items-center gap-2 rounded-md bg-primary px-3 py-2 text-white hover:opacity-90"
                  @if($isCeo || (!$isManager && !($isPic && $isTaskStarted))) disabled @endif>
                  Thêm
