@@ -9,17 +9,22 @@ services:
     environment:
       SERVICE_NAME: app
       SERVICE_TAGS: dev
+      DB_CONNECTION: mysql
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_DATABASE: taskxpro
+      DB_USERNAME: taskxpro
+      DB_PASSWORD: secret
     volumes:
       - ./:/var/www
-      #- vendor:/var/www/vendor
-      #- node_modules:/var/www/node_modules
-      #- public_build:/var/www/public/build
       - storage:/var/www/storage
       - bootstrap_cache:/var/www/bootstrap/cache
       - database:/var/www/database
       - ./php/upload.ini:/usr/local/etc/php/conf.d/upload.ini:ro
     networks:
       - taskxpro-network
+    depends_on:
+      - db
 
   scheduler:
     build:
@@ -31,6 +36,12 @@ services:
     environment:
       SERVICE_NAME: scheduler
       SERVICE_TAGS: dev
+      DB_CONNECTION: mysql
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_DATABASE: taskxpro
+      DB_USERNAME: taskxpro
+      DB_PASSWORD: secret
     volumes:
       - ./:/var/www
       - storage:/var/www/storage
@@ -40,7 +51,7 @@ services:
     networks:
       - taskxpro-network
     depends_on:
-      - app
+      - db
 
   web:
     image: nginx:alpine
@@ -51,7 +62,6 @@ services:
       - "8020:80"
     volumes:
       - ./:/var/www
-      #- public_build:/var/www/public/build:ro
       - storage:/var/www/storage:ro
       - ./nginx/conf.d/:/etc/nginx/conf.d/
     networks:
@@ -59,14 +69,26 @@ services:
     depends_on:
       - app
 
+  db:
+    image: mysql:8.0
+    container_name: taskxpro-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: taskxpro
+      MYSQL_USER: taskxpro
+      MYSQL_PASSWORD: secret
+      MYSQL_ROOT_PASSWORD: secret
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - taskxpro-network
+
 networks:
   taskxpro-network:
     driver: bridge
 
 volumes:
-  # vendor:
-  # node_modules:
-  # public_build:
   storage:
   bootstrap_cache:
   database:
+  db_data:
