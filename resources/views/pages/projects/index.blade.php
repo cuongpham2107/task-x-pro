@@ -34,6 +34,18 @@ new #[Title('Dự án')] class extends Component
     #[Url(as: 'type', except: '')]
     public ?string $filterType = null;
 
+    #[Url(as: 'status', except: '')]
+    public ?string $filterStatus = null;
+
+    #[Url(as: 'manager', except: '')]
+    public ?string $filterManagerId = null;
+
+    #[Url(as: 'start', except: '')]
+    public ?string $filterStartDate = null;
+
+    #[Url(as: 'end', except: '')]
+    public ?string $filterEndDate = null;
+
     #[Url(as: 'q', except: '')]
     public ?string $filterSearch = null;
 
@@ -66,6 +78,26 @@ new #[Title('Dự án')] class extends Component
     }
 
     public function updatedFilterType(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedFilterStatus(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedFilterManagerId(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedFilterStartDate(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedFilterEndDate(): void
     {
         $this->resetPage();
     }
@@ -146,6 +178,18 @@ new #[Title('Dự án')] class extends Component
     }
 
     #[Computed]
+    public function statuses(): array
+    {
+        return $this->projectService->getStatusOptions();
+    }
+
+    #[Computed]
+    public function managers(): array
+    {
+        return $this->projectService->getManagerOptions();
+    }
+
+    #[Computed]
     public function tabs(): array
     {
         return $this->projectService->getTabCounts(auth()->user());
@@ -159,6 +203,10 @@ new #[Title('Dự án')] class extends Component
             'sort' => $this->sortBy,
             'dir' => $this->sortDir,
             'type' => $this->filterType,
+            'status' => $this->filterStatus,
+            'manager_id' => $this->filterManagerId,
+            'start_date' => $this->filterStartDate,
+            'end_date' => $this->filterEndDate,
             'search' => $this->filterSearch,
         ]);
     }
@@ -199,13 +247,13 @@ new #[Title('Dự án')] class extends Component
             @endforeach
         </div>
 
-        {{-- Search + Filter + Sort --}}
-        <div class="flex w-full flex-col gap-3 md:w-auto md:flex-row md:items-center md:pb-4">
-            <div class="w-full md:w-auto">
-                <x-ui.filter-search model="filterSearch" placeholder="Tìm dự án..." width="w-full md:w-44" />
+        {{-- Search (left) + Filters (right) --}}
+        <div class="flex items-end w-full gap-2">
+            <div class="shrink-0 w-full xl:w-64">
+                <x-ui.filter-search model="filterSearch" placeholder="Tìm dự án..." width="w-full" />
             </div>
 
-            <div class="flex w-full items-center gap-2 overflow-x-auto pb-2 md:w-auto md:overflow-visible md:pb-0">
+            <div class="flex items-end gap-3 ml-auto flex-wrap">
                 <div class="shrink-0">
                     <x-ui.filter-select model="filterType" :value="$filterType" label="Loại hình" icon="style"
                         all-label="Tất cả loại hình" width="w-44" drop-width="w-52" :options="[]">
@@ -221,6 +269,24 @@ new #[Title('Dự án')] class extends Component
                             </button>
                         @endforeach
                     </x-ui.filter-select>
+                </div>
+
+                <div class="shrink-0">
+                    <x-ui.filter-select model="filterStatus" :value="$filterStatus" label="Trạng thái" icon="filter_alt"
+                        all-label="Tất cả trạng thái" width="w-44" drop-width="w-56" :options="$this->statuses" />
+                </div>
+
+                <div class="shrink-0">
+                    <x-ui.filter-select model="filterManagerId" :value="$filterManagerId" label="Quản lý" icon="supervisor_account"
+                        all-label="Tất cả quản lý" width="w-44" drop-width="w-72" :options="$this->managers" />
+                </div>
+
+                <div class="shrink-0 xl:w-44">
+                    <x-ui.datepicker class="py-1 rounded-lg bg-white dark:bg-slate-800" label="Thời gian bắt đầu" name="filterStartDate" wire:model.live="filterStartDate" />
+                </div>
+
+                <div class="shrink-0 xl:w-44">
+                    <x-ui.datepicker class="py-1 rounded-lg bg-white dark:bg-slate-800" label="Thời gian kết thúc" name="filterEndDate" wire:model.live="filterEndDate" />
                 </div>
 
                 <div class="shrink-0">

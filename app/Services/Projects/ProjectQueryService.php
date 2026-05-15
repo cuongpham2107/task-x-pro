@@ -111,6 +111,31 @@ class ProjectQueryService
     }
 
     /**
+     * Tra ve danh sach trang thai cho filter.
+     *
+     * @return array<string, string>
+     */
+    public function getStatusOptions(): array
+    {
+        return ProjectStatus::options();
+    }
+
+    /**
+     * Tra ve danh sach quan ly cho filter.
+     *
+     * @return array<int, string>
+     */
+    public function getManagerOptions(): array
+    {
+        return User::query()
+            ->role(['ceo', 'leader', 'super_admin'])
+            ->where('status', UserStatus::Active->value)
+            ->orderBy('name')
+            ->pluck('name', 'id')
+            ->toArray();
+    }
+
+    /**
      * Lay chi tiet project cho man hinh edit.
      */
     public function findForEdit(int $projectId): Project
@@ -197,6 +222,28 @@ class ProjectQueryService
                     ->where('name', 'like', "%{$search}%")
                     ->orWhere('objective', 'like', "%{$search}%");
             });
+        }
+
+        $status = $filters['status'] ?? null;
+        if ($status !== null && $status !== '') {
+            $query->where('status', $status);
+        }
+
+        $managerId = $filters['manager_id'] ?? null;
+        if ($managerId !== null && $managerId !== '') {
+            $query->whereHas('leaders', function (Builder $builder) use ($managerId): void {
+                $builder->where('users.id', (int) $managerId);
+            });
+        }
+
+        $startDate = trim((string) ($filters['start_date'] ?? ''));
+        if ($startDate !== '') {
+            $query->whereDate('start_date', '>=', $startDate);
+        }
+
+        $endDate = trim((string) ($filters['end_date'] ?? ''));
+        if ($endDate !== '') {
+            $query->whereDate('end_date', '<=', $endDate);
         }
 
         $type = $filters['type'] ?? null;

@@ -314,3 +314,27 @@ Artisan::command('progress:refresh-all', function (): void {
 
     $this->info('Progress refreshed for all phases and projects.');
 })->purpose('Đồng bộ lại % tiến độ của tất cả Phase và Project từ dữ liệu Task');
+
+Artisan::command('projects:set-creator-admin', function (): void {
+    $email = 'admin@admin.com';
+
+    $user = User::query()->where('email', $email)->first();
+    if ($user === null) {
+        $this->error("User with email {$email} not found.");
+
+        return;
+    }
+
+    $total = Project::query()->count();
+
+    if ($total === 0) {
+        $this->info('No projects found to update.');
+
+        return;
+    }
+
+    // Update all projects to set created_by to the admin user
+    Project::query()->update(['created_by' => $user->id]);
+
+    $this->info("Updated {$total} projects: set created_by = {$user->id} ({$user->email}).");
+})->purpose('Set created_by for all projects to admin@admin.com');

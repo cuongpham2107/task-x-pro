@@ -48,6 +48,26 @@ class ProjectService
     }
 
     /**
+     * Tra ve danh sach trang thai cho filter.
+     *
+     * @return array<string, string>
+     */
+    public function getStatusOptions(): array
+    {
+        return $this->queryService->getStatusOptions();
+    }
+
+    /**
+     * Tra ve danh sach quan ly cho filter.
+     *
+     * @return array<int, string>
+     */
+    public function getManagerOptions(): array
+    {
+        return $this->queryService->getManagerOptions();
+    }
+
+    /**
      * Lay chi tiet project cho man hinh edit.
      */
     public function findForEdit(User $actor, int $projectId): Project

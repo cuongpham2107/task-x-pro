@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\PhaseTemplate;
+use App\Models\ProjectType;
 use App\Models\User;
 use App\Services\Projects\ProjectMutationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -30,6 +31,27 @@ it('creates a project without phases when phasePayloads is an empty array', func
 
     expect($project->phases)->toHaveCount(0);
     expect($project->name)->toBe('Project Without Phases');
+});
+
+it('creates a project with a custom project type key', function () {
+    $projectType = ProjectType::create([
+        'key' => 'test',
+        'label' => 'Test',
+    ]);
+
+    $service = app(ProjectMutationService::class);
+
+    $attributes = [
+        'name' => 'Project With Custom Type',
+        'type' => $projectType->key,
+        'project_type_id' => $projectType->id,
+        'start_date' => now()->toDateString(),
+    ];
+
+    $project = $service->create($this->actor, $attributes, [], []);
+
+    expect($project->project_type_id)->toBe($projectType->id);
+    expect($project->type)->toBe('test');
 });
 
 it('creates a project with template phases when phasePayloads is null', function () {
