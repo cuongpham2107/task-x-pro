@@ -226,34 +226,15 @@ new #[Title('Dự án')] class extends Component
 
         </div>
     </div>
-    <!-- Tabs Section -->
-    <div
-        class="mb-2 flex flex-col gap-2 md:flex-row md:items-center md:justify-between md:gap-2 md:pb-0 dark:border-slate-800">
-        {{-- Tabs --}}
-        <div class="hidden min-w-0 flex-1 gap-1 overflow-x-auto md:flex">
-            @foreach ($this->tabs as $key => $tab)
-                <button wire:click="setTab('{{ $key }}')"
-                    class="{{ $this->tab === $key
-                        ? 'border-primary text-primary font-bold'
-                        : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200' }} flex items-center gap-1.5 whitespace-nowrap border-b-2 px-3 pb-4 text-sm font-medium tracking-tight transition-colors">
-                    {{ $tab['label'] }}
-                    <span
-                        class="{{ $this->tab === $key
-                            ? 'bg-primary/10 text-primary'
-                            : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400' }} text-2xs rounded-full px-1.5 py-0.5 leading-none">
-                        {{ $tab['count'] }}
-                    </span>
-                </button>
-            @endforeach
-        </div>
-
+    <!-- Controls Section -->
+    <div class="mb-2 flex items-center justify-between gap-2 md:gap-2 md:pb-0 dark:border-slate-800">
         {{-- Search (left) + Filters (right) --}}
         <div class="flex items-end w-full gap-2">
             <div class="shrink-0 w-full xl:w-64">
                 <x-ui.filter-search model="filterSearch" placeholder="Tìm dự án..." width="w-full" />
             </div>
 
-            <div class="items-end gap-3 ml-auto flex-wrap hidden lg:flex">
+            <div class="items-end gap-3 ml-auto flex-wrap hidden xl:flex">
                 <div class="shrink-0">
                     <x-ui.filter-select model="filterType" :value="$filterType" label="Loại hình" icon="style"
                         all-label="Tất cả loại hình" width="w-44" drop-width="w-52" :options="[]">
@@ -281,11 +262,11 @@ new #[Title('Dự án')] class extends Component
                         all-label="Tất cả quản lý" width="w-44" drop-width="w-72" :options="$this->managers" />
                 </div>
 
-                <div class="shrink-0 xl:w-44">
+                <div class="shrink-0 lg:w-44">
                     <x-ui.datepicker class="py-1 rounded-lg bg-white dark:bg-slate-800" label="Thời gian bắt đầu" name="filterStartDate" wire:model.live="filterStartDate" />
                 </div>
 
-                <div class="shrink-0 xl:w-44">
+                <div class="shrink-0 lg:w-44">
                     <x-ui.datepicker class="py-1 rounded-lg bg-white dark:bg-slate-800" label="Thời gian kết thúc" name="filterEndDate" wire:model.live="filterEndDate" />
                 </div>
 
