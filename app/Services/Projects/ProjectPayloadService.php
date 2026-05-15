@@ -3,9 +3,9 @@
 namespace App\Services\Projects;
 
 use App\Enums\ProjectStatus;
-use App\Enums\ProjectType;
 use App\Enums\UserStatus;
 use App\Models\Project;
+use App\Models\ProjectType as ProjectTypeModel;
 use App\Models\User;
 use Illuminate\Validation\ValidationException;
 
@@ -21,6 +21,7 @@ class ProjectPayloadService
         $allowedFields = [
             'name',
             'type',
+            'project_type_id',
             'status',
             'budget',
             'budget_spent',
@@ -34,23 +35,26 @@ class ProjectPayloadService
             ->toArray();
 
         if (! $isUpdate) {
-            $requiredFields = ['name', 'type'];
+            $hasType = array_key_exists('type', $payload) && $payload['type'] !== null && $payload['type'] !== '';
+            $hasTypeId = array_key_exists('project_type_id', $payload) && $payload['project_type_id'] !== null && $payload['project_type_id'] !== '';
 
-            foreach ($requiredFields as $requiredField) {
-                if (! array_key_exists($requiredField, $payload) || $payload[$requiredField] === null || $payload[$requiredField] === '') {
-                    throw ValidationException::withMessages([
-                        $requiredField => 'Truong nay la bat buoc khi tao project.',
-                    ]);
-                }
+            if (! $hasType && ! $hasTypeId) {
+                throw ValidationException::withMessages([
+                    'type' => 'Truong "type" hoac "project_type_id" la bat buoc khi tao project.',
+                ]);
             }
 
             $payload['created_by'] = $actorId;
         }
 
-        if (array_key_exists('type', $payload) && $payload['type'] !== null && ! in_array($payload['type'], ProjectType::values(), true)) {
-            throw ValidationException::withMessages([
-                'type' => 'Loai du an khong hop le.',
-            ]);
+        // If caller provided a project_type_id, validate it exists
+        if (array_key_exists('project_type_id', $payload) && $payload['project_type_id'] !== null && $payload['project_type_id'] !== '') {
+            $exists = ProjectTypeModel::query()->where('id', (int) $payload['project_type_id'])->exists();
+            if (! $exists) {
+                throw ValidationException::withMessages([
+                    'project_type_id' => 'Loại dự án không tồn tại.',
+                ]);
+            }
         }
 
         if (array_key_exists('status', $payload) && $payload['status'] !== null && ! in_array($payload['status'], ProjectStatus::values(), true)) {

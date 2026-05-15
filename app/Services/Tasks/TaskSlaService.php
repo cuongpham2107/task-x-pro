@@ -33,7 +33,7 @@ class TaskSlaService
             ]);
         }
 
-        $projectType = $phase->project->type instanceof \BackedEnum ? $phase->project->type->value : (string) $phase->project->type;
+        $projectType = $phase->project->projectType?->key ?? ($phase->project->type instanceof \BackedEnum ? $phase->project->type->value : (string) $phase->project->type);
         $referenceDateText = $referenceDate->toDateString();
 
         $query = SlaConfig::query()

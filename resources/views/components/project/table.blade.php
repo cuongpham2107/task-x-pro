@@ -76,7 +76,7 @@
                         <div>
                             <p class="text-sm font-semibold text-slate-600 dark:text-slate-100">
                                 {{ $project->name }}</p>
-                            <p class="text-xs text-slate-500">Loại: {{ $project->type->label() }}</p>
+                            <p class="text-xs text-slate-500">Loại: {{ $project->projectType ? $project->projectType->label : ($project->type instanceof \BackedEnum ? $project->type->label() : ($project->type ?? '—')) }}</p>
                         </div>
                     </div>
                 </x-ui.table.cell>

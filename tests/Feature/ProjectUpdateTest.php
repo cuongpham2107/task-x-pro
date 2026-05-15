@@ -40,7 +40,7 @@ it('does not delete phases when updating project with phasePayloads as null', fu
 
     $attributes = [
         'name' => 'Updated Project Name',
-        'type' => $project->type->value,
+        'type' => $project->projectType?->key ?? ($project->type instanceof \BackedEnum ? $project->type->value : (string) $project->type),
         'start_date' => '2024-02-01', // Update start date
     ];
 
@@ -72,7 +72,7 @@ it('fails to update project when phasePayloads is [] and phases have tasks', fun
 
     $attributes = [
         'name' => 'Updated Project Name',
-        'type' => $project->type->value,
+        'type' => $project->projectType?->key ?? ($project->type instanceof \BackedEnum ? $project->type->value : (string) $project->type),
     ];
 
     // 2. Update project with phasePayloads: [] (should attempt to delete all phases)

@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 
 use App\Enums\ProjectStatus;
-use App\Enums\ProjectType;
+use App\Models\ProjectType as ProjectTypeModel;
 use App\Enums\TaskPriority;
 use App\Enums\TaskStatus;
 use App\Enums\TaskType;
@@ -15,7 +15,6 @@ use App\Models\Document;
 use App\Models\DocumentVersion;
 use App\Models\KpiScore;
 use App\Models\Phase;
-use App\Models\PhaseTemplate;
 use App\Models\Project;
 use App\Models\ProjectLeader;
 use App\Models\SlaConfig;
@@ -29,7 +28,6 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
@@ -46,22 +44,22 @@ class ExcelImportSeeder extends Seeder
             $users = $this->importUsers($jsonDir, $departments);
             $this->assignDepartmentHeads($departments, $users['ceo'], $users['leaders']);
             $this->seedAuthorization($users['ceo'], $users['leaders'], $users['pics'], $users['admin'] ?? null);
-            
+
             $this->seedSlaConfigs($departments, $users['ceo']);
 
             $projects = $this->importProjects($jsonDir, $users['leaders'], $users['ceo']);
 
             $this->seedProjectLeaders($projects, $users['leaders'], $users['ceo']);
-            
+
             // Đếm số tasks mỗi project để tạo phases trước khi import tasks
             $taskCounts = $this->countTasksByProject($jsonDir);
             $this->createPhasesFromCounts($projects, $taskCounts);
-            
+
             $this->importTasksData($jsonDir, $projects, $users['leaders'], $users['pics'], $users['ceo'], $taskCounts);
-            
+
             // Cập nhật phases dựa trên tasks thực tế (dates, weights, progress)
             $this->refinePhasesFromTasks($projects);
-            
+
             $this->importActivityLogsData($jsonDir, $projects, $users);
             $this->seedKpiScores($users['pics']);
         });
@@ -184,7 +182,7 @@ class ExcelImportSeeder extends Seeder
             ]
         );
 
-        if (!$admin) {
+        if (! $admin) {
             $admin = $superAdmin;
         }
 
@@ -388,10 +386,13 @@ class ExcelImportSeeder extends Seeder
             $startDate = $this->parseDate($p['Ngày bắt đầu'] ?? '') ?: now()->toDateString();
             $endDate = $this->parseDate($p['Ngày kết thúc'] ?? '');
 
+            // Resolve default project type to existing DB entry (software) or fallback to raw string
+            $defaultType = ProjectTypeModel::query()->where('key', 'software')->first();
             $project = Project::firstOrCreate(
                 ['name' => $p['Tên dự án']],
                 [
-                    'type' => ProjectType::Software->value,
+                    'type' => $defaultType?->key ?? 'software',
+                    'project_type_id' => $defaultType?->id,
                     'status' => $status,
                     'objective' => $p['Mô tả dự án'] ?? '',
                     'start_date' => $startDate,
@@ -412,7 +413,7 @@ class ExcelImportSeeder extends Seeder
 
     private function createPhasesFromTemplate(Project $project, int $createdBy, $allTemplates): void
     {
-        $typeValue = $project->type->value;
+        $typeValue = $project->projectType?->key ?? ($project->type instanceof \BackedEnum ? $project->type->value : (string) $project->type);
         $templates = $allTemplates->where('project_type', $typeValue)->values();
 
         if ($templates->isEmpty()) {
@@ -569,7 +570,8 @@ class ExcelImportSeeder extends Seeder
 
             $taskTypeRaw = $t['Loại công việc'] ?? 'Khác';
             $taskTypeSLA = $this->mapTaskTypeToSLA($taskTypeRaw);
-            $slaHours = $this->getSlaHours($assignee, $taskTypeSLA, $project->type);
+            $projectTypeKey = $project->projectType?->key ?? ($project->type instanceof \BackedEnum ? $project->type->value : (string) $project->type);
+            $slaHours = $this->getSlaHours($assignee, $taskTypeSLA, $projectTypeKey);
 
             $deadline = $this->parseDate($t['Hạn chót'] ?? '');
             if (! $deadline && $startedAt && $slaHours) {
@@ -593,7 +595,7 @@ class ExcelImportSeeder extends Seeder
             $totalTasks = $taskCounts->get($projectName, 0);
             $phases = $project->phases()->orderBy('order_index')->get();
             $numPhases = $phases->count();
-            
+
             // Track task index per project
             $currentIdx = ($taskIndexPerProject[$projectName] ?? 0) + 1;
             $taskIndexPerProject[$projectName] = $currentIdx;
@@ -997,6 +999,7 @@ class ExcelImportSeeder extends Seeder
 
             if ($totalTasks == 0) {
                 $this->createDefaultPhase($project);
+
                 continue;
             }
 
@@ -1033,7 +1036,7 @@ class ExcelImportSeeder extends Seeder
                 Phase::create([
                     'project_id' => $project->id,
                     'name' => $phaseName,
-                    'description' => "Dự kiến chứa ~".ceil($totalTasks / $numPhases)." tasks.",
+                    'description' => 'Dự kiến chứa ~'.ceil($totalTasks / $numPhases).' tasks.',
                     'weight' => $weightPerPhase,
                     'order_index' => $i,
                     'start_date' => $phaseStart->toDateString(),
@@ -1108,15 +1111,15 @@ class ExcelImportSeeder extends Seeder
                 $weight = round(($count / $totalTasks) * 100, 2);
 
                 // Dates từ tasks
-                $startDates = $tasks->pluck('started_at')->filter()->map(fn($d) => is_string($d) ? substr($d,0,10) : $d?->toDateString())->filter();
-                $deadlines = $tasks->pluck('deadline')->filter()->map(fn($d) => is_string($d) ? substr($d,0,10) : $d?->toDateString())->filter();
+                $startDates = $tasks->pluck('started_at')->filter()->map(fn ($d) => is_string($d) ? substr($d, 0, 10) : $d?->toDateString())->filter();
+                $deadlines = $tasks->pluck('deadline')->filter()->map(fn ($d) => is_string($d) ? substr($d, 0, 10) : $d?->toDateString())->filter();
 
                 $phaseStart = $startDates->min() ?? $phase->start_date;
                 $phaseEnd = $deadlines->max() ?? $phase->end_date;
 
                 // Status và progress
-                $allCompleted = $tasks->every(fn($t) => $t->status === 'completed');
-                $hasActive = $tasks->contains(fn($t) => $t->status === 'in_progress' || $t->status === 'Đang thực hiện' || $t->status === 'active');
+                $allCompleted = $tasks->every(fn ($t) => $t->status === 'completed');
+                $hasActive = $tasks->contains(fn ($t) => $t->status === 'in_progress' || $t->status === 'Đang thực hiện' || $t->status === 'active');
                 $phaseStatus = $allCompleted ? 'completed' : ($hasActive ? 'active' : 'pending');
                 $progress = $allCompleted ? 100 : ($hasActive ? 50 : 0); // tạm, refreshProgressFromPhases sẽ chính xác hơn
 

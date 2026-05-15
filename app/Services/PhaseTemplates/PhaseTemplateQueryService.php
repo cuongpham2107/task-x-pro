@@ -2,8 +2,8 @@
 
 namespace App\Services\PhaseTemplates;
 
-use App\Enums\ProjectType;
 use App\Models\PhaseTemplate;
+use App\Models\ProjectType as ProjectTypeModel;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -63,7 +63,7 @@ class PhaseTemplateQueryService
     public function formOptions(): array
     {
         return [
-            'project_type_labels' => ProjectType::options(),
+            'project_type_labels' => ProjectTypeModel::query()->pluck('label', 'key')->toArray(),
         ];
     }
 

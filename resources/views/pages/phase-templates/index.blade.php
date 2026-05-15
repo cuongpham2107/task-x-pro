@@ -1,6 +1,5 @@
 <?php
 
-use App\Enums\ProjectType;
 use App\Models\PhaseTemplate;
 use App\Services\PhaseTemplates\PhaseTemplateService;
 use Illuminate\Support\Facades\Gate;
@@ -36,7 +35,7 @@ new #[Title('Mẫu phase')] class extends Component
 
     public ?int $editingTemplateId = null;
 
-    public string $projectType = ProjectType::Warehouse->value;
+    public string $projectType = '';
 
     public string $phaseName = '';
 
@@ -68,6 +67,7 @@ new #[Title('Mẫu phase')] class extends Component
     {
         $options = $this->phaseTemplateService->formOptions(auth()->user());
         $this->projectTypeLabels = $options['project_type_labels'];
+        $this->projectType = $this->projectType ?: (array_key_first($this->projectTypeLabels) ?? '');
     }
 
     public function updatedFilterSearch(): void
@@ -98,7 +98,7 @@ new #[Title('Mẫu phase')] class extends Component
     protected function rules(): array
     {
         return [
-            'projectType' => ['required', Rule::in(ProjectType::values())],
+            'projectType' => ['required', Rule::in(array_keys($this->projectTypeLabels ?? []))],
             'phaseName' => ['required', 'string', 'max:255'],
             'phaseDescription' => ['nullable', 'string'],
             'orderIndex' => ['required', 'integer', 'min:1', 'max:999', Rule::unique('phase_templates', 'order_index')->where(fn ($query) => $query->where('project_type', $this->projectType))->ignore($this->editingTemplateId)],

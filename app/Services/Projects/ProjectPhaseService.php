@@ -44,15 +44,18 @@ class ProjectPhaseService
 
     public function createPhasesFromTemplate(Project $project): void
     {
+        $projectTypeKey = $project->projectType?->key ?? ($project->type instanceof \BackedEnum ? (string) $project->type->value : (string) $project->type);
+
         $templates = PhaseTemplate::query()
-            ->where('project_type', $project->type)
+            ->where('project_type', $projectTypeKey)
             ->where('is_active', true)
             ->orderBy('order_index')
             ->get();
 
         if ($templates->isEmpty()) {
+            $label = $project->projectType?->label ?? ($project->type instanceof \BackedEnum ? $project->type->label() : (string) $project->type);
             throw ValidationException::withMessages([
-                'type' => 'Chưa cấu hình phase template cho loại project này ('.$project->type->label().').',
+                'type' => 'Chưa cấu hình phase template cho loại project này ('.$label.').',
             ]);
         }
 

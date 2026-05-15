@@ -573,8 +573,10 @@ class TaskXProSeeder extends Seeder
     private function seedExecutionData(Collection $projects, Collection $leaders, Collection $pics, User $ceo): void
     {
         foreach ($projects as $project) {
+            $projectTypeKey = $project->projectType?->key ?? ($project->type instanceof \BackedEnum ? $project->type->value : (string) $project->type);
+
             $phaseTemplates = PhaseTemplate::query()
-                ->where('project_type', $project->type)
+                ->where('project_type', $projectTypeKey)
                 ->where('is_active', true)
                 ->orderBy('order_index')
                 ->get();
@@ -673,7 +675,9 @@ class TaskXProSeeder extends Seeder
         }
 
         // Determine number of tasks for this phase
-        $taskCount = match ($project->type) {
+        $typeKey = $project->projectType?->key ?? ($project->type instanceof \BackedEnum ? $project->type->value : (string) $project->type);
+
+        $taskCount = match ($typeKey) {
             'software' => 6,
             'warehouse' => 4,
             default => 3,

@@ -2,17 +2,20 @@
 
 use App\Enums\ProjectStatus;
 use App\Models\Project;
+use App\Models\ProjectType;
 use App\Services\Projects\ProjectService;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 
-new class extends Component {
+new class extends Component
+{
     public bool $showFormModal = false;
 
     public string $mode = 'create';
@@ -24,7 +27,7 @@ new class extends Component {
     #[Validate('required|string|max:255')]
     public string $name = '';
 
-    #[Validate('required|string|in:warehouse,customs,trucking,software,gms,tower')]
+    #[Validate('required|string|max:255')]
     public string $type = '';
 
     #[Validate('required|date')]
@@ -41,9 +44,15 @@ new class extends Component {
 
     public bool $is_phase = false;
 
+    public ?int $editingProjectTypeId = null;
+
+    public string $editingProjectTypeLabel = '';
+
+    public bool $showProjectTypeModal = false;
+
     public function updatedStartDate(): void
     {
-        if (!$this->is_phase || $this->startDate === '' || $this->startDate === null) {
+        if (! $this->is_phase || $this->startDate === '' || $this->startDate === null) {
             $this->checkEndDateWarning();
 
             return;
@@ -73,6 +82,25 @@ new class extends Component {
         $this->checkEndDateWarning();
     }
 
+    // Create a ProjectType immediately from the free-text input and refresh options
+    public function createFreeTextOption(string $text): void
+    {
+        $text = trim($text);
+        if ($text === '') {
+            return;
+        }
+
+        $projectTypeModel = ProjectType::findByKeyOrLabel($text);
+        if ($projectTypeModel === null) {
+            $key = Str::of($text)->trim()->lower()->replaceMatches('/[^a-z0-9]+/', '_')->trim('_')->__toString();
+            $label = Str::of($text)->trim()->title()->__toString();
+            $projectTypeModel = ProjectType::create(['key' => $key ?: Str::uuid()->toString(), 'label' => $label ?: $text]);
+        }
+
+        $this->loadFormOptions();
+        $this->type = $projectTypeModel->key;
+    }
+
     public function updatedEndDate(): void
     {
         $this->checkEndDateWarning();
@@ -86,7 +114,7 @@ new class extends Component {
                 $end = Carbon::parse($this->endDate)->startOfDay();
 
                 if ($start->diffInDays($end) < $this->templateTotalDays) {
-                    $this->addError('endDate', 'Lưu ý: Ngày kết thúc nhỏ hơn tổng thời gian dự kiến của các giai đoạn mẫu (' . $this->templateTotalDays . ' ngày).');
+                    $this->addError('endDate', 'Lưu ý: Ngày kết thúc nhỏ hơn tổng thời gian dự kiến của các giai đoạn mẫu ('.$this->templateTotalDays.' ngày).');
                 } else {
                     $this->resetValidation('endDate');
                 }
@@ -140,12 +168,12 @@ new class extends Component {
         $this->editingProjectId = $project->id;
         $this->mode = 'edit';
         $this->name = (string) $project->name;
-        $this->type = $project->type instanceof \BackedEnum ? (string) $project->type->value : (string) $project->type;
+        $this->type = $project->projectType ? (string) $project->projectType->key : ($project->type instanceof \BackedEnum ? (string) $project->type->value : (string) $project->type);
         $this->startDate = $project->start_date instanceof Carbon ? $project->start_date->toDateString() : '';
         $this->endDate = $project->end_date instanceof Carbon ? $project->end_date->toDateString() : '';
         $this->objective = (string) ($project->objective ?? '');
         $this->budget = $project->budget !== null ? (string) $project->budget : '';
-        $this->leaderIds = $project->leaders()->pluck('users.id')->map(fn($id) => (int) $id)->values()->all();
+        $this->leaderIds = $project->leaders()->pluck('users.id')->map(fn ($id) => (int) $id)->values()->all();
         $this->is_phase = false; // Reset phase toggle on edit
 
         $this->showFormModal = true;
@@ -162,6 +190,78 @@ new class extends Component {
         $options = app(ProjectService::class)->formOptions();
         $this->projectTypeLabels = $options['project_type_labels'];
         $this->leaderOptions = $options['leaders'];
+    }
+
+    public function requestEditProjectType(string $key): void
+    {
+        $pt = ProjectType::query()->where('key', $key)->orWhere('label', $key)->first();
+        if (! $pt) {
+            return;
+        }
+
+        $this->editingProjectTypeId = $pt->id;
+        $this->editingProjectTypeLabel = $pt->label;
+        $this->showProjectTypeModal = true;
+    }
+
+    public function updateProjectType(): void
+    {
+        $label = trim($this->editingProjectTypeLabel);
+        if ($label === '' || $this->editingProjectTypeId === null) {
+            return;
+        }
+
+        $newKey = Str::of($label)->trim()->lower()->replaceMatches('/[^a-z0-9]+/', '_')->trim('_')->__toString();
+
+        // Ensure uniqueness of key
+        $exists = ProjectType::query()
+            ->where('key', $newKey)
+            ->where('id', '!=', $this->editingProjectTypeId)
+            ->exists();
+        if ($exists) {
+            $this->dispatch('toast', message: 'Khóa loại dự án đã tồn tại.', type: 'error');
+
+            return;
+        }
+
+        $pt = ProjectType::find($this->editingProjectTypeId);
+        if (! $pt) {
+            $this->showProjectTypeModal = false;
+
+            return;
+        }
+
+        $pt->update(['label' => $label, 'key' => $newKey]);
+
+        $this->loadFormOptions();
+        $this->showProjectTypeModal = false;
+        $this->dispatch('toast', message: 'Cập nhật loại dự án thành công.', type: 'success');
+    }
+
+    public function deleteProjectType(?string $key = null): void
+    {
+        if ($key === null && $this->editingProjectTypeId !== null) {
+            $pt = ProjectType::find($this->editingProjectTypeId);
+        } else {
+            $pt = ProjectType::query()->where('key', $key)->orWhere('label', $key)->first();
+        }
+        if (! $pt) {
+            $this->dispatch('toast', message: 'Loại dự án không tồn tại.', type: 'error');
+
+            return;
+        }
+
+        // Prevent deleting if projects exist
+        $hasProjects = \App\Models\Project::query()->where('project_type_id', $pt->id)->exists();
+        if ($hasProjects) {
+            $this->dispatch('toast', message: 'Không thể xóa: đã có dự án sử dụng loại này.', type: 'error');
+
+            return;
+        }
+
+        $pt->delete();
+        $this->loadFormOptions();
+        $this->dispatch('toast', message: 'Đã xóa loại dự án.', type: 'success');
     }
 
     /**
@@ -209,7 +309,7 @@ new class extends Component {
             $this->resetFormModal();
             $this->dispatch('project-saved');
         } catch (\Exception $e) {
-            $this->dispatch('toast', message: 'Lỗi: ' . $e->getMessage(), type: 'error');
+            $this->dispatch('toast', message: 'Lỗi: '.$e->getMessage(), type: 'error');
         }
     }
 
@@ -283,9 +383,19 @@ new class extends Component {
             $this->checkEndDateWarning();
 
             $projectService = app(ProjectService::class);
+            // Resolve or create a ProjectType from free-text input
+            $projectTypeModel = ProjectType::findByKeyOrLabel($this->type);
+            if ($projectTypeModel === null) {
+                $key = Str::of($this->type)->trim()->lower()->replaceMatches('/[^a-z0-9]+/', '_')->trim('_')->__toString();
+                $label = Str::of($this->type)->trim()->title()->__toString();
+                $projectTypeModel = ProjectType::create(['key' => $key ?: Str::uuid()->toString(), 'label' => $label ?: $this->type]);
+            }
+
             $attributes = [
                 'name' => $this->name,
-                'type' => $this->type,
+                'project_type_id' => $projectTypeModel->id,
+                // keep legacy `type` column for backward compatibility
+                'type' => $projectTypeModel->key,
                 'start_date' => $this->startDate ?: null,
                 'end_date' => $this->endDate ?: null,
                 'objective' => $this->objective ?: null,
@@ -327,11 +437,11 @@ new class extends Component {
             $this->dispatch('project-saved');
         } catch (ValidationException $e) {
             $this->setErrorBag($e->validator->errors());
-            $this->dispatch('toast', message: 'Vui lòng kiểm tra lại thông tin! ' . collect($e->validator->errors()->all())->first(), type: 'error');
+            $this->dispatch('toast', message: 'Vui lòng kiểm tra lại thông tin! '.collect($e->validator->errors()->all())->first(), type: 'error');
         } catch (\Exception $e) {
             \Log::error('Project save failed', ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
-            session()->flash('error', 'Có lỗi xảy ra: ' . $e->getMessage());
-            $this->dispatch('toast', message: 'Có lỗi xảy ra: ' . $e->getMessage(), type: 'error');
+            session()->flash('error', 'Có lỗi xảy ra: '.$e->getMessage());
+            $this->dispatch('toast', message: 'Có lỗi xảy ra: '.$e->getMessage(), type: 'error');
         }
     }
 };
@@ -365,7 +475,7 @@ new class extends Component {
                     {{-- Loại hình dự án --}}
                     <div>
                         <x-ui.select label="Loại hình dự án" name="type" wire:model.live="type" icon="category"
-                            :options="$projectTypeLabels" required />
+                            :options="$projectTypeLabels" allow-free-text allow-manage required />
                     </div>
 
                     {{-- Ngân sách --}}
@@ -494,5 +604,31 @@ new class extends Component {
                 </x-ui.button>
             </div>
         </x-slot>
+    </x-ui.modal>
+    {{-- ProjectType edit modal --}}
+    <x-ui.modal wire:model="showProjectTypeModal" maxWidth="md">
+        <x-slot name="header">
+            <x-ui.form.heading icon="edit" title="Chỉnh sửa loại dự án" description="Chỉnh sửa tên loại dự án." />
+        </x-slot>
+
+        <form wire:submit.prevent="updateProjectType">
+            <div class="p-4">
+                <x-ui.input label="Tên loại dự án" name="editingProjectTypeLabel" wire:model.defer="editingProjectTypeLabel" required />
+            </div>
+
+            <x-slot name="footer">
+                <div class="flex justify-between items-center w-full">
+                    <div>
+                        <x-ui.button type="button" variant="danger" wire:click="deleteProjectType" onclick="return confirm('Xác nhận xóa loại dự án này?')">
+                            Xóa
+                        </x-ui.button>
+                    </div>
+                    <div class="flex gap-2">
+                        <x-ui.button type="button" variant="secondary" @click="$wire.set('showProjectTypeModal', false)">Hủy</x-ui.button>
+                        <x-ui.button type="submit" variant="primary">Lưu</x-ui.button>
+                    </div>
+                </div>
+            </x-slot>
+        </form>
     </x-ui.modal>
 </div>

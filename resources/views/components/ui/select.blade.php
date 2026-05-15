@@ -6,6 +6,8 @@
     'disabled' => false,
     'icon' => null,
     'options' => [], // [ value => label ] or [ value => ['label' => '...', 'icon' => '...'] ]
+    'allowFreeText' => false,
+    'allowManage' => false,
     'placeholder' => 'Chọn một tùy chọn',
     'labelKey' => 'label',
     'iconKey' => 'icon',
@@ -52,6 +54,14 @@
         if (this.value === null || this.value === undefined || this.value === '') return null;
         let found = this.optionsList.find(o => String(o.value) === String(this.value));
         return found ? found.icon : null;
+    }
+    ,
+    setValueFromInput() {
+        const val = this.search?.toString().trim() ?? '';
+        if (!val) return;
+        this.value = val;
+        this.open = false;
+        this.search = '';
     }
 }" x-effect="optionsList = @js($jsOptions)" @click.outside="open = false" x-cloak>
     @if ($label)
@@ -111,12 +121,12 @@
             </div>
 
             <div class="flex-1 overflow-y-auto p-1">
-                @if (count($normalized) > 5)
+                @if (count($normalized) > 5 || $allowFreeText)
                     <div class="sticky top-0 z-10 bg-white px-2 py-2 dark:bg-slate-900">
                         <div class="relative">
                             <span
                                 class="material-symbols-outlined absolute left-2 top-1/2 -translate-y-1/2 text-sm text-slate-400">search</span>
-                            <input type="text" x-model="search" placeholder="Tìm kiếm..."
+                            <input type="text" x-model="search" @keydown.enter.prevent="setValueFromInput()" placeholder="Tìm kiếm..."
                                 class="focus:border-primary w-full rounded-lg border-slate-200 bg-slate-50 py-1.5 pl-8 pr-3 text-xs focus:ring-0 dark:border-slate-800 dark:bg-slate-800">
                         </div>
                     </div>
@@ -136,8 +146,8 @@
                             $optLabel = is_array($opt) ? $opt[$labelKey] ?? $val : $opt;
                             $optIcon = is_array($opt) ? $opt[$iconKey] ?? null : null;
                         @endphp
-                        <button type="button" @click="value = @js($val); open = false"
-                            x-show="!search || '{{ strtolower($optLabel) }}'.includes(search.toLowerCase())"
+                        <div class="flex items-center justify-between" x-show="!search || '{{ strtolower($optLabel) }}'.includes(search.toLowerCase())">
+                            <button type="button" @click="value = @js($val); open = false"
                             class="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-slate-50 dark:hover:bg-slate-800"
                             :class="value == @js($val) ? 'bg-primary/5 text-primary font-medium' :
                                 'text-slate-700 dark:text-slate-300'">
@@ -146,10 +156,32 @@
                             @endif
                             <span>{{ $optLabel }}</span>
                         </button>
+
+                            @if ($allowManage)
+                                <div class="ml-2 flex items-center gap-2">
+                                    <button type="button" title="Sửa" @click.stop.prevent="if (typeof $wire !== 'undefined') $wire.call('requestEditProjectType', @js($val))" class="text-sm text-slate-500 hover:text-primary">
+                                        <span class="material-symbols-outlined">edit</span>
+                                    </button>
+                                    <button type="button" title="Xóa" @click.stop.prevent="if (typeof $wire !== 'undefined') { if (confirm('Xác nhận xóa loại dự án này?')) $wire.call('deleteProjectType', @js($val)) }" class="text-sm text-red-500 hover:text-red-700">
+                                        <span class="material-symbols-outlined">delete</span>
+                                    </button>
+                                </div>
+                            @endif
+                        </div>
                     @endforeach
 
                     {{-- Handle Slots if provided --}}
                     {{ $slot }}
+
+                    @if ($allowFreeText)
+                        <div class="px-2 py-2">
+                            <button type="button" x-show="search && !optionsList.find(o => o.label.toLowerCase() === search.toLowerCase())"
+                                @click="if (typeof $wire !== 'undefined') { $wire.call('createFreeTextOption', search).then(() => { value = search; open = false; search = '' }) } else { value = search; open = false; search = '' }"
+                                class="w-full rounded-lg bg-primary/5 px-3 py-2 text-sm text-primary hover:bg-primary/10">
+                                Tạo mới: <strong x-text="search"></strong>
+                            </button>
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>

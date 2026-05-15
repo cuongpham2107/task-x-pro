@@ -3,9 +3,9 @@
 namespace App\Services\Projects;
 
 use App\Enums\ProjectStatus;
-use App\Enums\ProjectType;
 use App\Enums\UserStatus;
 use App\Models\Project;
+use App\Models\ProjectType as ProjectTypeModel;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
@@ -107,7 +107,7 @@ class ProjectQueryService
      */
     public function getTypeOptions(): array
     {
-        return ProjectType::options();
+        return ProjectTypeModel::query()->pluck('label', 'key')->toArray();
     }
 
     /**
@@ -148,8 +148,8 @@ class ProjectQueryService
             ->get(['id', 'name', 'email']);
 
         return [
-            'project_types' => ProjectType::values(),
-            'project_type_labels' => ProjectType::options(),
+            'project_types' => ProjectTypeModel::query()->pluck('key')->values()->all(),
+            'project_type_labels' => ProjectTypeModel::query()->pluck('label', 'key')->toArray(),
             'project_statuses' => ProjectStatus::values(),
             'project_status_labels' => ProjectStatus::options(),
             'leaders' => $leaders,
@@ -201,7 +201,12 @@ class ProjectQueryService
 
         $type = $filters['type'] ?? null;
         if ($type !== null && $type !== '') {
-            $query->where('type', $type);
+            // If numeric, assume it's a project_type_id, otherwise it's the legacy/key value
+            if (is_numeric($type)) {
+                $query->where('project_type_id', (int) $type);
+            } else {
+                $query->where('type', $type);
+            }
         }
 
         $leaderId = $filters['leader_id'] ?? null;

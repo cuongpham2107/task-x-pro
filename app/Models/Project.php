@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use App\Enums\ProjectStatus;
-use App\Enums\ProjectType;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -20,6 +19,7 @@ class Project extends Model
      */
     protected $fillable = [
         'name',
+        'project_type_id',
         'type',
         'status',
         'budget',
@@ -43,7 +43,6 @@ class Project extends Model
             'end_date' => 'date',
             'progress' => 'integer',
             'status' => ProjectStatus::class,
-            'type' => ProjectType::class,
         ];
     }
 
@@ -66,6 +65,11 @@ class Project extends Model
     public function phases(): HasMany
     {
         return $this->hasMany(Phase::class);
+    }
+
+    public function projectType(): BelongsTo
+    {
+        return $this->belongsTo(ProjectType::class, 'project_type_id');
     }
 
     public function documents(): HasMany
@@ -146,7 +150,7 @@ class Project extends Model
             } elseif ($hasActive) {
                 // Có phase active → project running
                 $updates['status'] = ProjectStatus::Running->value;
-            } elseif ($completedPhases > 0 && !$hasActive && !$allCompleted) {
+            } elseif ($completedPhases > 0 && ! $hasActive && ! $allCompleted) {
                 // Có phase completed nhưng chưa all, và không có phase active → running (ongoing)
                 $updates['status'] = ProjectStatus::Running->value;
             }
