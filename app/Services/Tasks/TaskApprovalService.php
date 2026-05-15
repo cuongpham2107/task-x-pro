@@ -35,7 +35,7 @@ class TaskApprovalService
             ]);
         }
 
-        if (! $this->canApproveByWorkflow($actor, $task, $workflowType)) {
+        if (! $actor->hasRole('super_admin') && ! $this->canApproveByWorkflow($actor, $task, $workflowType)) {
             throw ValidationException::withMessages([
                 'status' => $workflowType === TaskWorkflowType::Single->value
                     ? 'Workflow 1 cấp chỉ Leader được phê duyệt hoàn thành.'
@@ -52,7 +52,8 @@ class TaskApprovalService
         $approvalLevel = $this->resolveApprovalLevel($actor);
 
         if (
-            $workflowType === TaskWorkflowType::Double->value
+            ! $actor->hasRole('super_admin')
+            && $workflowType === TaskWorkflowType::Double->value
             && $approvalLevel === ApprovalLevel::Ceo->value
             && ! $this->hasApprovedAtLevel($task, ApprovalLevel::Leader->value)
         ) {
@@ -61,7 +62,7 @@ class TaskApprovalService
             ]);
         }
 
-        if ($this->hasApprovedAtLevel($task, $approvalLevel)) {
+        if (! $actor->hasRole('super_admin') && $this->hasApprovedAtLevel($task, $approvalLevel)) {
             throw ValidationException::withMessages([
                 'approval' => 'Cấp duyệt này đã được phê duyệt trước đó.',
             ]);
@@ -70,7 +71,7 @@ class TaskApprovalService
         $isFinalApprovalStep = $workflowType === TaskWorkflowType::Single->value
             || $approvalLevel === ApprovalLevel::Ceo->value;
 
-        if ($isFinalApprovalStep && (int) $task->progress < 90) {
+        if (! $actor->hasRole('super_admin') && $isFinalApprovalStep && (int) $task->progress < 90) {
             throw ValidationException::withMessages([
                 'progress' => 'Task chỉ được hoàn thành khi tiến độ đạt ít nhất 90%.',
             ]);
@@ -119,7 +120,7 @@ class TaskApprovalService
             ]);
         }
 
-        if (! $this->canApproveByWorkflow($actor, $task, $workflowType)) {
+        if (! $actor->hasRole('super_admin') && ! $this->canApproveByWorkflow($actor, $task, $workflowType)) {
             throw ValidationException::withMessages([
                 'status' => $workflowType === TaskWorkflowType::Single->value
                     ? 'Workflow 1 cấp chỉ Leader được từ chối duyệt.'
@@ -137,7 +138,8 @@ class TaskApprovalService
         $approvalLevel = $this->resolveApprovalLevel($actor);
 
         if (
-            $workflowType === TaskWorkflowType::Double->value
+            ! $actor->hasRole('super_admin')
+            && $workflowType === TaskWorkflowType::Double->value
             && $approvalLevel === ApprovalLevel::Ceo->value
             && ! $this->hasApprovedAtLevel($task, ApprovalLevel::Leader->value)
         ) {
@@ -146,7 +148,7 @@ class TaskApprovalService
             ]);
         }
 
-        if ($this->hasApprovedAtLevel($task, $approvalLevel)) {
+        if (! $actor->hasRole('super_admin') && $this->hasApprovedAtLevel($task, $approvalLevel)) {
             throw ValidationException::withMessages([
                 'approval' => 'Cấp duyệt này đã đánh giá đạt trước đó, không thể đánh giá lại trong cùng vòng duyệt.',
             ]);
