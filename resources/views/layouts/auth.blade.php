@@ -62,10 +62,9 @@
                         </div>
                         <div class="flex flex-col">
                             <span
-                                class="text-xl font-extrabold tracking-tight text-slate-600 dark:text-slate-100 leading-none">{{ config('app.name') }}</span>
+                                class="text-xl font-extrabold tracking-tight text-slate-600 dark:text-slate-100 ">{{ config('app.name') }}</span>
                             <span
-                                class="text-[11px] font-medium text-slate-400 dark:text-slate-500 tracking-widest uppercase mt-4">Project
-                                Manager</span>
+                                class="text-[11px] font-medium text-slate-400 dark:text-slate-500 tracking-widest uppercase ">Quản lý dự án chuyên nghiệp</span>
                         </div>
                     </div>
 

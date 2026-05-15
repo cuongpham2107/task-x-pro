@@ -71,7 +71,7 @@ new #[Layout('layouts.auth')] #[Title('Đăng nhập')] class extends Component
 }; ?>
 
 <div>
-    <x-slot:title>Đăng nhập - ProManager</x-slot:title>
+    <x-slot:title>Đăng nhập - {{ config('app.name') }}</x-slot:title>
 
     <x-slot:header>
         <div>
