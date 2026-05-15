@@ -4,8 +4,10 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
     <title>{{ $title ?? config('app.name') }}</title>
-
+ {{-- Favicon --}}
+         <link rel="icon" type="image/x-icon" href="{{ asset('images/logo.png') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
@@ -57,7 +59,7 @@
                 <div class="flex flex-col gap-5">
                     <div class="flex items-center gap-3">
                         <div
-                            class="size-11 rounded-xl bg-primary/10 ring-1 ring-primary/20 flex items-center justify-center p-1.5 shadow-sm">
+                            class="size-14 flex items-center justify-center">
                             <img src="{{ asset('images/logo.png') }}" alt="ASGL-logo" class="size-full object-contain">
                         </div>
                         <div class="flex flex-col">

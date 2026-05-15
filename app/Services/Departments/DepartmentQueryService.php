@@ -116,6 +116,10 @@ class DepartmentQueryService
         return [
             'status_labels' => DepartmentStatus::options(),
             'heads' => $heads,
+            'members' => User::query()
+                ->where('status', '!=', UserStatus::Resigned->value)
+                ->orderBy('name')
+                ->get(['id', 'name', 'email', 'avatar', 'status', 'department_id']),
         ];
     }
 

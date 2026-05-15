@@ -10,12 +10,13 @@
     // Leader can save in create mode or when editing a non-completed task
     $canPersistTask = false;
     if ($mode === 'create') {
-        $canPersistTask = $isLeader && !$isCeo && $user->can('create', \App\Models\Task::class);
+        $canPersistTask = $user->hasRole('super_admin') || ($isLeader && !$isCeo && $user->can('create', \App\Models\Task::class));
     } elseif ($editingTask !== null) {
         // Leader can always save; PIC can save if they have permission (Participant/PIC)
-        $canPersistTask =
+        $canPersistTask = $user->hasRole('super_admin') || (
             !$isCeo &&
-            (($isLeader && $user->can('update', $editingTask)) || ($isPicUser && $user->can('update', $editingTask)));
+            (($isLeader && $user->can('update', $editingTask)) || ($isPicUser && $user->can('update', $editingTask)))
+        );
     }
 
     $canApprove = false;

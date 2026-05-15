@@ -15,7 +15,8 @@ use Livewire\Attributes\Validate;
 use Livewire\Component;
 use Livewire\WithPagination;
 
-new #[Title('Phòng ban')] class extends Component {
+new #[Title('Phòng ban')] class extends Component
+{
     use WithPagination;
 
     protected DepartmentService $departmentService;
@@ -65,6 +66,12 @@ new #[Title('Phòng ban')] class extends Component {
     /** @var Collection<int, \App\Models\User> */
     public Collection $headOptions;
 
+    /** @var array<int> */
+    public array $memberIds = [];
+
+    /** @var Collection<int, \App\Models\User> */
+    public Collection $memberOptions;
+
     public function boot(DepartmentService $departmentService): void
     {
         $this->departmentService = $departmentService;
@@ -73,7 +80,7 @@ new #[Title('Phòng ban')] class extends Component {
     public function mount(): void
     {
         $this->statusLabels = DepartmentStatus::options();
-        $this->loadHeadOptions();
+        $this->loadOptions();
     }
 
     public function updatedFilterSearch(): void
@@ -106,6 +113,8 @@ new #[Title('Phòng ban')] class extends Component {
         return [
             'code' => ['required', 'string', 'max:20', 'regex:/^[A-Za-z0-9_-]+$/', Rule::unique(Department::class, 'code')->ignore($this->editingDepartmentId)],
             'status' => ['required', Rule::in(DepartmentStatus::values())],
+            'memberIds' => ['array'],
+            'memberIds.*' => ['exists:users,id'],
         ];
     }
 
@@ -127,7 +136,7 @@ new #[Title('Phòng ban')] class extends Component {
         Gate::forUser(auth()->user())->authorize('create', Department::class);
 
         $this->resetFormModal();
-        $this->loadHeadOptions();
+        $this->loadOptions();
         $this->mode = 'create';
         $this->editingDepartmentId = null;
         $this->showFormModal = true;
@@ -146,12 +155,13 @@ new #[Title('Phòng ban')] class extends Component {
 
         Gate::forUser($actor)->authorize('update', $department);
 
-        $this->loadHeadOptions();
+        $this->loadOptions();
         $this->mode = 'edit';
         $this->editingDepartmentId = $department->id;
         $this->code = (string) $department->code;
         $this->name = (string) $department->name;
         $this->users = $department->users;
+        $this->memberIds = $department->users->pluck('id')->map(fn ($id) => (int) $id)->all();
         $this->headUserId = $department->head_user_id !== null ? (string) $department->head_user_id : null;
         $this->status = $department->status instanceof \BackedEnum ? (string) $department->status->value : (string) $department->status;
 
@@ -166,15 +176,17 @@ new #[Title('Phòng ban')] class extends Component {
 
     public function resetFormModal(): void
     {
-        $this->reset(['code', 'name', 'headUserId', 'editingDepartmentId', 'users']);
+        $this->reset(['code', 'name', 'headUserId', 'editingDepartmentId', 'users', 'memberIds']);
         $this->status = DepartmentStatus::Active->value;
         $this->mode = 'create';
         $this->resetValidation();
     }
 
-    private function loadHeadOptions(): void
+    private function loadOptions(): void
     {
-        $this->headOptions = $this->departmentService->formOptions()['heads'];
+        $opts = $this->departmentService->formOptions();
+        $this->headOptions = $opts['heads'];
+        $this->memberOptions = $opts['members'];
     }
 
     public function confirmDeleteDepartment(int $departmentId): void
@@ -223,7 +235,7 @@ new #[Title('Phòng ban')] class extends Component {
             $message = $e->validator->errors()->first() ?: 'Không thể xóa phòng ban.';
             $this->dispatch('toast', message: $message, type: 'error');
         } catch (\Exception $e) {
-            $message = 'Không thể xóa phòng ban: ' . $e->getMessage();
+            $message = 'Không thể xóa phòng ban: '.$e->getMessage();
             session()->flash('error', $message);
             $this->dispatch('toast', message: $message, type: 'error');
         }
@@ -243,6 +255,7 @@ new #[Title('Phòng ban')] class extends Component {
             'name' => $this->name,
             'head_user_id' => $this->headUserId,
             'status' => $this->status,
+            'member_ids' => $this->memberIds,
         ];
 
         try {
@@ -257,7 +270,15 @@ new #[Title('Phòng ban')] class extends Component {
                 $message = 'Tạo phòng ban thành công!';
             }
 
-            $this->closeFormModal();
+            // After create: close modal. After update: keep modal open and refresh members list.
+            if ($this->mode === 'edit' && $this->editingDepartmentId !== null) {
+                $department = $this->departmentService->findForEdit($actor, $this->editingDepartmentId);
+                $this->users = $department->users;
+                $this->memberIds = $department->users->pluck('id')->map(fn($id) => (int) $id)->all();
+            } else {
+                $this->closeFormModal();
+            }
+
             unset($this->departments, $this->summaryStats);
 
             session()->flash('success', $message);
@@ -265,7 +286,7 @@ new #[Title('Phòng ban')] class extends Component {
         } catch (ValidationException $e) {
             $this->setErrorBag($e->validator->errors());
         } catch (\Exception $e) {
-            $message = 'Không thể lưu phòng ban: ' . $e->getMessage();
+            $message = 'Không thể lưu phòng ban: '.$e->getMessage();
             session()->flash('error', $message);
             $this->dispatch('toast', message: $message, type: 'error');
         }
@@ -449,6 +470,8 @@ new #[Title('Phòng ban')] class extends Component {
                         ->mapWithKeys(fn($head) => [$head->id => $head->name . ' - ' . $head->email])
                         ->all()" />
 
+                <x-ui.user-multi-select model="memberIds" :users="$memberOptions" label="Thành viên" placeholder="Tìm thành viên..." />
+
                 <x-ui.select label="Trạng thái" name="status" wire:model="status" icon="sync" :options="$statusLabels"
                     required />
             </div>
@@ -457,8 +480,15 @@ new #[Title('Phòng ban')] class extends Component {
         {{-- Hiển thị danh sách người trong phòng ban --}}
         @if ($mode === 'edit' && $users && $users->isNotEmpty())
             <div class="mt-6">
-                <x-ui.form.heading icon="person" title="Danh sách thành viên"
-                    description="Danh sách thành viên trong phòng ban." />
+                <div class="flex items-start gap-3">
+                    <div class="shrink-0 mt-1">
+                        <x-ui.button type="button" size="sm" icon="add" onclick="window.dispatchEvent(new CustomEvent('open-user-multi-select-window'))">
+                            Thêm
+                        </x-ui.button>
+                    </div>
+                    <x-ui.form.heading icon="person" title="Danh sách thành viên"
+                        description="Danh sách thành viên trong phòng ban." />
+                </div>
                 <div class="mt-4">
                     <x-ui.table>
                         <x-ui.table.head>

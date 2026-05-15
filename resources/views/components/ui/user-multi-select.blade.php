@@ -71,7 +71,8 @@
         const numericId = Number(id);
         this.selectedIds = this.selectedIds.filter(value => Number(value) !== numericId);
     }
-}" @click.outside="showDropdown = false">
+}" @click.outside="showDropdown = false" x-on:open-user-multi-select-window.window="showDropdown = true; $nextTick(() => $refs.searchInput.focus())">
+    
     <label class="label-text">{{ $label }}
         @if ($required)
             <span class="text-red-500">*</span>

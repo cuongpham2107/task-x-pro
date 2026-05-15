@@ -20,6 +20,14 @@ class DepartmentMutationService
             $this->normalizedAttributes($attributes)
         );
 
+        // Assign members if provided
+        if (array_key_exists('member_ids', $attributes)) {
+            $memberIds = array_filter(array_map('intval', (array) $attributes['member_ids']));
+            if (! empty($memberIds)) {
+                User::query()->whereIn('id', $memberIds)->update(['department_id' => $department->id]);
+            }
+        }
+
         return $department->load('head:id,name,email,avatar');
     }
 
@@ -32,6 +40,22 @@ class DepartmentMutationService
 
         $department->fill($this->normalizedAttributes($attributes));
         $department->save();
+
+        // If member_ids provided, sync department assignment
+        if (array_key_exists('member_ids', $attributes)) {
+            $memberIds = array_filter(array_map('intval', (array) $attributes['member_ids']));
+
+            // Detach users previously assigned to this department but not in new list
+            User::query()
+                ->where('department_id', $department->id)
+                ->whereNotIn('id', $memberIds ?: [0])
+                ->update(['department_id' => null]);
+
+            // Assign selected users to this department
+            if (! empty($memberIds)) {
+                User::query()->whereIn('id', $memberIds)->update(['department_id' => $department->id]);
+            }
+        }
 
         return $department->load('head:id,name,email,avatar');
     }

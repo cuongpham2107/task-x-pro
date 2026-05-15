@@ -11,6 +11,10 @@ class TaskPolicy
 {
     public function viewAny(User $user): bool
     {
+        if ($user->hasRole('super_admin')) {
+            return true;
+        }
+
         return $user->can('task.view');
     }
 
@@ -37,6 +41,10 @@ class TaskPolicy
             return false;
         }
 
+        if ($user->hasRole('super_admin')) {
+            return true;
+        }
+
         if ($user->hasRole('ceo')) {
             return false;
         }
@@ -50,12 +58,12 @@ class TaskPolicy
             return false;
         }
 
-        if (! $user->can('task.update')) {
-            return false;
-        }
-
         if ($user->hasRole('super_admin')) {
             return true;
+        }
+
+        if (! $user->can('task.update')) {
+            return false;
         }
 
         if ($user->hasRole('ceo')) {
@@ -75,12 +83,12 @@ class TaskPolicy
             return false;
         }
 
-        if (! $user->can('task.delete')) {
-            return false;
-        }
-
         if ($user->hasRole('super_admin')) {
             return true;
+        }
+
+        if (! $user->can('task.delete')) {
+            return false;
         }
 
         if (! $user->hasRole('leader')) {
@@ -106,12 +114,12 @@ class TaskPolicy
             return false;
         }
 
-        if (! $user->can('task.assign')) {
-            return false;
-        }
-
         if ($user->hasRole('super_admin')) {
             return true;
+        }
+
+        if (! $user->can('task.assign')) {
+            return false;
         }
 
         if (! $user->hasRole('leader')) {
@@ -127,12 +135,12 @@ class TaskPolicy
             return false;
         }
 
-        if (! $user->can('task.approve')) {
-            return false;
-        }
-
         if ($user->hasRole('super_admin')) {
             return true;
+        }
+
+        if (! $user->can('task.approve')) {
+            return false;
         }
 
         $workflowType = $task->workflow_type instanceof \BackedEnum

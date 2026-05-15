@@ -6,7 +6,7 @@
             <span class="material-symbols-outlined text-2xl">menu</span>
         </button>
         <a href="{{ route('dashboard.index') }}" class="text-primary flex items-center gap-3">
-            <div class="bg-primary/10 ring-primary/20 flex size-9 items-center justify-center rounded-lg p-1.5 ring-1">
+            <div class="flex size-12 items-center justify-center rounded-full border border-green-500">
                 <img src="{{ asset('images/logo.png') }}" alt="ASG logo" class="size-full object-contain">
             </div>
             <h2

@@ -1,21 +1,22 @@
 @php
     $user = auth()->user();
     $isCeo = $user->hasRole('ceo');
+    $isSuperAdmin = $user->hasRole('super_admin');
     $isLeader = $isResponsibleLeader;
     $isPic = (int) $pic_id === $user->id || in_array($user->id, $co_pic_ids ?: []);
 
     // Leaders can edit all manager fields, while task hasn't started for PIC-related fields.
-// CEOs and PICs cannot edit manager fields.
-$isManager = $isLeader && !$isCeo && $status !== 'waiting_approval';
+// CEOs and PICs cannot edit manager fields. Super admins are treated as managers.
+$isManager = ($isLeader && !$isCeo && $status !== 'waiting_approval') || $isSuperAdmin;
     $isRestricted = !$isManager;
 
-    // PIC cannot change the pic field itself - only Leaders can change PIC, but not after task started
+    // PIC cannot change the pic field itself - only Leaders (or super_admin) can change PIC, but not after task started
     $canChangePic = $isManager && !$isTaskStarted;
 
-    $canEditTaskType = $isLeader && !$isCeo;
+    $canEditTaskType = ($isLeader && !$isCeo) || $isSuperAdmin;
 
-    // Only PIC/Co-PIC (not leaders) can edit progress
-    $canEditProgressFields = !$isCeo && ($isPic && $isTaskStarted);
+    // Only PIC/Co-PIC (not leaders) can edit progress, except super_admin
+    $canEditProgressFields = $isSuperAdmin || (!$isCeo && ($isPic && $isTaskStarted));
 @endphp
 
 <div class="{{ $this->isCompletedLocked ? 'pointer-events-none select-none opacity-70' : '' }} grid grid-cols-2 gap-6">
