@@ -34,6 +34,7 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Livewire\Blaze\Blaze;
+use Spatie\LaravelPdf\Facades\Pdf;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 

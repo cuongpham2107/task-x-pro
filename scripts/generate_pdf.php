@@ -6,6 +6,7 @@ $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
 $kernel->bootstrap();
 
 use Spatie\LaravelPdf\Facades\Pdf;
+use App\Helpers\PdfHelper;
 
 $data = collect([
     (object) [
@@ -28,6 +29,7 @@ $html = view('exports.kpi', [
 ])->render();
 
 $pdf = Pdf::html($html)->format('a4');
+$pdf = PdfHelper::fromHtml($html, 'a4');
 $tempFile = tempnam(sys_get_temp_dir(), 'pdf_').'.pdf';
 $pdf->save($tempFile);
 
