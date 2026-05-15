@@ -253,7 +253,7 @@ new #[Title('Dự án')] class extends Component
                 <x-ui.filter-search model="filterSearch" placeholder="Tìm dự án..." width="w-full" />
             </div>
 
-            <div class="flex items-end gap-3 ml-auto flex-wrap">
+            <div class="items-end gap-3 ml-auto flex-wrap hidden lg:flex">
                 <div class="shrink-0">
                     <x-ui.filter-select model="filterType" :value="$filterType" label="Loại hình" icon="style"
                         all-label="Tất cả loại hình" width="w-44" drop-width="w-52" :options="[]">
