@@ -1,4 +1,3 @@
-
 <?php
 
 namespace App\Models;
@@ -18,7 +17,7 @@ class ProjectType extends Model
 
         return self::query()
             ->whereRaw('LOWER(`key`) = ?', [$value])
-            ->orWhereRaw('LOWER(`label`) = ?', [$value])
+            ->orWhereRaw('LOWER(label) = ?', [$value])
             ->first();
     }
 }
