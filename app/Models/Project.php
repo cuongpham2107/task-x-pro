@@ -112,17 +112,14 @@ class Project extends Model
      */
     public function refreshProgressFromPhases(): void
     {
-        if ($this->status === ProjectStatus::Completed) {
-            return;
-        }
-
+        // Always recalculate progress, regardless of project status
         $weightedProgress = (float) $this->phases()
             ->selectRaw('COALESCE(SUM(progress * weight / 100.0), 0) as weighted_progress')
             ->value('weighted_progress');
 
         $progress = (int) round(max(0, min(100, $weightedProgress)));
 
-        // Sync project status based on phase statuses (Running status propagation)
+        // Sync project status based on phase statuses
         $hasActiveOrCompletedPhase = $this->phases()
             ->whereIn('status', ['active', 'completed'])
             ->exists();
@@ -131,8 +128,28 @@ class Project extends Model
 
         $updates = ['progress' => $progress];
 
+        // Init -> Running nếu có phase active/completed
         if ($hasActiveOrCompletedPhase && $statusValue === ProjectStatus::Init) {
             $updates['status'] = ProjectStatus::Running->value;
+        }
+
+        // Auto-set completed nếu tất cả phases đều completed
+        $totalPhases = $this->phases()->count();
+        if ($totalPhases > 0) {
+            $completedPhases = $this->phases()->where('status', 'completed')->count();
+            $allCompleted = ($completedPhases === $totalPhases);
+            $hasActive = $this->phases()->where('status', 'active')->exists();
+
+            if ($allCompleted) {
+                // Tất cả phases hoàn thành → project completed
+                $updates['status'] = ProjectStatus::Completed->value;
+            } elseif ($hasActive) {
+                // Có phase active → project running
+                $updates['status'] = ProjectStatus::Running->value;
+            } elseif ($completedPhases > 0 && !$hasActive && !$allCompleted) {
+                // Có phase completed nhưng chưa all, và không có phase active → running (ongoing)
+                $updates['status'] = ProjectStatus::Running->value;
+            }
         }
 
         if ($this->progress !== $progress || (isset($updates['status']) && $this->status !== $updates['status'])) {

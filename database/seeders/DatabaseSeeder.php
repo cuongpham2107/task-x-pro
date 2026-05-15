@@ -12,7 +12,8 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-            TaskXProSeeder::class,
+            // TaskXProSeeder::class, // Dummy data mẫu - tắt nếu chỉ dùng data từ Excel
+            ExcelImportSeeder::class,   // Data từ file Excel
         ]);
     }
 }

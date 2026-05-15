@@ -1,0 +1,1549 @@
+[
+  {
+    "Thời gian": "2026-02-25T07:21:22.591Z",
+    "Hành động": "Cập nhật dự án",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "ID: DA010, Tên: Phòng CN - Cải tổ mô hình hoạt động",
+    "project_code": "DA010"
+  },
+  {
+    "Thời gian": "2026-01-30T02:30:36.549Z",
+    "Hành động": "Cập nhật dự án",
+    "Người thực hiện": "admin@gmail.com",
+    "Chi tiết": "ID: DA010, Tên: Phòng CN - Cải tổ mô hình hoạt động",
+    "project_code": "DA010"
+  },
+  {
+    "Thời gian": "2026-01-30T02:27:07.588Z",
+    "Hành động": "Thêm dự án",
+    "Người thực hiện": "admin@gmail.com",
+    "Chi tiết": "Tên: Phòng CN - Cải tổ mô hình hoạt động, Quản lý: Admin, ID: DA010",
+    "project_code": "DA010"
+  },
+  {
+    "Thời gian": "2026-04-02T14:19:51.952Z",
+    "Hành động": "Cập nhật nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "ID: DA011-08, Tên: Phân tích và thiết kế hệ thống - CS Khách hàng",
+    "project_code": "DA011"
+  },
+  {
+    "Thời gian": "2026-04-02T14:19:04.245Z",
+    "Hành động": "Cập nhật nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "ID: DA011-38, Tên: Phân tích và thiết kế hệ thống - Bổ sung PML phù hợp CT",
+    "project_code": "DA011"
+  },
+  {
+    "Thời gian": "2026-04-02T14:18:55.422Z",
+    "Hành động": "Cập nhật nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "ID: DA011-36, Tên: Kiểm thử và hoàn thiện - Ops hiện trường (Giám sát sang tải)",
+    "project_code": "DA011"
+  },
+  {
+    "Thời gian": "2026-04-02T14:18:44.152Z",
+    "Hành động": "Cập nhật nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "ID: DA011-35, Tên: Coding - Ops hiện trường (Giám sát sang tải)",
+    "project_code": "DA011"
+  },
+  {
+    "Thời gian": "2026-04-02T14:18:33.482Z",
+    "Hành động": "Cập nhật nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "ID: DA011-34, Tên: Thiết kế giao diện - Ops hiện trường (Giám sát sang tải)",
+    "project_code": "DA011"
+  },
+  {
+    "Thời gian": "2026-04-02T14:18:23.946Z",
+    "Hành động": "Cập nhật nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "ID: DA011-33, Tên: Phân tích và thiết kế hệ thống - Ops hiện trường (Giám sát sang tải)",
+    "project_code": "DA011"
+  },
+  {
+    "Thời gian": "2026-04-02T14:18:04.746Z",
+    "Hành động": "Cập nhật nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "ID: DA011-25, Tên: Coding - Điều phối an ninh",
+    "project_code": "DA011"
+  },
+  {
+    "Thời gian": "2026-04-02T14:17:56.557Z",
+    "Hành động": "Cập nhật nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "ID: DA011-29, Tên: Thiết kế giao diện - Cổng tài xế",
+    "project_code": "DA011"
+  },
+  {
+    "Thời gian": "2026-04-02T14:17:46.945Z",
+    "Hành động": "Cập nhật nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "ID: DA011-16, Tên: Kiểm thử và hoàn thiện - CS Xuân Cương",
+    "project_code": "DA011"
+  },
+  {
+    "Thời gian": "2026-04-02T14:17:37.780Z",
+    "Hành động": "Cập nhật nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "ID: DA011-28, Tên: Phân tích và thiết kế hệ thống - Cổng tài xế",
+    "project_code": "DA011"
+  },
+  {
+    "Thời gian": "2026-04-02T14:17:32.189Z",
+    "Hành động": "Cập nhật nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "ID: DA011-24, Tên: Thiết kế giao diện - Điều phối an ninh",
+    "project_code": "DA011"
+  },
+  {
+    "Thời gian": "2026-04-02T14:17:17.756Z",
+    "Hành động": "Cập nhật nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "ID: DA011-23, Tên: Phân tích và thiết kế hệ thống - Điều phối an ninh",
+    "project_code": "DA011"
+  },
+  {
+    "Thời gian": "2026-04-02T14:17:07.860Z",
+    "Hành động": "Cập nhật nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "ID: DA011-21, Tên: Kiểm thử và hoàn thiện - Điều hành viên",
+    "project_code": "DA011"
+  },
+  {
+    "Thời gian": "2026-04-02T14:16:34.416Z",
+    "Hành động": "Cập nhật nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "ID: DA011-22, Tên: Khảo sát và xác định yêu cầu - Điều phối an ninh",
+    "project_code": "DA011"
+  },
+  {
+    "Thời gian": "2026-04-02T14:16:07.709Z",
+    "Hành động": "Cập nhật nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "ID: DA011-20, Tên: Coding - Điều hành viên",
+    "project_code": "DA011"
+  },
+  {
+    "Thời gian": "2026-04-02T14:16:01.624Z",
+    "Hành động": "Cập nhật nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "ID: DA011-19, Tên: Thiết kế giao diện - Điều hành viên",
+    "project_code": "DA011"
+  },
+  {
+    "Thời gian": "2026-04-02T14:15:39.424Z",
+    "Hành động": "Cập nhật nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "ID: DA011-18, Tên: Phân tích và thiết kế hệ thống - Điều hành viên",
+    "project_code": "DA011"
+  },
+  {
+    "Thời gian": "2026-04-02T14:15:12.724Z",
+    "Hành động": "Cập nhật nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "ID: DA011-17, Tên: Khảo sát và xác định yêu cầu - Điều hành viên",
+    "project_code": "DA011"
+  },
+  {
+    "Thời gian": "2026-04-02T14:14:49.338Z",
+    "Hành động": "Cập nhật nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "ID: DA011-11, Tên: Kiểm thử và hoàn thiện - CS Khách hàng",
+    "project_code": "DA011"
+  },
+  {
+    "Thời gian": "2026-04-02T14:14:34.130Z",
+    "Hành động": "Cập nhật nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "ID: DA011-10, Tên: Coding - CS Khách hàng",
+    "project_code": "DA011"
+  },
+  {
+    "Thời gian": "2026-04-02T14:14:13.306Z",
+    "Hành động": "Cập nhật nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "ID: DA011-09, Tên: Thiết kế giao diện - CS Khách hàng",
+    "project_code": "DA011"
+  },
+  {
+    "Thời gian": "2026-03-30T06:58:31.356Z",
+    "Hành động": "Cập nhật nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "ID: DA011-37, Tên: Khảo sát và xác định yêu cầu - Bổ sung PML phù hợp CT",
+    "project_code": "DA011"
+  },
+  {
+    "Thời gian": "2026-03-31T08:56:36.880Z",
+    "Hành động": "Cập nhật nhiệm vụ",
+    "Người thực hiện": "tpcn@gmail.com",
+    "Chi tiết": "ID: DA012-05, Tên: Nghiệm thu- Báo cáo",
+    "project_code": "DA012"
+  },
+  {
+    "Thời gian": "2026-03-31T08:56:32.880Z",
+    "Hành động": "Cập nhật nhiệm vụ",
+    "Người thực hiện": "tpcn@gmail.com",
+    "Chi tiết": "ID: DA012-03, Tên: Setup Hạ tầng Mạng",
+    "project_code": "DA012"
+  },
+  {
+    "Thời gian": "2026-03-31T08:56:23.606Z",
+    "Hành động": "Cập nhật nhiệm vụ",
+    "Người thực hiện": "tpcn@gmail.com",
+    "Chi tiết": "ID: DA012-04, Tên: Triển khai thực hiện",
+    "project_code": "DA012"
+  },
+  {
+    "Thời gian": "2026-03-31T08:56:19.687Z",
+    "Hành động": "Cập nhật nhiệm vụ",
+    "Người thực hiện": "tpcn@gmail.com",
+    "Chi tiết": "ID: DA012-03, Tên: Setup Hạ tầng Mạng",
+    "project_code": "DA012"
+  },
+  {
+    "Thời gian": "2026-03-31T08:56:14.527Z",
+    "Hành động": "Cập nhật nhiệm vụ",
+    "Người thực hiện": "tpcn@gmail.com",
+    "Chi tiết": "ID: DA012-03, Tên: Setup Hạ tầng Mạng",
+    "project_code": "DA012"
+  },
+  {
+    "Thời gian": "2026-03-31T08:56:11.111Z",
+    "Hành động": "Cập nhật nhiệm vụ",
+    "Người thực hiện": "tpcn@gmail.com",
+    "Chi tiết": "ID: DA012-04, Tên: Triển khai thực hiện",
+    "project_code": "DA012"
+  },
+  {
+    "Thời gian": "2026-03-31T08:56:05.217Z",
+    "Hành động": "Cập nhật nhiệm vụ",
+    "Người thực hiện": "tpcn@gmail.com",
+    "Chi tiết": "ID: DA012-03, Tên: Setup Hạ tầng Mạng",
+    "project_code": "DA012"
+  },
+  {
+    "Thời gian": "2026-03-31T08:55:58.843Z",
+    "Hành động": "Cập nhật nhiệm vụ",
+    "Người thực hiện": "tpcn@gmail.com",
+    "Chi tiết": "ID: DA012-02, Tên: Mua sắm thiết bị",
+    "project_code": "DA012"
+  },
+  {
+    "Thời gian": "2026-03-31T08:55:54.471Z",
+    "Hành động": "Cập nhật nhiệm vụ",
+    "Người thực hiện": "tpcn@gmail.com",
+    "Chi tiết": "ID: DA012-01, Tên: Phương án thi công",
+    "project_code": "DA012"
+  },
+  {
+    "Thời gian": "2026-02-02T09:33:42.824Z",
+    "Hành động": "Cập nhật nhiệm vụ",
+    "Người thực hiện": "tpcn@gmail.com",
+    "Chi tiết": "ID: DA012-02, Tên: Mua sắm thiết bị",
+    "project_code": "DA012"
+  },
+  {
+    "Thời gian": "2026-01-30T07:01:07.700Z",
+    "Hành động": "Thêm nhiệm vụ",
+    "Người thực hiện": "tpcn@gmail.com",
+    "Chi tiết": "Tên: Nghiệm thu- Báo cáo, Giao cho: Mai Hải Sơn, ID: DA012-05",
+    "project_code": "DA012"
+  },
+  {
+    "Thời gian": "2026-01-30T06:56:53.483Z",
+    "Hành động": "Thêm nhiệm vụ",
+    "Người thực hiện": "tpcn@gmail.com",
+    "Chi tiết": "Tên: Triển khai thực hiện, Giao cho: Mai Hải Sơn, ID: DA012-04",
+    "project_code": "DA012"
+  },
+  {
+    "Thời gian": "2026-01-30T06:56:07.860Z",
+    "Hành động": "Thêm nhiệm vụ",
+    "Người thực hiện": "tpcn@gmail.com",
+    "Chi tiết": "Tên: Setup Hạ tầng Mạng , Giao cho: Mai Hải Sơn, ID: DA012-03",
+    "project_code": "DA012"
+  },
+  {
+    "Thời gian": "2026-01-30T06:54:55.823Z",
+    "Hành động": "Thêm nhiệm vụ",
+    "Người thực hiện": "tpcn@gmail.com",
+    "Chi tiết": "Tên: Mua sắm thiết bị, Giao cho: Mai Hải Sơn, ID: DA012-02",
+    "project_code": "DA012"
+  },
+  {
+    "Thời gian": "2026-01-30T06:53:57.688Z",
+    "Hành động": "Thêm nhiệm vụ",
+    "Người thực hiện": "tpcn@gmail.com",
+    "Chi tiết": "Tên: Phương án thi công, Giao cho: Mai Hải Sơn, ID: DA012-01",
+    "project_code": "DA012"
+  },
+  {
+    "Thời gian": "2026-01-30T06:51:32.053Z",
+    "Hành động": "Thêm dự án",
+    "Người thực hiện": "tpcn@gmail.com",
+    "Chi tiết": "Tên: Camera B6, Quản lý: Mai Hải Sơn, ID: DA012",
+    "project_code": "DA012"
+  },
+  {
+    "Thời gian": "2026-03-31T09:05:10.645Z",
+    "Hành động": "Cập nhật nhiệm vụ",
+    "Người thực hiện": "tpcn@gmail.com",
+    "Chi tiết": "ID: DA013-02, Tên: Theo dõi tiến độ + Phối hợp triển khai",
+    "project_code": "DA013"
+  },
+  {
+    "Thời gian": "2026-03-31T09:04:41.885Z",
+    "Hành động": "Cập nhật dự án",
+    "Người thực hiện": "tpcn@gmail.com",
+    "Chi tiết": "ID: DA013, Tên: Dự án Ga HK",
+    "project_code": "DA013"
+  },
+  {
+    "Thời gian": "2026-03-31T09:03:48.806Z",
+    "Hành động": "Cập nhật nhiệm vụ",
+    "Người thực hiện": "tpcn@gmail.com",
+    "Chi tiết": "ID: DA013-02, Tên: Theo dõi tiến độ + Phối hợp triển khai",
+    "project_code": "DA013"
+  },
+  {
+    "Thời gian": "2026-03-31T09:03:17.823Z",
+    "Hành động": "Cập nhật nhiệm vụ",
+    "Người thực hiện": "tpcn@gmail.com",
+    "Chi tiết": "ID: DA013-01, Tên: Phương án triển khai",
+    "project_code": "DA013"
+  },
+  {
+    "Thời gian": "2026-01-31T02:43:16.500Z",
+    "Hành động": "Thêm nhiệm vụ",
+    "Người thực hiện": "tpcn@gmail.com",
+    "Chi tiết": "Tên: Theo dõi tiến độ + Phối hợp triển khai, Giao cho: Mai Hải Sơn, ID: DA013-02",
+    "project_code": "DA013"
+  },
+  {
+    "Thời gian": "2026-01-31T02:42:27.335Z",
+    "Hành động": "Cập nhật nhiệm vụ",
+    "Người thực hiện": "tpcn@gmail.com",
+    "Chi tiết": "ID: DA013-01, Tên: Phương án triển khai",
+    "project_code": "DA013"
+  },
+  {
+    "Thời gian": "2026-01-31T02:41:19.234Z",
+    "Hành động": "Thêm nhiệm vụ",
+    "Người thực hiện": "tpcn@gmail.com",
+    "Chi tiết": "Tên: Phương án triển khai, Giao cho: Mai Hải Sơn, ID: DA013-01",
+    "project_code": "DA013"
+  },
+  {
+    "Thời gian": "2026-01-31T02:39:52.783Z",
+    "Hành động": "Thêm dự án",
+    "Người thực hiện": "tpcn@gmail.com",
+    "Chi tiết": "Tên: Dự án Ga HK, Quản lý: Mai Hải Sơn, ID: DA013",
+    "project_code": "DA013"
+  },
+  {
+    "Thời gian": "2026-04-02T14:49:09.873Z",
+    "Hành động": "Thêm nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "Tên: Demo giao diện cổng hàng ghép XC, Giao cho: Nguyễn Thị Hồng Châu, ID: ID260402214909021",
+    "project_code": "DA014"
+  },
+  {
+    "Thời gian": "2026-04-02T14:39:04.231Z",
+    "Hành động": "Cập nhật nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "ID: ID260402212849833, Tên: Tổng hợp tổng quan thực trạng hàng ghép",
+    "project_code": "DA014"
+  },
+  {
+    "Thời gian": "2026-04-02T14:38:45.484Z",
+    "Hành động": "Cập nhật nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "ID: DA014-03, Tên: Giải pháp hàng ghép",
+    "project_code": "DA014"
+  },
+  {
+    "Thời gian": "2026-04-02T14:36:38.759Z",
+    "Hành động": "Thêm nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "Tên: Khảo sát và thống kê dữ liệu cụ thể ở bến bãi Xuân Cương, Giao cho: Phạm Thị Ngọc Anh, ID: ID260402213638119",
+    "project_code": "DA014"
+  },
+  {
+    "Thời gian": "2026-04-02T14:28:50.405Z",
+    "Hành động": "Thêm nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "Tên: Tổng hợp tổng quan thực trạng hàng ghép, Giao cho: Phạm Thị Ngọc Anh, ID: ID260402212849833",
+    "project_code": "DA014"
+  },
+  {
+    "Thời gian": "2026-04-02T14:20:42.221Z",
+    "Hành động": "Xóa nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "ID: DA014-02, Tên: Trình bày phương án hàng ghép tại Hữu Nghị kết hợp với Hải quan",
+    "project_code": "DA014"
+  },
+  {
+    "Thời gian": "2026-04-02T14:20:40.091Z",
+    "Hành động": "Xóa nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "ID: DA014-03, Tên: Demo Cổng hàng ghép Xuân Cương",
+    "project_code": "DA014"
+  },
+  {
+    "Thời gian": "2026-04-02T14:20:33.791Z",
+    "Hành động": "Xóa nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "ID: DA014-01, Tên: Báo cáo Hải quan thực trạng hàng ghép tại Xuân Cương",
+    "project_code": "DA014"
+  },
+  {
+    "Thời gian": "2026-02-13T07:30:44.590Z",
+    "Hành động": "Thêm nhiệm vụ",
+    "Người thực hiện": "tlgd@gmail.com",
+    "Chi tiết": "Tên: Demo Cổng hàng ghép Xuân Cương, Giao cho: Phạm Thị Ngọc Anh, ID: DA014-03",
+    "project_code": "DA014"
+  },
+  {
+    "Thời gian": "2026-02-13T07:28:19.481Z",
+    "Hành động": "Thêm nhiệm vụ",
+    "Người thực hiện": "tlgd@gmail.com",
+    "Chi tiết": "Tên: Trình bày phương án hàng ghép tại Hữu Nghị kết hợp với Hải quan, Giao cho: N/A, ID: DA014-02",
+    "project_code": "DA014"
+  },
+  {
+    "Thời gian": "2026-02-13T07:27:05.975Z",
+    "Hành động": "Thêm nhiệm vụ",
+    "Người thực hiện": "tlgd@gmail.com",
+    "Chi tiết": "Tên: Báo cáo Hải quan thực trạng hàng ghép tại Xuân Cương, Giao cho: Phạm Thị Ngọc Anh, ID: DA014-01",
+    "project_code": "DA014"
+  },
+  {
+    "Thời gian": "2026-02-12T12:30:58.950Z",
+    "Hành động": "Cập nhật dự án",
+    "Người thực hiện": "tlgd@gmail.com",
+    "Chi tiết": "ID: DA014, Tên: Cổng Hàng ghép Xuân Cương",
+    "project_code": "DA014"
+  },
+  {
+    "Thời gian": "2026-02-12T12:30:30.799Z",
+    "Hành động": "Thêm dự án",
+    "Người thực hiện": "tlgd@gmail.com",
+    "Chi tiết": "Tên: Hàng ghép Xuân Cương, Quản lý: Phạm Thị Ngọc Anh, ID: DA014",
+    "project_code": "DA014"
+  },
+  {
+    "Thời gian": "2026-04-02T14:51:53.855Z",
+    "Hành động": "Cập nhật dự án",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "ID: DA015, Tên: Cổng Tư vấn Hải quan Hữu Nghị (Phối hợp LCL)",
+    "project_code": "DA015"
+  },
+  {
+    "Thời gian": "2026-04-01T02:14:28.844Z",
+    "Hành động": "Cập nhật dự án",
+    "Người thực hiện": "admin@gmail.com",
+    "Chi tiết": "ID: DA015, Tên: Cổng Tư vấn Hải quan Hữu Nghị (Phối hợp LCL)",
+    "project_code": "DA015"
+  },
+  {
+    "Thời gian": "2026-02-12T12:33:09.049Z",
+    "Hành động": "Thêm dự án",
+    "Người thực hiện": "tlgd@gmail.com",
+    "Chi tiết": "Tên: Cổng Tư vấn Hải quan Hữu Nghị, Quản lý: Phạm Thị Ngọc Anh, ID: DA015",
+    "project_code": "DA015"
+  },
+  {
+    "Thời gian": "2026-04-02T14:51:44.102Z",
+    "Hành động": "Cập nhật dự án",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "ID: DA016, Tên: D2D_Phần mềm Vận tải",
+    "project_code": "DA016"
+  },
+  {
+    "Thời gian": "2026-02-12T12:35:05.612Z",
+    "Hành động": "Thêm dự án",
+    "Người thực hiện": "tlgd@gmail.com",
+    "Chi tiết": "Tên: D2D_Phần mềm Vận tải, Quản lý: Phạm Thị Ngọc Anh, ID: DA016",
+    "project_code": "DA016"
+  },
+  {
+    "Thời gian": "2026-04-02T14:51:36.509Z",
+    "Hành động": "Cập nhật dự án",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "ID: DA017, Tên: PM Quản lý nội bộ OKR",
+    "project_code": "DA017"
+  },
+  {
+    "Thời gian": "2026-02-13T02:46:20.617Z",
+    "Hành động": "Cập nhật dự án",
+    "Người thực hiện": "phamanhtuan@gmail.com",
+    "Chi tiết": "ID: DA017, Tên: PM Quản lý nội bộ OKR",
+    "project_code": "DA017"
+  },
+  {
+    "Thời gian": "2026-02-13T02:44:29.004Z",
+    "Hành động": "Thêm nhiệm vụ",
+    "Người thực hiện": "phamanhtuan@gmail.com",
+    "Chi tiết": "Tên: Coding & Testing, Giao cho: Nguyễn Ngọc Thắng, ID: DA017-02",
+    "project_code": "DA017"
+  },
+  {
+    "Thời gian": "2026-02-13T02:42:32.818Z",
+    "Hành động": "Cập nhật nhiệm vụ",
+    "Người thực hiện": "phamanhtuan@gmail.com",
+    "Chi tiết": "ID: DA017-01, Tên: Lên ý tưởng và thiết kế sơ bộ",
+    "project_code": "DA017"
+  },
+  {
+    "Thời gian": "2026-02-13T02:42:13.400Z",
+    "Hành động": "Thêm nhiệm vụ",
+    "Người thực hiện": "phamanhtuan@gmail.com",
+    "Chi tiết": "Tên: Lên ý tưởng và thiết kế sơ bộ, Giao cho: Nguyễn Văn Quân, ID: DA017-01",
+    "project_code": "DA017"
+  },
+  {
+    "Thời gian": "2026-02-12T12:37:58.584Z",
+    "Hành động": "Thêm dự án",
+    "Người thực hiện": "tlgd@gmail.com",
+    "Chi tiết": "Tên: PM Quản lý nội bộ OKR, Quản lý: Phạm Anh Tuấn, ID: DA017",
+    "project_code": "DA017"
+  },
+  {
+    "Thời gian": "2026-04-02T14:52:09.480Z",
+    "Hành động": "Cập nhật dự án",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "ID: DA018, Tên: PM Quản lý Nhân sự, Hành chính",
+    "project_code": "DA018"
+  },
+  {
+    "Thời gian": "2026-02-13T04:11:25.056Z",
+    "Hành động": "Cập nhật dự án",
+    "Người thực hiện": "tlgd@gmail.com",
+    "Chi tiết": "ID: DA018, Tên: PM Quản lý Nhân sự, Hành chính",
+    "project_code": "DA018"
+  },
+  {
+    "Thời gian": "2026-02-13T03:11:19.059Z",
+    "Hành động": "Cập nhật dự án",
+    "Người thực hiện": "tlgd@gmail.com",
+    "Chi tiết": "ID: DA018, Tên: PM Quản lý Nhân sự, Hành chính",
+    "project_code": "DA018"
+  },
+  {
+    "Thời gian": "2026-02-13T03:07:42.358Z",
+    "Hành động": "Cập nhật dự án",
+    "Người thực hiện": "tlgd@gmail.com",
+    "Chi tiết": "ID: DA018, Tên: PM Quản lý Nhân sự, Hành chính",
+    "project_code": "DA018"
+  },
+  {
+    "Thời gian": "2026-02-13T03:07:02.780Z",
+    "Hành động": "Cập nhật dự án",
+    "Người thực hiện": "tlgd@gmail.com",
+    "Chi tiết": "ID: DA018, Tên: PM Quản lý Nhân sự, Hành chính",
+    "project_code": "DA018"
+  },
+  {
+    "Thời gian": "2026-02-12T12:39:16.111Z",
+    "Hành động": "Thêm dự án",
+    "Người thực hiện": "tlgd@gmail.com",
+    "Chi tiết": "Tên: PM Quản lý Hành chính, Quản lý: Phạm Anh Tuấn, ID: DA018",
+    "project_code": "DA018"
+  },
+  {
+    "Thời gian": "2026-04-02T14:52:21.588Z",
+    "Hành động": "Cập nhật nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "ID: DA019-01, Tên: Hoàn thiện các order tháng 3/2026",
+    "project_code": "DA019"
+  },
+  {
+    "Thời gian": "2026-03-01T07:09:48.315Z",
+    "Hành động": "Thêm nhiệm vụ",
+    "Người thực hiện": "lethithuylinh@gmail.com",
+    "Chi tiết": "Tên: Hoàn thiện các order tháng 3/2026, Giao cho: Phạm Thị Hương, ID: DA019-01",
+    "project_code": "DA019"
+  },
+  {
+    "Thời gian": "2026-02-12T12:41:05.627Z",
+    "Hành động": "Thêm dự án",
+    "Người thực hiện": "tlgd@gmail.com",
+    "Chi tiết": "Tên: PM Logistics STH-TDI (Hoàn thiện và Vận hành), Quản lý: Lê Thị Thùy Linh, ID: DA019",
+    "project_code": "DA019"
+  },
+  {
+    "Thời gian": "2026-03-09T02:31:53.586Z",
+    "Hành động": "Cập nhật nhiệm vụ",
+    "Người thực hiện": "lethithuylinh@gmail.com",
+    "Chi tiết": "ID: DA020-01, Tên: Khảo sát, ghi nhận luồng nghiệp vụ hiện tại",
+    "project_code": "DA020"
+  },
+  {
+    "Thời gian": "2026-03-01T07:07:51.997Z",
+    "Hành động": "Cập nhật dự án",
+    "Người thực hiện": "lethithuylinh@gmail.com",
+    "Chi tiết": "ID: DA020, Tên: Tính giá tự động PML Xuân Cương",
+    "project_code": "DA020"
+  },
+  {
+    "Thời gian": "2026-03-01T07:07:13.905Z",
+    "Hành động": "Thêm nhiệm vụ",
+    "Người thực hiện": "lethithuylinh@gmail.com",
+    "Chi tiết": "Tên: Lên list câu hỏi khảo sát luồng vào giá trên HT Lõi XC, Giao cho: Lê Thị Thùy Linh, ID: DA020-02",
+    "project_code": "DA020"
+  },
+  {
+    "Thời gian": "2026-02-13T07:27:47.998Z",
+    "Hành động": "Thêm nhiệm vụ",
+    "Người thực hiện": "lethithuylinh@gmail.com",
+    "Chi tiết": "Tên: Khảo sát, ghi nhận luồng nghiệp vụ hiện tại, Giao cho: Hoàng Thị Thùy Trang, ID: DA020-01",
+    "project_code": "DA020"
+  },
+  {
+    "Thời gian": "2026-02-12T12:42:16.945Z",
+    "Hành động": "Thêm dự án",
+    "Người thực hiện": "tlgd@gmail.com",
+    "Chi tiết": "Tên: Tính giá tự động PML Xuân Cương, Quản lý: Lê Thị Thùy Linh, ID: DA020",
+    "project_code": "DA020"
+  },
+  {
+    "Thời gian": "2026-04-02T15:02:54.610Z",
+    "Hành động": "Cập nhật nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "ID: DA023-02, Tên: Verify tài liệu SRS",
+    "project_code": "DA023"
+  },
+  {
+    "Thời gian": "2026-04-02T15:02:27.384Z",
+    "Hành động": "Cập nhật nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "ID: DA023-04, Tên: Demo dự án",
+    "project_code": "DA023"
+  },
+  {
+    "Thời gian": "2026-04-02T15:02:23.400Z",
+    "Hành động": "Cập nhật nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "ID: DA023-05, Tên: Publish dự án",
+    "project_code": "DA023"
+  },
+  {
+    "Thời gian": "2026-04-02T15:02:11.258Z",
+    "Hành động": "Cập nhật nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "ID: DA023-03, Tên: Coding & Testing",
+    "project_code": "DA023"
+  },
+  {
+    "Thời gian": "2026-03-09T02:30:07.628Z",
+    "Hành động": "Thêm nhiệm vụ",
+    "Người thực hiện": "lethithuylinh@gmail.com",
+    "Chi tiết": "Tên: Bổ sung docs các Báo cáo update dữ liệu DV cởi bạt, Giao cho: Hoàng Thị Thùy Trang, ID: DA023-09",
+    "project_code": "DA023"
+  },
+  {
+    "Thời gian": "2026-03-03T04:23:08.016Z",
+    "Hành động": "Cập nhật nhiệm vụ",
+    "Người thực hiện": "phamanhtuan@gmail.com",
+    "Chi tiết": "ID: DA023-03, Tên: Coding & Testing",
+    "project_code": "DA023"
+  },
+  {
+    "Thời gian": "2026-03-03T04:23:03.976Z",
+    "Hành động": "Cập nhật nhiệm vụ",
+    "Người thực hiện": "phamanhtuan@gmail.com",
+    "Chi tiết": "ID: DA023-02, Tên: Verify tài liệu SRS",
+    "project_code": "DA023"
+  },
+  {
+    "Thời gian": "2026-02-13T06:48:40.438Z",
+    "Hành động": "Thêm nhiệm vụ",
+    "Người thực hiện": "lethithuylinh@gmail.com",
+    "Chi tiết": "Tên: Thiết kế giao diện, Giao cho: Nguyễn Văn Quân, ID: DA023-08",
+    "project_code": "DA023"
+  },
+  {
+    "Thời gian": "2026-02-13T06:46:50.846Z",
+    "Hành động": "Thêm nhiệm vụ",
+    "Người thực hiện": "lethithuylinh@gmail.com",
+    "Chi tiết": "Tên: Viết tài liệu SRS, Giao cho: Hoàng Thị Thùy Trang, ID: DA023-07",
+    "project_code": "DA023"
+  },
+  {
+    "Thời gian": "2026-02-13T06:43:22.371Z",
+    "Hành động": "Thêm nhiệm vụ",
+    "Người thực hiện": "lethithuylinh@gmail.com",
+    "Chi tiết": "Tên: Họp và chốt luồng nghiệp vụ với các bộ phận liên quan, Giao cho: Lê Thị Thùy Linh, ID: DA023-06",
+    "project_code": "DA023"
+  },
+  {
+    "Thời gian": "2026-02-13T02:41:07.894Z",
+    "Hành động": "Thêm nhiệm vụ",
+    "Người thực hiện": "phamanhtuan@gmail.com",
+    "Chi tiết": "Tên: Publish dự án, Giao cho: Phạm Anh Tuấn, ID: DA023-05",
+    "project_code": "DA023"
+  },
+  {
+    "Thời gian": "2026-02-13T02:39:50.230Z",
+    "Hành động": "Thêm nhiệm vụ",
+    "Người thực hiện": "phamanhtuan@gmail.com",
+    "Chi tiết": "Tên: Demo dự án, Giao cho: Nguyễn Thị Oanh, ID: DA023-04",
+    "project_code": "DA023"
+  },
+  {
+    "Thời gian": "2026-02-13T02:35:04.940Z",
+    "Hành động": "Thêm nhiệm vụ",
+    "Người thực hiện": "phamanhtuan@gmail.com",
+    "Chi tiết": "Tên: Coding & Testing, Giao cho: Phạm Anh Tuấn, ID: DA023-03",
+    "project_code": "DA023"
+  },
+  {
+    "Thời gian": "2026-02-13T02:29:01.003Z",
+    "Hành động": "Thêm nhiệm vụ",
+    "Người thực hiện": "phamanhtuan@gmail.com",
+    "Chi tiết": "Tên: Verify tài liệu SRS, Giao cho: Phạm Anh Tuấn, ID: DA023-02",
+    "project_code": "DA023"
+  },
+  {
+    "Thời gian": "2026-02-13T02:25:55.823Z",
+    "Hành động": "Thêm nhiệm vụ",
+    "Người thực hiện": "phamanhtuan@gmail.com",
+    "Chi tiết": "Tên: Xác định yêu cầu, phạm vi dự án, Giao cho: Phạm Anh Tuấn, ID: DA023-01",
+    "project_code": "DA023"
+  },
+  {
+    "Thời gian": "2026-02-13T02:04:44.047Z",
+    "Hành động": "Thêm dự án",
+    "Người thực hiện": "phamanhtuan@gmail.com",
+    "Chi tiết": "Tên: Dịch vụ cởi bạt, Quản lý: Phạm Anh Tuấn, ID: DA023",
+    "project_code": "DA023"
+  },
+  {
+    "Thời gian": "2026-03-02T14:59:57.031Z",
+    "Hành động": "Cập nhật dự án",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "ID: DA024, Tên: CĐS TM - Hệ thống quản lý tài liệu & chatbot",
+    "project_code": "DA024"
+  },
+  {
+    "Thời gian": "2026-02-13T02:54:37.753Z",
+    "Hành động": "Thêm nhiệm vụ",
+    "Người thực hiện": "phamanhtuan@gmail.com",
+    "Chi tiết": "Tên: Triển khai hệ thống, Giao cho: Phạm Anh Tuấn, ID: DA024-02",
+    "project_code": "DA024"
+  },
+  {
+    "Thời gian": "2026-02-13T02:50:22.206Z",
+    "Hành động": "Thêm nhiệm vụ",
+    "Người thực hiện": "phamanhtuan@gmail.com",
+    "Chi tiết": "Tên: Nghiên cứu cấu trúc hệ thống, Giao cho: Phạm Anh Tuấn, ID: DA024-01",
+    "project_code": "DA024"
+  },
+  {
+    "Thời gian": "2026-02-13T02:46:13.660Z",
+    "Hành động": "Thêm dự án",
+    "Người thực hiện": "phamanhtuan@gmail.com",
+    "Chi tiết": "Tên: CĐS TM - Hệ thống quản lý tài liệu & chatbot, Quản lý: Phạm Anh Tuấn, ID: DA024",
+    "project_code": "DA024"
+  },
+  {
+    "Thời gian": "2026-02-27T07:23:11.697Z",
+    "Hành động": "Cập nhật nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "ID: DA025-01, Tên: Đánh giá thực trạng và đề xuất giải pháp",
+    "project_code": "DA025"
+  },
+  {
+    "Thời gian": "2026-02-27T07:23:01.123Z",
+    "Hành động": "Cập nhật nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "ID: DA025-01, Tên: Đánh giá thực trạng và đề xuất tính khả thi",
+    "project_code": "DA025"
+  },
+  {
+    "Thời gian": "2026-02-25T07:20:29.542Z",
+    "Hành động": "Thêm nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "Tên: Đánh giá thực trạng và đề xuất tính khả thi, Giao cho: Phạm Thị Ngọc Anh, ID: DA025-01",
+    "project_code": "DA025"
+  },
+  {
+    "Thời gian": "2026-02-25T07:13:40.788Z",
+    "Hành động": "Thêm dự án",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "Tên: XC An toàn thông tin cấp độ 3, Quản lý: Phạm Thị Ngọc Anh, ID: DA025",
+    "project_code": "DA025"
+  },
+  {
+    "Thời gian": "2026-04-13T02:45:34.752Z",
+    "Hành động": "Cập nhật nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "ID: ID260413094441689, Tên: Ký hợp tác đối tác",
+    "project_code": "DA026"
+  },
+  {
+    "Thời gian": "2026-04-13T02:44:42.804Z",
+    "Hành động": "Thêm nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "Tên: Ký hợp tác đối tác, Giao cho: N/A, ID: ID260413094441689",
+    "project_code": "DA026"
+  },
+  {
+    "Thời gian": "2026-03-03T04:25:32.463Z",
+    "Hành động": "Thêm nhiệm vụ",
+    "Người thực hiện": "phamanhtuan@gmail.com",
+    "Chi tiết": "Tên: Coding & Ship bản Minimal, Giao cho: Đỗ Văn Hoan, ID: DA026-03",
+    "project_code": "DA026"
+  },
+  {
+    "Thời gian": "2026-03-03T04:24:47.038Z",
+    "Hành động": "Thêm nhiệm vụ",
+    "Người thực hiện": "phamanhtuan@gmail.com",
+    "Chi tiết": "Tên: Demo kiểm thử minimal, Giao cho: Phạm Anh Tuấn, ID: DA026-02",
+    "project_code": "DA026"
+  },
+  {
+    "Thời gian": "2026-03-03T04:23:51.319Z",
+    "Hành động": "Cập nhật nhiệm vụ",
+    "Người thực hiện": "phamanhtuan@gmail.com",
+    "Chi tiết": "ID: DA026-01, Tên: Nghiên cứu tính khả thi kỹ thuật",
+    "project_code": "DA026"
+  },
+  {
+    "Thời gian": "2026-02-27T07:33:23.116Z",
+    "Hành động": "Thêm nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "Tên: Nghiên cứu tính khả thi kỹ thuật, Giao cho: Phạm Anh Tuấn, ID: DA026-01",
+    "project_code": "DA026"
+  },
+  {
+    "Thời gian": "2026-02-27T07:32:11.091Z",
+    "Hành động": "Thêm dự án",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "Tên: XC_AI Agent, Quản lý: Phạm Anh Tuấn, ID: DA026",
+    "project_code": "DA026"
+  },
+  {
+    "Thời gian": "2026-04-02T15:14:19.642Z",
+    "Hành động": "Thêm nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "Tên: Golive với các bộ phận XC, Giao cho: Ngô Phú Cường, ID: ID260402221418857",
+    "project_code": "DA027"
+  },
+  {
+    "Thời gian": "2026-04-02T15:13:23.541Z",
+    "Hành động": "Thêm nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "Tên: Test hệ thống báo cáo, Giao cho: Nguyễn Văn Quân, ID: ID260402221322593",
+    "project_code": "DA027"
+  },
+  {
+    "Thời gian": "2026-04-02T15:12:43.764Z",
+    "Hành động": "Cập nhật dự án",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "ID: DA027, Tên: XC_Hệ thống báo cáo 3 tầng",
+    "project_code": "DA027"
+  },
+  {
+    "Thời gian": "2026-04-02T15:12:27.937Z",
+    "Hành động": "Thêm nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "Tên: Coding, Giao cho: Phạm Anh Tuấn, ID: ID260402221227130",
+    "project_code": "DA027"
+  },
+  {
+    "Thời gian": "2026-04-02T15:08:44.913Z",
+    "Hành động": "Cập nhật nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "ID: ID260402220723492, Tên: Phân tích dữ liệu và biểu đồ",
+    "project_code": "DA027"
+  },
+  {
+    "Thời gian": "2026-04-02T15:08:28.422Z",
+    "Hành động": "Thêm nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "Tên: Dựng Prototype Giao diện Báo cáo, Giao cho: Nguyễn Văn Quân, ID: ID260402220828011",
+    "project_code": "DA027"
+  },
+  {
+    "Thời gian": "2026-04-02T15:07:24.785Z",
+    "Hành động": "Thêm nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "Tên: Phân tích dữ liệu và biểu đồ, Giao cho: Nguyễn Văn Quân, ID: ID260402220723492",
+    "project_code": "DA027"
+  },
+  {
+    "Thời gian": "2026-04-02T15:06:10.312Z",
+    "Hành động": "Thêm nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "Tên: Demo dữ liệu, Giao cho: Ngô Phú Cường, ID: ID260402220609504",
+    "project_code": "DA027"
+  },
+  {
+    "Thời gian": "2026-02-27T07:41:37.758Z",
+    "Hành động": "Thêm dự án",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "Tên: XC_Hệ thống báo cáo 3 tầng, Quản lý: Ngô Phú Cường, ID: DA027",
+    "project_code": "DA027"
+  },
+  {
+    "Thời gian": "2026-03-30T06:56:22.603Z",
+    "Hành động": "Thêm nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "Tên: Chương trình đào tạo phối hợp nhân sự, Giao cho: Phạm Thị Ngọc Anh, ID: ID260330135622079",
+    "project_code": "DA028"
+  },
+  {
+    "Thời gian": "2026-03-04T10:54:06.362Z",
+    "Hành động": "Thêm dự án",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "Tên: XC_Đào tạo Công nghệ và AI, Quản lý: Phạm Thị Ngọc Anh, ID: DA028",
+    "project_code": "DA028"
+  },
+  {
+    "Thời gian": "2026-04-02T15:24:01.665Z",
+    "Hành động": "Thêm nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "Tên: Trình bày ý tưởng và lấy yêu cầu từ XC, Giao cho: Phạm Thị Ngọc Anh, ID: ID260402222401193",
+    "project_code": "DA029"
+  },
+  {
+    "Thời gian": "2026-04-02T15:22:58.277Z",
+    "Hành động": "Thêm nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "Tên: Prototype ý tưởng CRM, Giao cho: Nguyễn Thị Hồng Châu, ID: ID260402222257646",
+    "project_code": "DA029"
+  },
+  {
+    "Thời gian": "2026-04-02T15:22:21.255Z",
+    "Hành động": "Thêm nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "Tên: Nghiên cứu thực trạng và đưa ra ý tưởng nền tảng CRM XC, Giao cho: Phạm Thị Ngọc Anh, ID: ID260402222220341",
+    "project_code": "DA029"
+  },
+  {
+    "Thời gian": "2026-03-04T14:13:55.994Z",
+    "Hành động": "Thêm dự án",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "Tên: XC_Quản trị dữ liệu khách hàng CRM, Quản lý: Phạm Thị Ngọc Anh, ID: DA029",
+    "project_code": "DA029"
+  },
+  {
+    "Thời gian": "2026-03-04T14:16:18.578Z",
+    "Hành động": "Thêm dự án",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "Tên: Đảm bảo hạ tầng phần cứng, Quản lý: Mai Hải Sơn, ID: DA030",
+    "project_code": "DA030"
+  },
+  {
+    "Thời gian": "2026-03-04T14:22:37.380Z",
+    "Hành động": "Thêm dự án",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "Tên: Dự án Ga hành khách, Quản lý: Phạm Anh Tuấn, ID: DA031",
+    "project_code": "DA031"
+  },
+  {
+    "Thời gian": "2026-04-13T02:19:11.403Z",
+    "Hành động": "Thêm nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "Tên: Nghiệm thu giai đoạn 2, Giao cho: Phạm Thị Ngọc Anh, ID: ID260413091910403",
+    "project_code": "DA032"
+  },
+  {
+    "Thời gian": "2026-04-13T02:18:35.795Z",
+    "Hành động": "Thêm nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "Tên: Nghiệm thu giai đoạn 1, Giao cho: Phạm Thị Ngọc Anh, ID: ID260413091834805",
+    "project_code": "DA032"
+  },
+  {
+    "Thời gian": "2026-04-13T02:18:00.353Z",
+    "Hành động": "Cập nhật nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "ID: ID260313092629208, Tên: Coding & review phase 1",
+    "project_code": "DA032"
+  },
+  {
+    "Thời gian": "2026-04-02T15:26:23.785Z",
+    "Hành động": "Thêm nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "Tên: Test luồng nghiệp vụ phase 2, Giao cho: Phạm Thị Ngọc Anh, ID: ID260402222623162",
+    "project_code": "DA032"
+  },
+  {
+    "Thời gian": "2026-04-02T15:25:57.165Z",
+    "Hành động": "Cập nhật nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "ID: ID260330135458917, Tên: Test luồng nghiệp vụ phase 1",
+    "project_code": "DA032"
+  },
+  {
+    "Thời gian": "2026-04-02T15:25:34.041Z",
+    "Hành động": "Cập nhật dự án",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "ID: DA032, Tên: Dự án quản lý Tasks thông minh.",
+    "project_code": "DA032"
+  },
+  {
+    "Thời gian": "2026-04-02T15:25:30.163Z",
+    "Hành động": "Cập nhật dự án",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "ID: DA032, Tên: Dự án quản lý Tasks thông minh.",
+    "project_code": "DA032"
+  },
+  {
+    "Thời gian": "2026-04-02T15:24:34.798Z",
+    "Hành động": "Cập nhật nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "ID: ID260330135458917, Tên: Test luồng nghiệp vụ phase 1",
+    "project_code": "DA032"
+  },
+  {
+    "Thời gian": "2026-04-02T15:24:23.832Z",
+    "Hành động": "Cập nhật nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "ID: ID260330135458917, Tên: Test luồng nghiệp vụ",
+    "project_code": "DA032"
+  },
+  {
+    "Thời gian": "2026-03-30T06:55:01.702Z",
+    "Hành động": "Thêm nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "Tên: Test, Giao cho: Phạm Thị Ngọc Anh, ID: ID260330135458917",
+    "project_code": "DA032"
+  },
+  {
+    "Thời gian": "2026-03-13T02:34:15.028Z",
+    "Hành động": "Thêm nhiệm vụ",
+    "Người thực hiện": "phamanhtuan@gmail.com",
+    "Chi tiết": "Tên: Coding & review phase 2, Giao cho: Phạm Anh Tuấn, ID: ID260313093413925",
+    "project_code": "DA032"
+  },
+  {
+    "Thời gian": "2026-03-13T02:26:30.525Z",
+    "Hành động": "Thêm nhiệm vụ",
+    "Người thực hiện": "phamanhtuan@gmail.com",
+    "Chi tiết": "Tên: Coding & review phase 1, Giao cho: Phạm Anh Tuấn, ID: ID260313092629208",
+    "project_code": "DA032"
+  },
+  {
+    "Thời gian": "2026-03-13T02:19:24.032Z",
+    "Hành động": "Thêm nhiệm vụ",
+    "Người thực hiện": "phamanhtuan@gmail.com",
+    "Chi tiết": "Tên: Tổ chức sản xuất, Giao cho: Phạm Anh Tuấn, ID: ID260313091923237",
+    "project_code": "DA032"
+  },
+  {
+    "Thời gian": "2026-03-13T02:15:46.873Z",
+    "Hành động": "Thêm nhiệm vụ",
+    "Người thực hiện": "phamanhtuan@gmail.com",
+    "Chi tiết": "Tên: Tiếp nhận yêu cầu và phân tích, Giao cho: Phạm Anh Tuấn, ID: ID260313091546195",
+    "project_code": "DA032"
+  },
+  {
+    "Thời gian": "2026-03-13T02:10:57.193Z",
+    "Hành động": "Thêm dự án",
+    "Người thực hiện": "phamanhtuan@gmail.com",
+    "Chi tiết": "Tên: Dự án quản lý Tasks thông minh., Quản lý: Phạm Anh Tuấn, ID: DA032",
+    "project_code": "DA032"
+  },
+  {
+    "Thời gian": "2026-04-13T01:55:20.433Z",
+    "Hành động": "Cập nhật nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "ID: ID260402222924639, Tên: Truyền thông với nhân viên XC",
+    "project_code": "DA033"
+  },
+  {
+    "Thời gian": "2026-04-13T01:55:02.402Z",
+    "Hành động": "Cập nhật nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "ID: ID260402222924639, Tên: Truyền thông với nhân viên XC",
+    "project_code": "DA033"
+  },
+  {
+    "Thời gian": "2026-04-13T01:54:57.258Z",
+    "Hành động": "Cập nhật nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "ID: ID260402222759028, Tên: Test và fix luồng hệ thống",
+    "project_code": "DA033"
+  },
+  {
+    "Thời gian": "2026-04-13T01:54:51.810Z",
+    "Hành động": "Cập nhật nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "ID: ID260313110032654, Tên: Coding luồng hệ thống",
+    "project_code": "DA033"
+  },
+  {
+    "Thời gian": "2026-04-13T01:54:36.624Z",
+    "Hành động": "Cập nhật nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "ID: ID260402222905769, Tên: Tài liệu Quy trình Áp dụng với XC",
+    "project_code": "DA033"
+  },
+  {
+    "Thời gian": "2026-04-13T01:54:31.424Z",
+    "Hành động": "Cập nhật nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "ID: ID260313110032654, Tên: Coding luồng hệ thống",
+    "project_code": "DA033"
+  },
+  {
+    "Thời gian": "2026-04-13T01:54:24.031Z",
+    "Hành động": "Cập nhật nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "ID: ID260313110032654, Tên: Coding luồng hệ thống",
+    "project_code": "DA033"
+  },
+  {
+    "Thời gian": "2026-04-02T15:29:25.583Z",
+    "Hành động": "Thêm nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "Tên: Truyền thông với nhân viên XC, Giao cho: Phạm Thị Ngọc Anh, ID: ID260402222924639",
+    "project_code": "DA033"
+  },
+  {
+    "Thời gian": "2026-04-02T15:29:06.358Z",
+    "Hành động": "Thêm nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "Tên: Tài liệu Quy trình Áp dụng với XC, Giao cho: Phạm Thị Ngọc Anh, ID: ID260402222905769",
+    "project_code": "DA033"
+  },
+  {
+    "Thời gian": "2026-04-02T15:28:22.449Z",
+    "Hành động": "Cập nhật dự án",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "ID: DA033, Tên: PM Order cải tiến PM XC",
+    "project_code": "DA033"
+  },
+  {
+    "Thời gian": "2026-04-02T15:28:09.326Z",
+    "Hành động": "Cập nhật nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "ID: ID260313110005852, Tên: Phân tích luồng cơ bản",
+    "project_code": "DA033"
+  },
+  {
+    "Thời gian": "2026-04-02T15:27:59.897Z",
+    "Hành động": "Thêm nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "Tên: Test và fix luồng hệ thống, Giao cho: Phạm Thị Ngọc Anh, ID: ID260402222759028",
+    "project_code": "DA033"
+  },
+  {
+    "Thời gian": "2026-04-02T15:27:27.476Z",
+    "Hành động": "Cập nhật dự án",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "ID: DA033, Tên: Quy trình Order cải tiến PM XC",
+    "project_code": "DA033"
+  },
+  {
+    "Thời gian": "2026-04-02T15:27:25.475Z",
+    "Hành động": "Cập nhật dự án",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "ID: DA033, Tên: Quy trình Order cải tiến PM XC",
+    "project_code": "DA033"
+  },
+  {
+    "Thời gian": "2026-04-02T15:27:22.438Z",
+    "Hành động": "Cập nhật dự án",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "ID: DA033, Tên: Quy trình Order cải tiến PM XC",
+    "project_code": "DA033"
+  },
+  {
+    "Thời gian": "2026-03-30T06:54:14.879Z",
+    "Hành động": "Cập nhật nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "ID: ID260313105849991, Tên: Chốt luồng với Xuân Cương",
+    "project_code": "DA033"
+  },
+  {
+    "Thời gian": "2026-03-13T04:00:34.649Z",
+    "Hành động": "Thêm nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "Tên: Coding luồng hệ thống, Giao cho: Phạm Anh Tuấn, ID: ID260313110032654",
+    "project_code": "DA033"
+  },
+  {
+    "Thời gian": "2026-03-13T04:00:06.473Z",
+    "Hành động": "Thêm nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "Tên: Phân tích luồng cơ bản, Giao cho: Lê Thị Thùy Linh, ID: ID260313110005852",
+    "project_code": "DA033"
+  },
+  {
+    "Thời gian": "2026-03-13T03:59:40.391Z",
+    "Hành động": "Cập nhật nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "ID: ID260313105849991, Tên: Chốt luồng với Xuân Cương",
+    "project_code": "DA033"
+  },
+  {
+    "Thời gian": "2026-03-13T03:58:51.243Z",
+    "Hành động": "Thêm nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "Tên: Chốt luồng với Xuân Cương, Giao cho: Phạm Thị Ngọc Anh, ID: ID260313105849991",
+    "project_code": "DA033"
+  },
+  {
+    "Thời gian": "2026-03-13T03:58:15.511Z",
+    "Hành động": "Thêm dự án",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "Tên: Quy trình Order cải tiến PM XC, Quản lý: Phạm Thị Ngọc Anh, ID: DA033",
+    "project_code": "DA033"
+  },
+  {
+    "Thời gian": "2026-04-02T15:31:42.630Z",
+    "Hành động": "Cập nhật dự án",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "ID: DA034, Tên: PM LogXPro - Hệ thống Logistics",
+    "project_code": "DA034"
+  },
+  {
+    "Thời gian": "2026-03-30T07:25:42.919Z",
+    "Hành động": "Thêm dự án",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "Tên: LogXPro, Quản lý: Lê Thị Thùy Linh, ID: DA034",
+    "project_code": "DA034"
+  },
+  {
+    "Thời gian": "2026-04-02T15:31:28.434Z",
+    "Hành động": "Thêm nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "Tên: Đào tạo triển khai, Giao cho: Ngô Phú Cường, ID: ID260402223127519",
+    "project_code": "DA035"
+  },
+  {
+    "Thời gian": "2026-04-02T15:30:46.594Z",
+    "Hành động": "Thêm nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "Tên: Trình phê duyệt và chọn đơn vị triển khai, Giao cho: Ngô Phú Cường, ID: ID260402223046019",
+    "project_code": "DA035"
+  },
+  {
+    "Thời gian": "2026-04-02T15:30:07.674Z",
+    "Hành động": "Thêm nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "Tên: Gửi yêu cầu nghiệp vụ và Báo giá, Giao cho: Ngô Phú Cường, ID: ID260402223007058",
+    "project_code": "DA035"
+  },
+  {
+    "Thời gian": "2026-03-31T06:47:20.418Z",
+    "Hành động": "Thêm dự án",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "Tên: PM Kho CFS (FS), Quản lý: Phạm Thị Ngọc Anh, ID: DA035",
+    "project_code": "DA035"
+  },
+  {
+    "Thời gian": "2026-04-06T07:49:08.491Z",
+    "Hành động": "Chuyển nhiệm vụ",
+    "Người thực hiện": "tpcn@gmail.com",
+    "Chi tiết": "ID: ID260331165228207 → ID260406144907802, Tên: Bổ sung tên công ty trên hóa đơn xe ra vào, Từ DA037 sang DA036",
+    "project_code": "DA036"
+  },
+  {
+    "Thời gian": "2026-04-06T06:42:55.669Z",
+    "Hành động": "Cập nhật nhiệm vụ",
+    "Người thực hiện": "tpcn@gmail.com",
+    "Chi tiết": "ID: ID260331161611700, Tên: Camera giám sát khu cầu nâng mới",
+    "project_code": "DA036"
+  },
+  {
+    "Thời gian": "2026-04-01T07:04:36.717Z",
+    "Hành động": "Cập nhật dự án",
+    "Người thực hiện": "tpcn@gmail.com",
+    "Chi tiết": "ID: DA036, Tên: Xuân Cương",
+    "project_code": "DA036"
+  },
+  {
+    "Thời gian": "2026-04-01T07:03:52.873Z",
+    "Hành động": "Thêm nhiệm vụ",
+    "Người thực hiện": "tpcn@gmail.com",
+    "Chi tiết": "Tên: Camera giám sát hành trình Xe nâng, Giao cho: Mai Hải Sơn, ID: ID260401140352099",
+    "project_code": "DA036"
+  },
+  {
+    "Thời gian": "2026-04-01T07:02:50.571Z",
+    "Hành động": "Cập nhật dự án",
+    "Người thực hiện": "tpcn@gmail.com",
+    "Chi tiết": "ID: DA036, Tên: Xuân Cương",
+    "project_code": "DA036"
+  },
+  {
+    "Thời gian": "2026-04-01T07:00:20.249Z",
+    "Hành động": "Cập nhật nhiệm vụ",
+    "Người thực hiện": "tpcn@gmail.com",
+    "Chi tiết": "ID: ID260331155447055, Tên: Setup hệ thống hạ tầng , phần mềm cho Bot",
+    "project_code": "DA036"
+  },
+  {
+    "Thời gian": "2026-03-31T09:54:48.473Z",
+    "Hành động": "Cập nhật dự án",
+    "Người thực hiện": "tpcn@gmail.com",
+    "Chi tiết": "ID: DA036, Tên: Xuân Cương",
+    "project_code": "DA036"
+  },
+  {
+    "Thời gian": "2026-03-31T09:16:13.714Z",
+    "Hành động": "Thêm nhiệm vụ",
+    "Người thực hiện": "tpcn@gmail.com",
+    "Chi tiết": "Tên: Camera giám sát khu cầu nâng mới, Giao cho: Mai Hải Sơn, ID: ID260331161611700",
+    "project_code": "DA036"
+  },
+  {
+    "Thời gian": "2026-03-31T08:54:47.940Z",
+    "Hành động": "Thêm nhiệm vụ",
+    "Người thực hiện": "tpcn@gmail.com",
+    "Chi tiết": "Tên: Setup hệ thống hạ tầng , phần mềm cho Bot , Giao cho: Mai Hải Sơn, ID: ID260331155447055",
+    "project_code": "DA036"
+  },
+  {
+    "Thời gian": "2026-03-31T08:52:53.577Z",
+    "Hành động": "Thêm nhiệm vụ",
+    "Người thực hiện": "tpcn@gmail.com",
+    "Chi tiết": "Tên: Chuẩn bị trang thiết bị, setup hệ thống cho Hải Quan, Biên Phòng tại cổng Bảo Lâm, Giao cho: Mai Hải Sơn, ID: ID260331155252352",
+    "project_code": "DA036"
+  },
+  {
+    "Thời gian": "2026-03-31T08:49:59.004Z",
+    "Hành động": "Thêm dự án",
+    "Người thực hiện": "tpcn@gmail.com",
+    "Chi tiết": "Tên: Xuân Cương, Quản lý: Mai Hải Sơn, ID: DA036",
+    "project_code": "DA036"
+  },
+  {
+    "Thời gian": "2026-03-31T09:52:29.068Z",
+    "Hành động": "Thêm nhiệm vụ",
+    "Người thực hiện": "tpcn@gmail.com",
+    "Chi tiết": "Tên: Bổ sung tên công ty trên hóa đơn xe ra vào, Giao cho: Mai Hải Sơn, ID: ID260331165228207",
+    "project_code": "DA037"
+  },
+  {
+    "Thời gian": "2026-03-31T09:02:26.772Z",
+    "Hành động": "Thêm nhiệm vụ",
+    "Người thực hiện": "tpcn@gmail.com",
+    "Chi tiết": "Tên: Kết nối hệ thống xe ra tại bến với Biên Phòng, Giao cho: Mai Hải Sơn, ID: ID260331160224791",
+    "project_code": "DA037"
+  },
+  {
+    "Thời gian": "2026-03-31T09:00:12.367Z",
+    "Hành động": "Thêm nhiệm vụ",
+    "Người thực hiện": "tpcn@gmail.com",
+    "Chi tiết": "Tên: Di chuyển hệ thống kiểm soát xe ra vào, Giao cho: Mai Hải Sơn, ID: ID260331160011771",
+    "project_code": "DA037"
+  },
+  {
+    "Thời gian": "2026-03-31T08:58:17.838Z",
+    "Hành động": "Thêm nhiệm vụ",
+    "Người thực hiện": "tpcn@gmail.com",
+    "Chi tiết": "Tên: Nâng cấp hệ thống Camera, Giao cho: Mai Hải Sơn, ID: ID260331155816725",
+    "project_code": "DA037"
+  },
+  {
+    "Thời gian": "2026-03-31T08:55:27.898Z",
+    "Hành động": "Thêm dự án",
+    "Người thực hiện": "tpcn@gmail.com",
+    "Chi tiết": "Tên: ChiMa, Quản lý: Mai Hải Sơn, ID: DA037",
+    "project_code": "DA037"
+  },
+  {
+    "Thời gian": "2026-03-31T09:07:21.026Z",
+    "Hành động": "Cập nhật nhiệm vụ",
+    "Người thực hiện": "tpcn@gmail.com",
+    "Chi tiết": "ID: ID260331160705161, Tên: Lắp đặt bổ sung hệ thống Camera tại chung cư Tân Thanh",
+    "project_code": "DA038"
+  },
+  {
+    "Thời gian": "2026-03-31T09:07:05.728Z",
+    "Hành động": "Thêm nhiệm vụ",
+    "Người thực hiện": "tpcn@gmail.com",
+    "Chi tiết": "Tên: Lắp đặt bổ sung hệ thống Camera tại chung cư Tân Thanh, Giao cho: Mai Hải Sơn, ID: ID260331160705161",
+    "project_code": "DA038"
+  },
+  {
+    "Thời gian": "2026-03-31T09:05:39.512Z",
+    "Hành động": "Thêm dự án",
+    "Người thực hiện": "tpcn@gmail.com",
+    "Chi tiết": "Tên: Tân Thanh, Quản lý: Mai Hải Sơn, ID: DA038",
+    "project_code": "DA038"
+  },
+  {
+    "Thời gian": "2026-04-13T02:04:04.168Z",
+    "Hành động": "Cập nhật dự án",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "ID: DA039, Tên: Kết nối camera B1",
+    "project_code": "DA039"
+  },
+  {
+    "Thời gian": "2026-03-31T09:08:52.884Z",
+    "Hành động": "Cập nhật dự án",
+    "Người thực hiện": "tpcn@gmail.com",
+    "Chi tiết": "ID: DA039, Tên: B1",
+    "project_code": "DA039"
+  },
+  {
+    "Thời gian": "2026-03-31T09:07:48.603Z",
+    "Hành động": "Thêm dự án",
+    "Người thực hiện": "tpcn@gmail.com",
+    "Chi tiết": "Tên: B1, Quản lý: Mai Hải Sơn, ID: DA039",
+    "project_code": "DA039"
+  },
+  {
+    "Thời gian": "2026-03-31T09:53:13.151Z",
+    "Hành động": "Thêm nhiệm vụ",
+    "Người thực hiện": "tpcn@gmail.com",
+    "Chi tiết": "Tên: Bảo trì hệ thống theo định kỳ tháng, Giao cho: Mai Hải Sơn, ID: ID260331165311091",
+    "project_code": "DA040"
+  },
+  {
+    "Thời gian": "2026-03-31T09:09:35.601Z",
+    "Hành động": "Thêm dự án",
+    "Người thực hiện": "tpcn@gmail.com",
+    "Chi tiết": "Tên: Bảo trì hệ thống, Quản lý: Mai Hải Sơn, ID: DA040",
+    "project_code": "DA040"
+  },
+  {
+    "Thời gian": "2026-03-31T09:44:02.707Z",
+    "Hành động": "Cập nhật nhiệm vụ",
+    "Người thực hiện": "tpcn@gmail.com",
+    "Chi tiết": "ID: ID260331164145915, Tên: Tạo Ticket Bot Telegram",
+    "project_code": "DA041"
+  },
+  {
+    "Thời gian": "2026-03-31T09:43:47.992Z",
+    "Hành động": "Cập nhật nhiệm vụ",
+    "Người thực hiện": "tpcn@gmail.com",
+    "Chi tiết": "ID: ID260331164145915, Tên: Tạo Ticket Bot Telegram",
+    "project_code": "DA041"
+  },
+  {
+    "Thời gian": "2026-03-31T09:42:05.227Z",
+    "Hành động": "Cập nhật nhiệm vụ",
+    "Người thực hiện": "tpcn@gmail.com",
+    "Chi tiết": "ID: ID260331164145915, Tên: Tạo Ticket Bot Telegram",
+    "project_code": "DA041"
+  },
+  {
+    "Thời gian": "2026-03-31T09:41:46.546Z",
+    "Hành động": "Thêm nhiệm vụ",
+    "Người thực hiện": "tpcn@gmail.com",
+    "Chi tiết": "Tên: Tạo Ticket Bot Telegram, Giao cho: Mai Hải Sơn, ID: ID260331164145915",
+    "project_code": "DA041"
+  },
+  {
+    "Thời gian": "2026-03-31T09:10:01.176Z",
+    "Hành động": "Thêm dự án",
+    "Người thực hiện": "tpcn@gmail.com",
+    "Chi tiết": "Tên: AI Thực chiến, Quản lý: Mai Hải Sơn, ID: DA041",
+    "project_code": "DA041"
+  },
+  {
+    "Thời gian": "2026-04-13T01:55:51.029Z",
+    "Hành động": "Cập nhật dự án",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "ID: DA042, Tên: Kztek",
+    "project_code": "DA042"
+  },
+  {
+    "Thời gian": "2026-03-31T09:22:39.923Z",
+    "Hành động": "Thêm dự án",
+    "Người thực hiện": "tpcn@gmail.com",
+    "Chi tiết": "Tên: Kztek, Quản lý: Mai Hải Sơn, ID: DA042",
+    "project_code": "DA042"
+  },
+  {
+    "Thời gian": "2026-04-13T03:48:10.265Z",
+    "Hành động": "Cập nhật dự án",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "ID: DA043, Tên: Cổng bản tin XC",
+    "project_code": "DA043"
+  },
+  {
+    "Thời gian": "2026-04-13T02:14:52.276Z",
+    "Hành động": "Cập nhật dự án",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "ID: DA043, Tên: Cổng bản tin XC",
+    "project_code": "DA043"
+  },
+  {
+    "Thời gian": "2026-04-13T02:14:40.119Z",
+    "Hành động": "Cập nhật nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "ID: ID260402224812571, Tên: Bàn giao và public",
+    "project_code": "DA043"
+  },
+  {
+    "Thời gian": "2026-04-13T02:14:23.666Z",
+    "Hành động": "Cập nhật nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "ID: ID260402224753856, Tên: Test và chỉnh sửa hệ thống",
+    "project_code": "DA043"
+  },
+  {
+    "Thời gian": "2026-04-13T02:04:35.551Z",
+    "Hành động": "Cập nhật nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "ID: ID260402224714570, Tên: Triển khai chỉnh sửa hệ thống",
+    "project_code": "DA043"
+  },
+  {
+    "Thời gian": "2026-04-02T15:48:13.116Z",
+    "Hành động": "Thêm nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "Tên: Bàn giao và public, Giao cho: Phạm Thị Ngọc Anh, ID: ID260402224812571",
+    "project_code": "DA043"
+  },
+  {
+    "Thời gian": "2026-04-02T15:47:54.751Z",
+    "Hành động": "Thêm nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "Tên: Test và chỉnh sửa hệ thống, Giao cho: Phạm Thị Ngọc Anh, ID: ID260402224753856",
+    "project_code": "DA043"
+  },
+  {
+    "Thời gian": "2026-04-02T15:47:15.333Z",
+    "Hành động": "Thêm nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "Tên: Triển khai chỉnh sửa hệ thống, Giao cho: Phạm Thị Ngọc Anh, ID: ID260402224714570",
+    "project_code": "DA043"
+  },
+  {
+    "Thời gian": "2026-04-02T15:43:37.074Z",
+    "Hành động": "Thêm nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "Tên: Chỉnh sửa hệ thống theo yêu cầu, Giao cho: Phạm Thị Ngọc Anh, ID: ID260402224336402",
+    "project_code": "DA043"
+  },
+  {
+    "Thời gian": "2026-04-02T15:42:34.030Z",
+    "Hành động": "Thêm nhiệm vụ",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "Tên: Thu thập yêu cầu, Giao cho: Phạm Thị Ngọc Anh, ID: ID260402224233018",
+    "project_code": "DA043"
+  },
+  {
+    "Thời gian": "2026-04-02T15:32:46.655Z",
+    "Hành động": "Cập nhật dự án",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "ID: DA043, Tên: Cổng bản tin XC",
+    "project_code": "DA043"
+  },
+  {
+    "Thời gian": "2026-04-02T15:32:24.709Z",
+    "Hành động": "Thêm dự án",
+    "Người thực hiện": "phamthingocanh@gmail.com",
+    "Chi tiết": "Tên: Cổng thông tin XC, Quản lý: Phạm Thị Ngọc Anh, ID: DA043",
+    "project_code": "DA043"
+  },
+  {
+    "Thời gian": "2026-04-08T04:55:15.531Z",
+    "Hành động": "Thêm dự án",
+    "Người thực hiện": "tpcn@gmail.com",
+    "Chi tiết": "Tên: SF, Quản lý: Mai Hải Sơn, ID: DA044",
+    "project_code": "DA044"
+  }
+]

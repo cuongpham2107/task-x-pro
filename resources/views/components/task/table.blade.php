@@ -13,10 +13,10 @@
             </button>
         </x-ui.table.column>
         <x-ui.table.column width="min-w-60 w-60">Dự án &amp; Giai đoạn</x-ui.table.column>
-        <x-ui.table.column width="min-w-35" align="center">Leader quản lý</x-ui.table.column>
-        <x-ui.table.column width="min-w-35" align="center">Chủ PIC</x-ui.table.column>
-        <x-ui.table.column width="min-w-35" align="center">PIC hỗ trợ</x-ui.table.column>
-        <x-ui.table.column width="min-w-30">
+        <x-ui.table.column width="min-w-30" align="center">Leader quản lý</x-ui.table.column>
+        <x-ui.table.column width="min-w-30" align="center">Chủ PIC</x-ui.table.column>
+        <x-ui.table.column width="min-w-30" align="center">PIC hỗ trợ</x-ui.table.column>
+        <x-ui.table.column width="min-w-40">
             <button wire:click="setSort('priority')"
                 class="hover:text-primary flex items-center gap-1 uppercase tracking-wider transition-colors">
                 Độ ưu tiên
@@ -26,7 +26,7 @@
                 </span>
             </button>
         </x-ui.table.column>
-        <x-ui.table.column width="min-w-30">
+        <x-ui.table.column width="min-w-35">
             <button wire:click="setSort('deadline')"
                 class="hover:text-primary flex items-center gap-1 uppercase tracking-wider transition-colors">
                 Hạn chót
@@ -36,7 +36,7 @@
                 </span>
             </button>
         </x-ui.table.column>
-        <x-ui.table.column width="min-w-35">
+        <x-ui.table.column width="min-w-45">
             <button wire:click="setSort('status')"
                 class="hover:text-primary flex items-center gap-1 uppercase tracking-wider transition-colors">
                 Trạng thái

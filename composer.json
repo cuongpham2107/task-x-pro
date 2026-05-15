@@ -17,6 +17,7 @@
         "filament/tables": "^5.3",
         "laravel-notification-channels/telegram": "^6.0",
         "laravel/framework": "^12.0",
+        "laravel/mcp": "^0.6.7",
         "laravel/tinker": "^2.10.1",
         "livewire/blaze": "^1.0",
         "maatwebsite/excel": "^3.1",

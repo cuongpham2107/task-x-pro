@@ -1,0 +1,142 @@
+[
+  {
+    "Mã NV": "NV001",
+    "Họ tên": "Ngô Phú Cường",
+    "Email": "admin@gmail.com",
+    "Mật khẩu": "password",
+    "Chức vụ": "Giám đốc",
+    "Phân quyền": "Admin",
+    "Đối tượng": "Người dùng",
+    "Ghi chú": ""
+  },
+  {
+    "Mã NV": "NV002",
+    "Họ tên": "Phạm Thị Ngọc Anh",
+    "Email": "phamthingocanh@gmail.com",
+    "Mật khẩu": "password",
+    "Chức vụ": "Trợ lý Giám đốc",
+    "Phân quyền": "Admin",
+    "Đối tượng": "Người dùng",
+    "Ghi chú": ""
+  },
+  {
+    "Mã NV": "NV003",
+    "Họ tên": "Mai Hải Sơn",
+    "Email": "tpcn@gmail.com",
+    "Mật khẩu": "password",
+    "Chức vụ": "Trưởng phòng công nghệ",
+    "Phân quyền": "Quản lý",
+    "Đối tượng": "Người dùng",
+    "Ghi chú": ""
+  },
+  {
+    "Mã NV": "NV006",
+    "Họ tên": "Phạm Anh Tuấn",
+    "Email": "phamanhtuan@gmail.com",
+    "Mật khẩu": "password",
+    "Chức vụ": "Trưởng phòng Sản xuất",
+    "Phân quyền": "Admin",
+    "Đối tượng": "Người dùng",
+    "Ghi chú": ""
+  },
+  {
+    "Mã NV": "NV007",
+    "Họ tên": "Lê Thị Thùy Linh",
+    "Email": "lethithuylinh@gmail.com",
+    "Mật khẩu": "password",
+    "Chức vụ": "Trưởng phòng Phân tích nghiệp vụ và thiết kế",
+    "Phân quyền": "Admin",
+    "Đối tượng": "Người dùng",
+    "Ghi chú": ""
+  },
+  {
+    "Mã NV": "NV008",
+    "Họ tên": "Nguyễn Thị Hồng Châu",
+    "Email": "nguyenthihongchau@gmail.com",
+    "Mật khẩu": "password",
+    "Chức vụ": "Nhân viên Phân tích trải nghiệm",
+    "Phân quyền": "Nhân viên",
+    "Đối tượng": "Người dùng",
+    "Ghi chú": ""
+  },
+  {
+    "Mã NV": "NV009",
+    "Họ tên": "Nguyễn Văn Quân",
+    "Email": "nguyenvanquan@gmail.com",
+    "Mật khẩu": "password",
+    "Chức vụ": "Nhân viên thiết kế",
+    "Phân quyền": "Nhân viên",
+    "Đối tượng": "Người dùng",
+    "Ghi chú": ""
+  },
+  {
+    "Mã NV": "NV010",
+    "Họ tên": "Đặng Thanh Sơn",
+    "Email": "dangthanhson@gmail.com",
+    "Mật khẩu": "password",
+    "Chức vụ": "Nhân viên Phân tích quy trình",
+    "Phân quyền": "Nhân viên",
+    "Đối tượng": "Người dùng",
+    "Ghi chú": ""
+  },
+  {
+    "Mã NV": "NV011",
+    "Họ tên": "Hoàng Thị Thùy Trang",
+    "Email": "hoangthithuytrang@gmail.com",
+    "Mật khẩu": "password",
+    "Chức vụ": "Nhân viên Phân tích quy trình",
+    "Phân quyền": "Nhân viên",
+    "Đối tượng": "Người dùng",
+    "Ghi chú": ""
+  },
+  {
+    "Mã NV": "NV012",
+    "Họ tên": "Nguyễn Ngọc Thắng",
+    "Email": "nguyenngocthang@gmail.com",
+    "Mật khẩu": "password",
+    "Chức vụ": "Nhân viên Back End",
+    "Phân quyền": "Nhân viên",
+    "Đối tượng": "Người dùng",
+    "Ghi chú": ""
+  },
+  {
+    "Mã NV": "NV013",
+    "Họ tên": "Nguyễn Hữu Bình",
+    "Email": "nguyenhuubinh@gmail.com",
+    "Mật khẩu": "password",
+    "Chức vụ": "Nhân viên Mobile",
+    "Phân quyền": "Nhân viên",
+    "Đối tượng": "Người dùng",
+    "Ghi chú": ""
+  },
+  {
+    "Mã NV": "NV014",
+    "Họ tên": "Đỗ Văn Hoan",
+    "Email": "dovanhoan@gmail.com",
+    "Mật khẩu": "password",
+    "Chức vụ": "Nhân viên Back End",
+    "Phân quyền": "Nhân viên",
+    "Đối tượng": "Người dùng",
+    "Ghi chú": ""
+  },
+  {
+    "Mã NV": "NV015",
+    "Họ tên": "Nguyễn Thị Oanh",
+    "Email": "nguyenthioanh@gmail.com",
+    "Mật khẩu": "password",
+    "Chức vụ": "Nhân viên triển khai vận hành",
+    "Phân quyền": "Nhân viên",
+    "Đối tượng": "Người dùng",
+    "Ghi chú": ""
+  },
+  {
+    "Mã NV": "NV016",
+    "Họ tên": "Phạm Thị Hương",
+    "Email": "phamthihuong@gmail.com",
+    "Mật khẩu": "password",
+    "Chức vụ": "Nhân viên Phân tích dữ liệu",
+    "Phân quyền": "Nhân viên",
+    "Đối tượng": "Người dùng",
+    "Ghi chú": ""
+  }
+]

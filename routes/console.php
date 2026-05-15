@@ -296,3 +296,21 @@ Schedule::command('kpi:backfill-missing-months', ['--months' => '12'])
     ->monthlyOn(1, '04:00')
     ->withoutOverlapping()
     ->onOneServer();
+
+Artisan::command('progress:refresh-all', function (): void {
+    $phases = \App\Models\Phase::query()->get();
+    $this->info("Refreshing progress for {$phases->count()} phases...");
+
+    foreach ($phases as $phase) {
+        $phase->refreshProgressFromTasks();
+    }
+
+    $projects = Project::query()->get();
+    $this->info("Refreshing progress for {$projects->count()} projects...");
+
+    foreach ($projects as $project) {
+        $project->refreshProgressFromPhases();
+    }
+
+    $this->info('Progress refreshed for all phases and projects.');
+})->purpose('Đồng bộ lại % tiến độ của tất cả Phase và Project từ dữ liệu Task');
