@@ -4,11 +4,11 @@ namespace App\Services\Tasks;
 
 use App\Enums\TaskPriority;
 use App\Enums\TaskStatus;
-use App\Enums\TaskType;
 use App\Enums\TaskWorkflowType;
 use App\Enums\UserStatus;
 use App\Models\Phase;
 use App\Models\Task;
+use App\Models\TaskType as TaskTypeModel;
 use App\Models\User;
 use Illuminate\Support\Carbon;
 use Illuminate\Validation\ValidationException;
@@ -60,10 +60,16 @@ class TaskPayloadService
             }
         }
 
-        if (array_key_exists('type', $payload) && ! in_array((string) $payload['type'], TaskType::values(), true)) {
-            throw ValidationException::withMessages([
-                'type' => 'Loại công việc không hợp lệ.',
-            ]);
+        if (array_key_exists('type', $payload)) {
+            $taskType = TaskTypeModel::findByKeyOrLabel((string) $payload['type']);
+
+            if ($taskType === null) {
+                throw ValidationException::withMessages([
+                    'type' => 'Loại công việc không hợp lệ.',
+                ]);
+            }
+
+            $payload['type'] = $taskType->key;
         }
 
         if (array_key_exists('status', $payload) && ! in_array((string) $payload['status'], TaskStatus::values(), true)) {

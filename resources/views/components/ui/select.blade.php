@@ -8,6 +8,9 @@
     'options' => [], // [ value => label ] or [ value => ['label' => '...', 'icon' => '...'] ]
     'allowFreeText' => false,
     'allowManage' => false,
+    'manageEditAction' => null,
+    'manageDeleteAction' => null,
+    'manageDeleteConfirm' => null,
     'placeholder' => 'Chọn một tùy chọn',
     'labelKey' => 'label',
     'iconKey' => 'icon',
@@ -38,6 +41,10 @@
         })
         ->values()
         ->all();
+
+    $manageEditAction = $manageEditAction ?: 'requestEditProjectType';
+    $manageDeleteAction = $manageDeleteAction ?: 'deleteProjectType';
+    $manageDeleteConfirm = $manageDeleteConfirm ?: 'Xác nhận xóa loại dự án này?';
 @endphp
 
 <div class="w-full" x-data="{
@@ -159,10 +166,10 @@
 
                             @if ($allowManage)
                                 <div class="ml-2 flex items-center gap-2">
-                                    <button type="button" title="Sửa" @click.stop.prevent="if (typeof $wire !== 'undefined') $wire.call('requestEditProjectType', @js($val))" class="text-sm text-slate-500 hover:text-primary">
+                                    <button type="button" title="Sửa" @click.stop.prevent="if (typeof $wire !== 'undefined') $wire.call(@js($manageEditAction), @js($val))" class="text-sm text-slate-500 hover:text-primary">
                                         <span class="material-symbols-outlined">edit</span>
                                     </button>
-                                    <button type="button" title="Xóa" @click.stop.prevent="if (typeof $wire !== 'undefined') { if (confirm('Xác nhận xóa loại dự án này?')) $wire.call('deleteProjectType', @js($val)) }" class="text-sm text-red-500 hover:text-red-700">
+                                    <button type="button" title="Xóa" @click.stop.prevent="if (typeof $wire !== 'undefined') { if (confirm(@js($manageDeleteConfirm))) $wire.call(@js($manageDeleteAction), @js($val)) }" class="text-sm text-red-500 hover:text-red-700">
                                         <span class="material-symbols-outlined">delete</span>
                                     </button>
                                 </div>
@@ -176,7 +183,7 @@
                     @if ($allowFreeText)
                         <div class="px-2 py-2">
                             <button type="button" x-show="search && !optionsList.find(o => o.label.toLowerCase() === search.toLowerCase())"
-                                @click="if (typeof $wire !== 'undefined') { $wire.call('createFreeTextOption', search).then(() => { value = search; open = false; search = '' }) } else { value = search; open = false; search = '' }"
+                                @click="if (typeof $wire !== 'undefined') { $wire.call('createFreeTextOption', search).then(() => { open = false; search = '' }) } else { value = search; open = false; search = '' }"
                                 class="w-full rounded-lg bg-primary/5 px-3 py-2 text-sm text-primary hover:bg-primary/10">
                                 Tạo mới: <strong x-text="search"></strong>
                             </button>

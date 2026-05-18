@@ -1,14 +1,13 @@
 <?php
 use App\Enums\TaskPriority;
 use App\Enums\TaskStatus;
-use App\Enums\TaskType;
 use App\Models\Task;
+use App\Services\Dashboard\DashboardService;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
-use Livewire\Component;
 use Livewire\Attributes\On;
+use Livewire\Component;
 use Livewire\WithPagination;
-use App\Services\Dashboard\DashboardService;
 
 new class extends Component
 {
@@ -300,7 +299,7 @@ new class extends Component
                                     </span>
                                     <span
                                         class="rounded border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-bold text-slate-600 sm:text-[11px] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
-                                        {{ $task->type instanceof TaskType ? $task->type->label() : $task->type ?? 'N/A' }}
+                                        {{ method_exists($task, 'typeLabel') ? $task->typeLabel() : ($task->type ?? 'N/A') }}
                                     </span>
                                     <span class="flex items-center gap-1 text-[11px] text-slate-500 sm:text-xs">
                                         <span class="material-symbols-outlined text-sm">schedule</span>
@@ -476,7 +475,7 @@ new class extends Component
                             KPI Cá nhân</h3>
                     </div>
                     <span
-                        class="rounded bg-slate-100 px-2 py-0.5 text-[10px] font-bold uppercase text-slate-400 dark:bg-slate-800">Tháng
+                        class="rounded bg-slate-100 px-2 py-0.5 text-2xs font-bold uppercase text-slate-400 dark:bg-slate-800">Tháng
                         này</span>
                 </div>
                 <div class="flex flex-col gap-4">

@@ -5,6 +5,7 @@ use App\Models\Phase;
 use App\Models\Project;
 use App\Models\Task;
 use App\Models\TaskAttachment;
+use App\Models\TaskType;
 use App\Services\Documents\Contracts\DocumentServiceInterface;
 use App\Services\Tasks\TaskCommentService;
 use App\Services\Tasks\TaskService;
@@ -13,6 +14,8 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
@@ -44,6 +47,8 @@ new class extends Component
     public bool $showCompletionRatingModal = false;
 
     public bool $showRejectReasonModal = false;
+
+    public bool $showTaskTypeModal = false;
 
     // Modal for editing/adding document versions from an attachment
     public bool $showEditDocumentModal = false;
@@ -130,6 +135,12 @@ new class extends Component
     // Form options
     public array $taskTypeLabels = [];
 
+    public ?int $editingTaskTypeId = null;
+
+    public string $editingTaskTypeKey = '';
+
+    public string $editingTaskTypeLabel = '';
+
     public array $taskStatusLabels = [];
 
     public array $taskPriorityLabels = [];
@@ -172,6 +183,132 @@ new class extends Component
         $this->phaseOptions = $options['phases'];
         $this->picOptions = $options['pics'];
         $this->loadDependencyTaskOptions();
+    }
+
+    public function createFreeTextOption(string $text): void
+    {
+        $text = trim($text);
+
+        if ($text === '') {
+            return;
+        }
+
+        if (! Schema::hasTable((new TaskType())->getTable())) {
+            $this->dispatch('toast', message: 'Vui lòng chạy migration tạo bảng loại công việc trước.', type: 'error');
+
+            return;
+        }
+
+        $taskType = TaskType::findByKeyOrLabel($text);
+
+        if ($taskType === null) {
+            $key = Str::of($text)->trim()->lower()->replaceMatches('/[^a-z0-9]+/', '_')->trim('_')->__toString();
+            $label = Str::of($text)->trim()->title()->__toString();
+            $taskType = TaskType::create(['key' => $key ?: Str::uuid()->toString(), 'label' => $label ?: $text]);
+        }
+
+        $this->loadFormOptions();
+        $this->type = $taskType->key;
+    }
+
+    public function requestEditTaskType(string $key): void
+    {
+        if (! Schema::hasTable((new TaskType())->getTable())) {
+            $this->dispatch('toast', message: 'Vui lòng chạy migration tạo bảng loại công việc trước.', type: 'error');
+
+            return;
+        }
+
+        $taskType = TaskType::query()->where('key', $key)->orWhere('label', $key)->first();
+
+        if (! $taskType) {
+            return;
+        }
+
+        $this->editingTaskTypeId = $taskType->id;
+        $this->editingTaskTypeKey = $taskType->key;
+        $this->editingTaskTypeLabel = $taskType->label;
+        $this->showTaskTypeModal = true;
+    }
+
+    public function updateTaskType(): void
+    {
+        if (! Schema::hasTable((new TaskType())->getTable())) {
+            $this->dispatch('toast', message: 'Vui lòng chạy migration tạo bảng loại công việc trước.', type: 'error');
+
+            return;
+        }
+
+        $label = trim($this->editingTaskTypeLabel);
+
+        if ($label === '' || $this->editingTaskTypeId === null) {
+            return;
+        }
+
+        $newKey = Str::of($label)->trim()->lower()->replaceMatches('/[^a-z0-9]+/', '_')->trim('_')->__toString();
+
+        $exists = TaskType::query()
+            ->where('key', $newKey)
+            ->where('id', '!=', $this->editingTaskTypeId)
+            ->exists();
+
+        if ($exists) {
+            $this->dispatch('toast', message: 'Khóa loại công việc đã tồn tại.', type: 'error');
+
+            return;
+        }
+
+        $taskType = TaskType::find($this->editingTaskTypeId);
+
+        if (! $taskType) {
+            $this->showTaskTypeModal = false;
+
+            return;
+        }
+
+        $taskType->update(['label' => $label, 'key' => $newKey]);
+
+        $this->loadFormOptions();
+        $this->type = $newKey;
+        $this->showTaskTypeModal = false;
+        $this->dispatch('toast', message: 'Cập nhật loại công việc thành công.', type: 'success');
+    }
+
+    public function deleteTaskType(?string $key = null): void
+    {
+        if (! Schema::hasTable((new TaskType())->getTable())) {
+            $this->dispatch('toast', message: 'Vui lòng chạy migration tạo bảng loại công việc trước.', type: 'error');
+
+            return;
+        }
+
+        if ($key === null && $this->editingTaskTypeId !== null) {
+            $taskType = TaskType::find($this->editingTaskTypeId);
+        } else {
+            $taskType = TaskType::query()->where('key', $key)->orWhere('label', $key)->first();
+        }
+
+        if (! $taskType) {
+            $this->dispatch('toast', message: 'Loại công việc không tồn tại.', type: 'error');
+
+            return;
+        }
+
+        $hasTasks = Task::query()->where('type', $taskType->key)->exists();
+        if ($hasTasks) {
+            $this->dispatch('toast', message: 'Không thể xóa: đã có công việc sử dụng loại này.', type: 'error');
+
+            return;
+        }
+
+        $taskType->delete();
+        $this->loadFormOptions();
+
+        if ($this->type === $taskType->key) {
+            $this->type = array_key_first($this->taskTypeLabels) ?? 'technical';
+        }
+
+        $this->dispatch('toast', message: 'Đã xóa loại công việc.', type: 'success');
     }
 
     public function updatedFiles(): void
@@ -388,7 +525,7 @@ new class extends Component
 
     public function resetFormModal(): void
     {
-        $this->reset(['name', 'type', 'status', 'priority', 'workflow_type', 'deadline', 'description', 'deliverable_urls', 'deliverable_url_input', 'progress', 'issue_note', 'recommendation', 'pic_id', 'dependency_task_id', 'project_id', 'phase_id', 'newComment', 'co_pic_ids', 'editing_task_id', 'files', 'file_document_meta', 'existing_attachments', 'hasDependencyBlock', 'dependencyTaskName', 'activeTab', 'showCompletionRatingModal', 'completionStarRating', 'completionApprovalComment', 'completionTaskName', 'showRejectReasonModal', 'rejectReason', 'showEditDocumentModal', 'editingAttachmentForDocument', 'editingDocumentId', 'editingDocumentName', 'editingChangeSummary', 'editingNewVersionFile', 'original_status', 'isResponsibleLeader', 'isTaskStarted', 'canCancel']);
+        $this->reset(['name', 'type', 'status', 'priority', 'workflow_type', 'deadline', 'description', 'deliverable_urls', 'deliverable_url_input', 'progress', 'issue_note', 'recommendation', 'pic_id', 'dependency_task_id', 'project_id', 'phase_id', 'newComment', 'co_pic_ids', 'editing_task_id', 'files', 'file_document_meta', 'existing_attachments', 'hasDependencyBlock', 'dependencyTaskName', 'activeTab', 'showCompletionRatingModal', 'completionStarRating', 'completionApprovalComment', 'completionTaskName', 'showRejectReasonModal', 'rejectReason', 'showEditDocumentModal', 'editingAttachmentForDocument', 'editingDocumentId', 'editingDocumentName', 'editingChangeSummary', 'editingNewVersionFile', 'original_status', 'isResponsibleLeader', 'isTaskStarted', 'canCancel', 'showTaskTypeModal', 'editingTaskTypeId', 'editingTaskTypeKey', 'editingTaskTypeLabel']);
         $this->existing_attachments = collect();
         $this->taskComments = collect();
         $this->activeTab = 'general';
@@ -1290,6 +1427,26 @@ new class extends Component
             </div>
         </form>
     </x-ui.slide-panel>
+
+    <x-ui.modal wire:model="showTaskTypeModal" maxWidth="md">
+        <x-slot name="header">
+            <x-ui.form.heading icon="category" title="Chỉnh sửa loại công việc"
+                description="Cập nhật nhãn hoặc xóa loại công việc đang chọn." />
+        </x-slot>
+
+        <form wire:submit.prevent="updateTaskType" class="space-y-4 p-4">
+            <x-ui.input label="Tên loại công việc" name="editingTaskTypeLabel" wire:model.defer="editingTaskTypeLabel"
+                required />
+
+            <div class="flex justify-end gap-2">
+                <x-ui.button type="button" variant="secondary" @click="$wire.set('showTaskTypeModal', false)">Hủy</x-ui.button>
+                <x-ui.button type="button" variant="danger" wire:click="deleteTaskType" onclick="return confirm('Xác nhận xóa loại công việc này?')">
+                    Xóa
+                </x-ui.button>
+                <x-ui.button type="submit" variant="primary">Lưu</x-ui.button>
+            </div>
+        </form>
+    </x-ui.modal>
 
     @include('components.task.form.partials.modal-reject-reason')
     @include('components.task.form.partials.modal-completion-rating')

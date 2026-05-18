@@ -4,12 +4,12 @@ namespace App\Services\Tasks;
 
 use App\Enums\TaskPriority;
 use App\Enums\TaskStatus;
-use App\Enums\TaskType;
 use App\Enums\TaskWorkflowType;
 use App\Enums\UserStatus;
 use App\Models\Phase;
 use App\Models\Project;
 use App\Models\Task;
+use App\Models\TaskType as TaskTypeModel;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
@@ -137,8 +137,8 @@ class TaskQueryService
             ->get(['id', 'name', 'email', 'department_id']);
 
         return [
-            'task_types' => TaskType::values(),
-            'task_type_labels' => TaskType::options(),
+            'task_types' => TaskTypeModel::keys(),
+            'task_type_labels' => TaskTypeModel::labels(),
             'task_statuses' => TaskStatus::values(),
             'task_status_labels' => TaskStatus::options(),
             'task_priorities' => TaskPriority::values(),

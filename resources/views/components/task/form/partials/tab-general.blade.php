@@ -7,23 +7,32 @@
 
     // Leaders can edit all manager fields, while task hasn't started for PIC-related fields.
 // CEOs and PICs cannot edit manager fields. Super admins are treated as managers.
+// However, CEO who is PIC should be treated like a PIC for editing purposes.
 $isManager = ($isLeader && !$isCeo && $status !== 'waiting_approval') || $isSuperAdmin;
-    $isRestricted = !$isManager;
+    $isRestricted = !($isManager || ($isCeo && $isPic));
 
     // PIC cannot change the pic field itself - only Leaders (or super_admin) can change PIC, but not after task started
     $canChangePic = $isManager && !$isTaskStarted;
 
     $canEditTaskType = ($isLeader && !$isCeo) || $isSuperAdmin;
+    // Allow CEO-PIC to edit task type
+    if ($isCeo && $isPic) {
+        $canEditTaskType = true;
+    }
 
     // Only PIC/Co-PIC (not leaders) can edit progress, except super_admin
     $canEditProgressFields = $isSuperAdmin || (!$isCeo && ($isPic && $isTaskStarted));
+    // Allow CEO-PIC to edit progress
+    if ($isCeo && $isPic && $isTaskStarted) {
+        $canEditProgressFields = true;
+    }
 @endphp
 
 <div class="{{ $this->isCompletedLocked ? 'pointer-events-none select-none opacity-70' : '' }} grid grid-cols-2 gap-6">
     {{-- Tên công việc --}}
     <div class="col-span-full">
         <x-ui.input label="Tên công việc" name="name" placeholder="Nhập tên công việc..." wire:model="name"
-            :disabled="$isCeo || $isRestricted" required />
+            :disabled="$isRestricted" required />
     </div>
     @if (!$this->isPhaseScoped)
         <div class="col-span-full grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -42,7 +51,8 @@ $isManager = ($isLeader && !$isCeo && $status !== 'waiting_approval') || $isSupe
     {{-- Loại công việc & Trạng thái --}}
     <div>
         <x-ui.select label="Loại công việc" name="type" wire:model="type" icon="category" :options="$taskTypeLabels"
-            :disabled="!$canEditTaskType" required />
+            allow-free-text allow-manage manage-edit-action="requestEditTaskType" manage-delete-action="deleteTaskType"
+            manage-delete-confirm="Xác nhận xóa loại công việc này?" :disabled="!$canEditTaskType" required />
     </div>
 
     <div>

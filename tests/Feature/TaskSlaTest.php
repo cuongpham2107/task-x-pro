@@ -3,7 +3,7 @@
 use App\Enums\SlaProjectType;
 use App\Enums\SlaTaskType;
 use App\Enums\TaskStatus;
-use App\Enums\TaskType;
+// TaskType enum removed; use string values in tests
 use App\Models\Phase;
 use App\Models\Project;
 use App\Models\SlaConfig;
@@ -31,7 +31,7 @@ test('sla_met is calculated correctly when task is completed within SLA', functi
     $task = Task::factory()->create([
         'phase_id' => $phase->id,
         'pic_id' => $user->id,
-        'type' => TaskType::Technical,
+        'type' => 'technical',
         'status' => TaskStatus::InProgress,
         'started_at' => now()->subHours(6),
         'sla_standard_hours' => 8.0,
@@ -70,7 +70,7 @@ test('sla_met is false when task exceeds SLA hours', function (): void {
     $task = Task::factory()->create([
         'phase_id' => $phase->id,
         'pic_id' => $user->id,
-        'type' => TaskType::Technical,
+        'type' => 'technical',
         'status' => TaskStatus::InProgress,
         'started_at' => now()->subHours(10),
         'sla_standard_hours' => 8.0,
@@ -95,7 +95,7 @@ test('delay_days is calculated correctly when task exceeds deadline', function (
     $task = Task::factory()->create([
         'phase_id' => $phase->id,
         'pic_id' => $user->id,
-        'type' => TaskType::Technical,
+        'type' => 'technical',
         'status' => TaskStatus::InProgress,
         'deadline' => $deadline,
         'started_at' => now()->subDays(3),
@@ -123,7 +123,7 @@ test('delay_days is positive when task completed before deadline', function (): 
     $task = Task::factory()->create([
         'phase_id' => $phase->id,
         'pic_id' => $user->id,
-        'type' => TaskType::Technical,
+        'type' => 'technical',
         'status' => TaskStatus::InProgress,
         'deadline' => $deadline,
         'started_at' => now()->subDays(1),
@@ -148,7 +148,7 @@ test('sla fields are reset when task is un-completed', function (): void {
     $task = Task::factory()->create([
         'phase_id' => $phase->id,
         'pic_id' => $user->id,
-        'type' => TaskType::Technical,
+        'type' => 'technical',
         'status' => TaskStatus::Completed,
         'sla_met' => true,
         'delay_days' => 1.5,
@@ -173,7 +173,7 @@ test('sla calculation handles missing started_at gracefully', function (): void 
     $task = Task::factory()->create([
         'phase_id' => $phase->id,
         'pic_id' => $user->id,
-        'type' => TaskType::Technical,
+        'type' => 'technical',
         'status' => TaskStatus::InProgress,
         'started_at' => null,
         'sla_standard_hours' => 8.0,
@@ -197,7 +197,7 @@ test('progress is set to 100 when task is completed', function (): void {
     $task = Task::factory()->create([
         'phase_id' => $phase->id,
         'pic_id' => $user->id,
-        'type' => TaskType::Technical,
+        'type' => 'technical',
         'status' => TaskStatus::InProgress,
         'progress' => 75,
     ]);
@@ -217,7 +217,7 @@ test('sla fields are not updated for non-completed status changes', function ():
     $task = Task::factory()->create([
         'phase_id' => $phase->id,
         'pic_id' => $user->id,
-        'type' => TaskType::Technical,
+        'type' => 'technical',
         'status' => TaskStatus::Pending,
         'sla_met' => null,
         'delay_days' => 0,

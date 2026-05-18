@@ -195,10 +195,10 @@
                                         {{ $item['name'] }}</p>
                                     <div class="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-slate-500">
                                         <span class="truncate">{{ $item['project'] }}</span>
-                                        <span
+                                        <!-- <span
                                             class="text-2xs rounded-md bg-slate-100 px-2 py-0.5 font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
                                             {{ $item['phase'] }}
-                                        </span>
+                                        </span> -->
                                     </div>
                                     <p class="text-[11px] text-slate-400">
                                         @if ($item['hasDate'])

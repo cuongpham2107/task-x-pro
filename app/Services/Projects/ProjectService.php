@@ -135,4 +135,12 @@ class ProjectService
     {
         $this->mutationService->delete($actor, $project);
     }
+
+    /**
+     * Clone project voi tat ca phases va tasks.
+     */
+    public function clone(User $actor, Project $project): Project
+    {
+        return $this->mutationService->clone($actor, $project);
+    }
 }

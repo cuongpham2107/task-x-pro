@@ -12,11 +12,10 @@
     if ($mode === 'create') {
         $canPersistTask = $user->hasRole('super_admin') || ($isLeader && !$isCeo && $user->can('create', \App\Models\Task::class));
     } elseif ($editingTask !== null) {
-        // Leader can always save; PIC can save if they have permission (Participant/PIC)
-        $canPersistTask = $user->hasRole('super_admin') || (
-            !$isCeo &&
-            (($isLeader && $user->can('update', $editingTask)) || ($isPicUser && $user->can('update', $editingTask)))
-        );
+        // Leader (not CEO) can save; PIC can save if they have permission; CEO-PIC can also save
+        $canPersistTask = $user->hasRole('super_admin') || 
+            ($isLeader && !$isCeo && $user->can('update', $editingTask)) || 
+            ($isPicUser && $user->can('update', $editingTask));
     }
 
     $canApprove = false;
@@ -111,8 +110,8 @@
             @elseif (!$canPersistTask)
                 <div
                     class="absolute bottom-full right-0 z-50 mb-2 hidden w-48 rounded-lg bg-slate-900 px-2 py-1 text-xs text-white group-hover:block">
-                    @if ($isCeo)
-                        CEO chỉ có quyền xem, không thể chỉnh sửa.
+                    @if ($isCeo && !$isPicUser)
+                        CEO chỉ có quyền xem, không thể chỉnh sửa (trừ khi là chủ PIC).
                     @else
                         Bạn không có quyền chỉnh sửa công việc này.
                     @endif

@@ -1,6 +1,6 @@
 <?php
 
-use App\Enums\TaskType;
+// TaskType enum removed; use DB-backed values or literal strings in tests
 use App\Models\Phase;
 use App\Models\Project;
 use App\Models\ProjectLeader;
@@ -41,7 +41,7 @@ it('sends telegram notification to pic when task is created', function () {
     $attributes = [
         'phase_id' => $phase->id,
         'name' => 'Task moi',
-        'type' => TaskType::Technical->value,
+        'type' => 'technical',
         'pic_id' => $pic->id,
         'deadline' => now()->addDays(5),
     ];

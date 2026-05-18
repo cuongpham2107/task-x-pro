@@ -132,27 +132,32 @@ class Project extends Model
 
         $updates = ['progress' => $progress];
 
-        // Init -> Running nếu có phase active/completed
-        if ($hasActiveOrCompletedPhase && $statusValue === ProjectStatus::Init) {
-            $updates['status'] = ProjectStatus::Running->value;
-        }
+        // If project is paused or overdue we should not auto-change its status
+        $skipAutoStatus = in_array($statusValue, [ProjectStatus::Paused, ProjectStatus::Overdue], true);
 
-        // Auto-set completed nếu tất cả phases đều completed
-        $totalPhases = $this->phases()->count();
-        if ($totalPhases > 0) {
-            $completedPhases = $this->phases()->where('status', 'completed')->count();
-            $allCompleted = ($completedPhases === $totalPhases);
-            $hasActive = $this->phases()->where('status', 'active')->exists();
+        if (! $skipAutoStatus) {
+            // Init -> Running nếu có phase active/completed
+            if ($hasActiveOrCompletedPhase && $statusValue === ProjectStatus::Init) {
+                $updates['status'] = ProjectStatus::Running->value;
+            }
 
-            if ($allCompleted) {
-                // Tất cả phases hoàn thành → project completed
-                $updates['status'] = ProjectStatus::Completed->value;
-            } elseif ($hasActive) {
-                // Có phase active → project running
-                $updates['status'] = ProjectStatus::Running->value;
-            } elseif ($completedPhases > 0 && ! $hasActive && ! $allCompleted) {
-                // Có phase completed nhưng chưa all, và không có phase active → running (ongoing)
-                $updates['status'] = ProjectStatus::Running->value;
+            // Auto-set completed nếu tất cả phases đều completed
+            $totalPhases = $this->phases()->count();
+            if ($totalPhases > 0) {
+                $completedPhases = $this->phases()->where('status', 'completed')->count();
+                $allCompleted = ($completedPhases === $totalPhases);
+                $hasActive = $this->phases()->where('status', 'active')->exists();
+
+                if ($allCompleted) {
+                    // Tất cả phases hoàn thành → project completed
+                    $updates['status'] = ProjectStatus::Completed->value;
+                } elseif ($hasActive) {
+                    // Có phase active → project running
+                    $updates['status'] = ProjectStatus::Running->value;
+                } elseif ($completedPhases > 0 && ! $hasActive && ! $allCompleted) {
+                    // Có phase completed nhưng chưa all, và không có phase active → running (ongoing)
+                    $updates['status'] = ProjectStatus::Running->value;
+                }
             }
         }
 

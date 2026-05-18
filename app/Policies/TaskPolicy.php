@@ -67,7 +67,8 @@ class TaskPolicy
         }
 
         if ($user->hasRole('ceo')) {
-            return false;
+            // CEO can update if they are the PIC (execution participant)
+            return $this->isExecutionParticipant($user, $task);
         }
 
         if ($this->isResponsibleProjectLeader($user, $task)) {

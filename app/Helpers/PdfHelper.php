@@ -25,6 +25,7 @@ class PdfHelper
     public static function fromView($view, $data = [], $format = 'a4')
     {
         $html = view($view, $data)->render();
+
         return self::fromHtml($html, $format);
     }
 }

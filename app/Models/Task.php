@@ -150,7 +150,6 @@ class Task extends Model
     protected function casts(): array
     {
         return [
-            'type' => \App\Enums\TaskType::class,
             'status' => \App\Enums\TaskStatus::class,
             'priority' => \App\Enums\TaskPriority::class,
             'deadline' => 'datetime',
@@ -188,6 +187,17 @@ class Task extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function typeLabel(): string
+    {
+        $typeValue = $this->type instanceof \BackedEnum ? (string) $this->type->value : trim((string) $this->type);
+
+        if ($typeValue === '') {
+            return 'N/A';
+        }
+
+        return TaskType::findByKeyOrLabel($typeValue)?->label ?? $typeValue;
     }
 
     public function coPicAssignments(): HasMany

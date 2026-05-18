@@ -5,8 +5,8 @@ $app = require_once __DIR__.'/../bootstrap/app.php';
 $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
 $kernel->bootstrap();
 
-use Spatie\LaravelPdf\Facades\Pdf;
 use App\Helpers\PdfHelper;
+use Spatie\LaravelPdf\Facades\Pdf;
 
 $data = collect([
     (object) [

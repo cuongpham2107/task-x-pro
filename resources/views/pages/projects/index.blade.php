@@ -11,7 +11,7 @@ use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
 
-new #[Title('Dự án')] class extends Component
+new #[Title('Quản lý dự án')] class extends Component
 {
     use WithPagination;
 
@@ -171,6 +171,23 @@ new #[Title('Dự án')] class extends Component
         }
     }
 
+    public function cloneProject(int $projectId): void
+    {
+        try {
+            $sourceProject = Project::query()->findOrFail($projectId);
+
+            Gate::forUser(auth()->user())->authorize('view', $sourceProject);
+
+            $clonedProject = $this->projectService->clone(auth()->user(), $sourceProject);
+
+            unset($this->projects, $this->tabs);
+
+            $this->dispatch('toast', message: 'Dự án "' . $sourceProject->name . '" đã được sao chép thành công!', type: 'success');
+        } catch (\Exception $e) {
+            $this->dispatch('toast', message: 'Không thể sao chép dự án: '.$e->getMessage(), type: 'error');
+        }
+    }
+
     #[Computed]
     public function types(): array
     {
@@ -224,6 +241,42 @@ new #[Title('Dự án')] class extends Component
                 </x-ui.button>
             @endif
 
+        </div>
+    </div>
+    <!-- Project Table -->
+    <div class="mb-4">
+        <div class="mb-8 grid grid-cols-1 gap-4 md:grid-cols-4">
+            {{-- Total projects --}}
+            <div class="flex flex-col gap-1 rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
+                <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Tổng số dự án</p>
+                <div class="flex items-baseline gap-2">
+                    <span class="text-2xl font-bold dark:text-white text-slate-600">{{ $this->tabs['all']['count'] ?? 0 }}</span>
+                </div>
+            </div>
+
+            {{-- Running projects --}}
+            <div class="flex flex-col gap-1 rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
+                <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Đang chạy</p>
+                <div>
+                    <span class="text-2xl font-bold text-slate-600 dark:text-white">{{ $this->tabs['running']['count'] ?? 0 }}</span>
+                </div>
+            </div>
+
+            {{-- Paused projects --}}
+            <div class="flex flex-col gap-1 rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
+                <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Tạm dừng</p>
+                <div>
+                    <span class="text-2xl font-bold text-slate-600 dark:text-white">{{ $this->tabs['paused']['count'] ?? 0 }}</span>
+                </div>
+            </div>
+
+            {{-- Completed projects --}}
+            <div class="flex flex-col gap-1 rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
+                <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Hoàn thành</p>
+                <div>
+                    <span class="text-2xl font-bold text-slate-600 dark:text-white">{{ $this->tabs['completed']['count'] ?? 0 }}</span>
+                </div>
+            </div>
         </div>
     </div>
     <!-- Controls Section -->
@@ -282,7 +335,7 @@ new #[Title('Dự án')] class extends Component
             </div>
         </div>
     </div>
-    <!-- Project Table -->
+   
     <x-project.table :projects="$this->projects" :sort-by="$sortBy" :sort-dir="$sortDir" />
     <livewire-project.form />
     <x-ui.modal wire:model="showDeleteModal" maxWidth="md">

@@ -106,4 +106,60 @@ class ProjectMutationService
         Gate::forUser($actor)->authorize('delete', $project);
         $project->delete();
     }
+
+    /**
+     * Clone project voi tat ca phases va tasks.
+     */
+    public function clone(User $actor, Project $sourceProject): Project
+    {
+        Gate::forUser($actor)->authorize('create', Project::class);
+
+        return DB::transaction(function () use ($actor, $sourceProject): Project {
+            // Clone project with new name
+            $clonedAttributes = $sourceProject->toArray();
+            $clonedAttributes['name'] = $sourceProject->name.' (Clone)';
+            $clonedAttributes['status'] = 'init';
+            $clonedAttributes['created_by'] = $actor->id;
+            unset($clonedAttributes['id'], $clonedAttributes['created_at'], $clonedAttributes['updated_at']);
+
+            $newProject = Project::query()->create($clonedAttributes);
+
+            // Copy leaders
+            $leaderIds = $sourceProject->leaders->pluck('id')->toArray();
+            $this->payloadService->syncLeaders($newProject, $leaderIds, $actor->id);
+
+            // Clone phases and tasks
+            foreach ($sourceProject->phases as $sourcePhase) {
+                $phaseAttributes = $sourcePhase->toArray();
+                $phaseAttributes['project_id'] = $newProject->id;
+                unset($phaseAttributes['id'], $phaseAttributes['created_at'], $phaseAttributes['updated_at']);
+
+                $newPhase = $newProject->phases()->create($phaseAttributes);
+
+                // Clone tasks
+                foreach ($sourcePhase->tasks as $sourceTask) {
+                    $taskAttributes = $sourceTask->toArray();
+                    $taskAttributes['phase_id'] = $newPhase->id;
+                    $taskAttributes['status'] = 'pending';
+                    $taskAttributes['progress'] = 0;
+                    $taskAttributes['started_at'] = null;
+                    $taskAttributes['completed_at'] = null;
+                    unset($taskAttributes['id'], $taskAttributes['created_at'], $taskAttributes['updated_at']);
+
+                    $newTask = $newPhase->tasks()->create($taskAttributes);
+
+                    // Clone co-PICs
+                    if ($sourceTask->coPics->isNotEmpty()) {
+                        $coPicIds = $sourceTask->coPics->pluck('id')->toArray();
+                        $newTask->coPics()->sync($coPicIds);
+                    }
+                }
+            }
+
+            $newProject->refreshProgressFromPhases();
+            $newProject->refresh();
+
+            return $this->queryService->hydrateProject($newProject);
+        });
+    }
 }

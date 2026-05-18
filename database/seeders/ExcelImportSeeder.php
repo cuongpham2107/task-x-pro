@@ -3,10 +3,8 @@
 namespace Database\Seeders;
 
 use App\Enums\ProjectStatus;
-use App\Models\ProjectType as ProjectTypeModel;
 use App\Enums\TaskPriority;
 use App\Enums\TaskStatus;
-use App\Enums\TaskType;
 use App\Enums\UserStatus;
 use App\Models\ActivityLog;
 use App\Models\ApprovalLog;
@@ -17,6 +15,7 @@ use App\Models\KpiScore;
 use App\Models\Phase;
 use App\Models\Project;
 use App\Models\ProjectLeader;
+use App\Models\ProjectType as ProjectTypeModel;
 use App\Models\SlaConfig;
 use App\Models\Task;
 use App\Models\TaskAttachment;
