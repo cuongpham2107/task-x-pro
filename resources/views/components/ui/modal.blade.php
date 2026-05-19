@@ -29,7 +29,7 @@
         <div x-transition:enter="ease-out duration-200" x-transition:enter-start="opacity-0"
             x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-150"
             x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
-            class="fixed inset-0 z-50 flex items-center justify-center overflow-hidden p-2"
+            class="fixed inset-0 z-99999 flex items-center justify-center overflow-hidden p-2"
             @if ($closeable && $closeOutside) @keydown.escape.window="isOpen = false" @endif>
             {{-- Backdrop --}}
             <div class="fixed inset-0 bg-black/50 backdrop-blur-sm"
@@ -39,7 +39,7 @@
             <div x-transition:enter="ease-out duration-200" x-transition:enter-start="opacity-0 scale-95"
                 x-transition:enter-end="opacity-100 scale-100" x-transition:leave="ease-in duration-150"
                 x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
-                class="{{ $maxWidthClasses }} relative z-10 w-full overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-slate-800">
+                class="{{ $maxWidthClasses }} relative z-100000 w-full overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-slate-800">
                 {{-- Close button --}}
                 @if ($closeable)
                     <button @click="isOpen = false"

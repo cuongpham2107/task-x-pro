@@ -20,7 +20,7 @@ class ProjectQueryService
     public function paginateForIndex(?User $actor, array $filters = [], int $perPage = 10): LengthAwarePaginator
     {
         $query = Project::query()
-            ->with(['creator', 'leaders'])
+            ->with(['creator', 'leaders', 'projectType'])
             ->withCount([
                 'tasks',
                 'tasks as done_tasks_count' => fn ($taskQuery) => $taskQuery->where('tasks.status', 'completed'),

@@ -32,12 +32,10 @@ class GlobalSearchController extends Controller
         $projectQuery = Project::query();
         $this->projectQueryService->scopeVisibility($projectQuery, $actor);
         $projects = $projectQuery->where(function ($query) use ($q) {
-            $query->where('name', 'like', "%{$q}%")
-                ->orWhere('code', 'like', "%{$q}%");
+            $query->where('name', 'like', "%{$q}%");
         })->limit(5)->get()->map(fn ($p) => [
             'id' => $p->id,
             'name' => $p->name,
-            'code' => $p->code,
             'status' => (string) ($p->status->label() ?? $p->status),
             'url' => route('projects.phases.index', $p->id),
         ]);

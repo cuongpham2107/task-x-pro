@@ -43,7 +43,7 @@ class TaskType extends Model
         }
 
         return self::query()
-            ->whereRaw('LOWER(key) = ?', [$value])
+            ->whereRaw('LOWER(`key`) = ?', [$value])
             ->orWhereRaw('LOWER(label) = ?', [$value])
             ->first();
     }

@@ -70,7 +70,8 @@ class ProjectPolicy
         }
 
         if ($user->hasRole('ceo')) {
-            return (int) $project->created_by === (int) $user->id;
+            return (int) $project->created_by === (int) $user->id
+                || $project->projectLeaders()->where('user_id', $user->id)->exists();
         }
 
         return $user->hasRole('leader');
@@ -91,14 +92,15 @@ class ProjectPolicy
         }
 
         if ($user->hasRole('ceo')) {
-            return (int) $project->created_by === (int) $user->id;
+            return (int) $project->created_by === (int) $user->id
+                || $project->projectLeaders()->where('user_id', $user->id)->exists();
         }
 
-        if (! $user->hasRole('leader')) {
-            return false;
+        if ($user->hasRole('leader')) {
+            return $project->projectLeaders()->where('user_id', $user->id)->exists();
         }
 
-        return (int) $project->created_by === (int) $user->id;
+        return false;
     }
 
     public function restore(User $user, Project $project): bool

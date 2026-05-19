@@ -31,6 +31,8 @@ new #[Title('Quản lý dự án')] class extends Component
     #[Url(as: 'dir', except: 'desc')]
     public string $sortDir = 'desc';
 
+    public string $viewMode = 'table';
+
     #[Url(as: 'type', except: '')]
     public ?string $filterType = null;
 
@@ -70,6 +72,13 @@ new #[Title('Quản lý dự án')] class extends Component
             $this->sortDir = 'asc';
         }
         $this->resetPage();
+    }
+
+    public function switchView(string $mode): void
+    {
+        if (in_array($mode, ['table', 'gantt'], true)) {
+            $this->viewMode = $mode;
+        }
     }
 
     public function updatedFilterSearch(): void
@@ -235,6 +244,11 @@ new #[Title('Quản lý dự án')] class extends Component
         <x-ui.heading title="Danh sách dự án" description="Quản lý và theo dõi tiến độ các dự án đang triển khai"
             class="mb-0" />
         <div class="flex items-center gap-3">
+            <div
+                class="flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-100 p-1 dark:border-slate-700 dark:bg-slate-800">
+                <x-ui.button size="sm" :variant="$viewMode === 'table' ? 'primary' : 'ghost'" wire:click="switchView('table')">Bảng</x-ui.button>
+                <x-ui.button size="sm" :variant="$viewMode === 'gantt' ? 'primary' : 'ghost'" wire:click="switchView('gantt')">Gantt</x-ui.button>
+            </div>
             @if (auth()->user()?->can('create', App\Models\Project::class))
                 <x-ui.button icon="add" size="sm" wire:click="$dispatch('project-create-requested')">
                     Tạo dự án
@@ -336,7 +350,11 @@ new #[Title('Quản lý dự án')] class extends Component
         </div>
     </div>
    
-    <x-project.table :projects="$this->projects" :sort-by="$sortBy" :sort-dir="$sortDir" />
+    @if ($viewMode === 'table')
+        <x-project.table :projects="$this->projects" :sort-by="$sortBy" :sort-dir="$sortDir" />
+    @else
+        <x-project.gantt :projects="$this->projects" />
+    @endif
     <livewire-project.form />
     <x-ui.modal wire:model="showDeleteModal" maxWidth="md">
         <x-slot name="header">
