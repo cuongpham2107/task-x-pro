@@ -10,7 +10,8 @@ use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\On;
 use Livewire\Component;
 
-new class extends Component {
+new class extends Component
+{
     public int $projectId;
 
     public int $phaseId;
@@ -68,8 +69,8 @@ new class extends Component {
 
         $this->columns = collect(TaskStatus::cases())
             ->mapWithKeys(
-                fn($status) => [
-                    $status->value => $tasks->filter(fn($t) => $t->status === $status->value || ($t->status instanceof TaskStatus && $t->status->value === $status->value))->values(),
+                fn ($status) => [
+                    $status->value => $tasks->filter(fn ($t) => $t->status === $status->value || ($t->status instanceof TaskStatus && $t->status->value === $status->value))->values(),
                 ],
             )
             ->all();
@@ -120,7 +121,7 @@ new class extends Component {
             $this->dispatch('toast', message: (string) ($firstError ?? $e->getMessage()), type: 'error');
             $this->loadTasks();
         } catch (\Exception $e) {
-            $this->dispatch('toast', message: 'Lỗi: ' . $e->getMessage(), type: 'error');
+            $this->dispatch('toast', message: 'Lỗi: '.$e->getMessage(), type: 'error');
             $this->loadTasks();
         }
     }
@@ -225,7 +226,7 @@ new class extends Component {
             $this->dispatch('toast', message: (string) ($firstError ?? $e->getMessage()), type: 'error');
             $this->loadTasks();
         } catch (\Exception $e) {
-            $this->dispatch('toast', message: 'Lỗi: ' . $e->getMessage(), type: 'error');
+            $this->dispatch('toast', message: 'Lỗi: '.$e->getMessage(), type: 'error');
             $this->loadTasks();
         }
     }
@@ -257,7 +258,7 @@ new class extends Component {
             $firstError = collect($e->errors())->flatten()->first();
             $this->addError('pendingRejectComment', (string) ($firstError ?? $e->getMessage()));
         } catch (\Exception $e) {
-            $this->addError('pendingRejectComment', 'Lỗi: ' . $e->getMessage());
+            $this->addError('pendingRejectComment', 'Lỗi: '.$e->getMessage());
         }
     }
 
@@ -329,7 +330,7 @@ new class extends Component {
         } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
             $this->dispatch('toast', message: 'Lỗi: Chỉ có người được giao hoặc người hỗ trợ mới có thể bắt đầu công việc', type: 'error');
         } catch (\Exception $e) {
-            $this->dispatch('toast', message: 'Lỗi: ' . $e->getMessage(), type: 'error');
+            $this->dispatch('toast', message: 'Lỗi: '.$e->getMessage(), type: 'error');
         }
     }
 };
@@ -592,6 +593,22 @@ new class extends Component {
                                 @endif
                             </div>
                         </div>
+
+                        {{-- Hiển thị thêm 1 thanh progress task --}}
+                        @if ($status === TaskStatus::InProgress)
+                            <div class="mt-1 ">
+                                <div class="mb-1 flex items-center justify-between gap-2 text-2xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                                    <span>Tiến độ</span>
+                                    <span class="rounded-full bg-white px-2 py-0.5 text-slate-700 shadow-sm dark:bg-slate-900 dark:text-slate-200">
+                                        {{ (int) ($task->progress ?? 0) }}%
+                                    </span>
+                                </div>
+                                <div class="h-2.5 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
+                                    <div class="bg-linear-to-r from-primary via-sky-500 to-emerald-500 h-full rounded-full shadow-[0_0_18px_rgba(59,130,246,0.25)]"
+                                        style="width: {{ $task->progress ?? 0 }}%"></div>
+                                </div>
+                            </div>
+                        @endif
                     </div>
                 </div>
             @empty

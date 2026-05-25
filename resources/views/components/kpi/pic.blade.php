@@ -1,7 +1,7 @@
 <?php
-use App\Helpers\PdfHelper;
 use App\Enums\KpiPeriodType;
 use App\Exports\KpiExport;
+use App\Helpers\PdfHelper;
 use App\Models\KpiScore;
 use App\Models\Task;
 use Illuminate\Database\Eloquent\Builder;
@@ -733,14 +733,14 @@ new class extends Component
             <div class="overflow-x-auto">
                 <table class="w-full text-left">
                     <thead
-                        class="bg-slate-50 text-[10px] font-black uppercase tracking-widest text-slate-500 dark:bg-slate-900/50">
+                        class="bg-slate-50 text-2xs font-black uppercase tracking-widest text-slate-500 dark:bg-slate-900/50">
                         <tr>
                             <th class="px-6 py-4">Công việc</th>
                             <th class="px-6 py-4">Dự án / Giai đoạn</th>
-                            <th class="px-6 py-4 text-center">Trạng thái</th>
+                            <th class="px-6 py-4 text-center w-28 whitespace-nowrap">Trạng thái</th>
                             <th class="px-6 py-4 text-center">Tiến độ</th>
-                            <th class="px-6 py-4 text-center">Deadline</th>
-                            <th class="px-6 py-4 text-center">SLA</th>
+                            <th class="px-6 py-4 text-center ">Deadline</th>
+                            <th class="px-6 py-4 text-center w-28 whitespace-nowrap">SLA</th>
                             <th class="px-6 py-4 text-center">Task Approver</th>
                         </tr>
                     </thead>
@@ -762,7 +762,7 @@ new class extends Component
                                     <p class="font-medium">{{ $task->phase?->project?->name ?? 'N/A' }}</p>
                                     <p class="text-slate-500">{{ $task->phase?->name ?? 'N/A' }}</p>
                                 </td>
-                                <td class="px-6 py-4 text-center">
+                                <td class="px-6 py-4 text-center w-28 whitespace-nowrap">
                                     <span
                                         class="{{ $taskStatusMeta['class'] }} rounded-full px-2.5 py-1 text-xs font-bold">
                                         {{ $taskStatusMeta['label'] }}
@@ -781,7 +781,7 @@ new class extends Component
                                 <td class="px-6 py-4 text-center text-xs text-slate-600 dark:text-slate-300">
                                     {{ $task->deadline?->format('d/m/Y') ?? '—' }}
                                 </td>
-                                <td class="px-6 py-4 text-center text-xs">
+                                <td class="px-6 py-4 text-center text-xs w-28 whitespace-nowrap">
                                     @if ($task->sla_met === true)
                                         <span
                                             class="rounded bg-emerald-100 px-2 py-0.5 font-semibold text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">Đạt</span>
@@ -793,7 +793,7 @@ new class extends Component
                                         <span class="text-slate-400">—</span>
                                     @endif
                                 </td>
-                                <td class="px-6 py-4 text-center">
+                                <td class="px-6 py-4 text-center w-28 whitespace-nowrap">
                                     <span
                                         class="{{ $taskApprovalMeta['class'] }} inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold">
                                         {{ $taskApprovalMeta['label'] }}
@@ -860,7 +860,7 @@ new class extends Component
                             <th class="px-8 py-4">Kỳ báo cáo</th>
                             <th class="px-8 py-4">Điểm thực tế</th>
                             <th class="px-8 py-4">Chỉ tiêu</th>
-                            <th class="px-8 py-4">Trạng thái</th>
+                            <th class="px-8 py-4 text-center w-28 whitespace-nowrap">Trạng thái</th>
                             <th class="px-8 py-4">Phê duyệt</th>
                         </tr>
                     </thead>

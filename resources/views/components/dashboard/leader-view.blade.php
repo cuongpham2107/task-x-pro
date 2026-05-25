@@ -565,6 +565,14 @@ new class extends Component
                     }
                 });
             }
+
+            // Ensure charts correctly size when created (useful if container was hidden)
+            if (leaderActivityChart && typeof leaderActivityChart.resize === 'function') {
+                leaderActivityChart.resize();
+            }
+            if (projectStatusChart && typeof projectStatusChart.resize === 'function') {
+                projectStatusChart.resize();
+            }
         }
 
         document.addEventListener('livewire:navigated', () => {
@@ -577,5 +585,33 @@ new class extends Component
             const data = (Array.isArray(event.detail) ? event.detail[0] : event.detail) || null;
             initLeaderCharts(data);
         });
+
+        // Ensure charts initialize on first load: wait until canvas is visible, retrying if needed
+        function waitForCanvasAndInit(retries = 12, delay = 150) {
+            const leaderCanvas = document.getElementById('leaderActivityChart');
+            const projectCanvas = document.getElementById('projectStatusChart');
+            const isVisible = (el) => {
+                if (!el) return false;
+                const r = el.getBoundingClientRect();
+                return r.width > 0 && r.height > 0;
+            };
+
+            if (isVisible(leaderCanvas) || isVisible(projectCanvas)) {
+                initLeaderCharts();
+                // ensure Chart.js recalculates sizes after a tick
+                setTimeout(() => window.dispatchEvent(new Event('resize')), 50);
+            } else if (retries > 0) {
+                setTimeout(() => waitForCanvasAndInit(retries - 1, delay), delay);
+            } else {
+                // final fallback
+                initLeaderCharts();
+                setTimeout(() => window.dispatchEvent(new Event('resize')), 200);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => waitForCanvasAndInit());
+        window.addEventListener('load', () => waitForCanvasAndInit());
+        // attempt shortly after script runs in case DOM is already ready
+        setTimeout(() => waitForCanvasAndInit(), 200);
     </script>
 </div>

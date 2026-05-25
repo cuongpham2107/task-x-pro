@@ -82,29 +82,27 @@ class Phase extends Model
      */
     public function refreshProgressFromTasks(): void
     {
+        // Consider only non-cancelled tasks when calculating phase progress
         $baseQuery = $this->tasks()->where('status', '!=', TaskStatus::Cancelled);
         $taskCount = (int) $baseQuery->count();
 
         if ($taskCount === 0) {
             $progress = 0;
         } else {
-            $completedCount = (int) (clone $baseQuery)
-                ->where('status', TaskStatus::Completed)
-                ->count();
-            $progress = (int) round($completedCount / $taskCount * 100);
+            // Compute progress as average of task.progress values (0-100)
+            $sumProgress = (float) (clone $baseQuery)->sum('progress');
+            $progress = (int) round($sumProgress / $taskCount);
         }
 
-        $hasIncompleteTask = (clone $baseQuery)
-            ->where('status', '!=', TaskStatus::Completed)
-            ->exists();
+        // Phase is considered Completed only when ALL non-cancelled tasks are Completed
+        $completedCount = (int) (clone $baseQuery)->where('status', TaskStatus::Completed)->count();
+        $allTasksCompleted = $taskCount > 0 && $completedCount === $taskCount;
 
-        $hasStartedTask = (clone $baseQuery)
-            ->where('status', '!=', TaskStatus::Pending)
-            ->exists();
+        // Consider phase Active if there is any progress, otherwise Pending
+        $hasStartedTask = (clone $baseQuery)->where('progress', '>', 0)->exists();
 
-        $canMarkCompleted = $taskCount > 0 && ! $hasIncompleteTask;
         $status = match (true) {
-            $canMarkCompleted => PhaseStatus::Completed,
+            $allTasksCompleted => PhaseStatus::Completed,
             $progress > 0 || $hasStartedTask => PhaseStatus::Active,
             default => PhaseStatus::Pending,
         };

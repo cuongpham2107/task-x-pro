@@ -442,7 +442,7 @@ new class extends Component
                 <!-- Weekdays -->
                 <div class="mb-2 grid grid-cols-7 text-center">
                     @foreach (['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'] as $day)
-                        <span class="text-[10px] font-bold text-slate-400">{{ $day }}</span>
+                        <span class="text-2xs font-bold text-slate-400">{{ $day }}</span>
                     @endforeach
                 </div>
 
@@ -451,7 +451,7 @@ new class extends Component
                     @foreach ($this->calendar as $date)
                         <div wire:click="selectDate('{{ $date['date'] }}')"
                             class="{{ $date['is_current_month'] ? 'text-slate-700 dark:text-slate-300' : 'text-slate-300 dark:text-slate-600' }} 
-                                   {{ $selectedDate === $date['date'] ? 'ring-2 ring-primary ring-offset-1 dark:ring-offset-slate-900 bg-primary/10 font-bold' : '' }}
+                                   {{ $selectedDate === $date['date'] ? 'ring-2 ring-primary ring-offset-1 dark:ring-offset-slate-900 bg-primary/10 font-bold ' . ($date['is_today'] ? 'text-black!' : '') : '' }}
                                    {{ $date['is_today'] ? 'bg-primary text-white font-bold' : 'hover:bg-slate-50 dark:hover:bg-slate-800' }} 
                                    relative flex aspect-square cursor-pointer flex-col items-center justify-center rounded-lg text-xs transition-colors">
                             <span>{{ $date['day'] }}</span>
