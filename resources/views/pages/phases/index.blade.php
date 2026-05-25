@@ -419,9 +419,11 @@ new #[Title('Quản lý giai đoạn')] class extends Component
             @endcan
 
             @can('create', [App\Models\Phase::class, $project])
-                <x-ui.button icon="add" size="sm" wire:click="$dispatch('phase-create-requested')">
-                    Thêm giai đoạn
-                </x-ui.button>
+                @unless (in_array($project->status, [ProjectStatus::Completed, ProjectStatus::Cancelled, ProjectStatus::Paused, ProjectStatus::Overdue], true))
+                    <x-ui.button icon="add" size="sm" wire:click="$dispatch('phase-create-requested')">
+                        Thêm giai đoạn
+                    </x-ui.button>
+                @endunless
             @endcan
         </div>
     </div>

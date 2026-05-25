@@ -80,6 +80,8 @@ new class extends Component
 
     public bool $isTaskStarted = false;
 
+    public bool $projectBlocked = false;
+
     public bool $canCancel = false;
 
     public string $name = '';
@@ -104,6 +106,8 @@ new class extends Component
     public array $deliverable_urls = [];
 
     public string $deliverable_url_input = '';
+
+    public Collection $deliverableDocuments;
 
     public int $progress = 0;
 
@@ -141,6 +145,14 @@ new class extends Component
 
     public string $editingTaskTypeLabel = '';
 
+    public bool $showDeliverableEditModal = false;
+
+    public ?int $editingDeliverableIndex = null;
+
+    public string $editingDeliverableUrl = '';
+
+    public string $editingDeliverableNote = '';
+
     public array $taskStatusLabels = [];
 
     public array $taskPriorityLabels = [];
@@ -164,6 +176,7 @@ new class extends Component
         $this->existing_attachments = collect();
         $this->taskComments = collect();
         $this->dependencyTaskOptions = collect();
+        $this->deliverableDocuments = collect();
         $this->loadFormOptions();
         $actor = auth()->user();
         if ($actor && ($actor->hasRole('super_admin') || $actor->hasRole('leader'))) {
@@ -474,6 +487,11 @@ new class extends Component
         $this->description = (string) ($task->description ?? '');
         // Load deliverable_urls (casted by model)
         $this->deliverable_urls = is_array($task->deliverable_urls) ? $task->deliverable_urls : ($task->deliverable_urls ? (array) $task->deliverable_urls : []);
+        $this->deliverableDocuments = Document::query()
+            ->where('task_id', $task->id)
+            ->where('document_type', \App\Enums\DocumentType::Deliverable)
+            ->with(['versions.uploader', 'uploader'])
+            ->get();
         $this->deliverable_url_input = '';
         $this->progress = (int) ($task->progress ?? 0);
         $this->issue_note = (string) ($task->issue_note ?? '');
@@ -506,6 +524,15 @@ new class extends Component
         $this->loadDependencyTaskOptions();
         $this->activeTab = 'general';
 
+        // Check if project is paused/blocked
+        $project = $task->phase?->project;
+        $this->projectBlocked = $project !== null && in_array($project->status, [
+            \App\Enums\ProjectStatus::Completed,
+            \App\Enums\ProjectStatus::Cancelled,
+            \App\Enums\ProjectStatus::Paused,
+            \App\Enums\ProjectStatus::Overdue,
+        ], true);
+
         // Check for dependency block
         $depTask = $task->dependencyTask;
         if ($depTask !== null) {
@@ -525,9 +552,10 @@ new class extends Component
 
     public function resetFormModal(): void
     {
-        $this->reset(['name', 'type', 'status', 'priority', 'workflow_type', 'deadline', 'description', 'deliverable_urls', 'deliverable_url_input', 'progress', 'issue_note', 'recommendation', 'pic_id', 'dependency_task_id', 'project_id', 'phase_id', 'newComment', 'co_pic_ids', 'editing_task_id', 'files', 'file_document_meta', 'existing_attachments', 'hasDependencyBlock', 'dependencyTaskName', 'activeTab', 'showCompletionRatingModal', 'completionStarRating', 'completionApprovalComment', 'completionTaskName', 'showRejectReasonModal', 'rejectReason', 'showEditDocumentModal', 'editingAttachmentForDocument', 'editingDocumentId', 'editingDocumentName', 'editingChangeSummary', 'editingNewVersionFile', 'original_status', 'isResponsibleLeader', 'isTaskStarted', 'canCancel', 'showTaskTypeModal', 'editingTaskTypeId', 'editingTaskTypeKey', 'editingTaskTypeLabel']);
+        $this->reset(['name', 'type', 'status', 'priority', 'workflow_type', 'deadline', 'description', 'deliverable_urls', 'deliverable_url_input', 'progress', 'issue_note', 'recommendation', 'pic_id', 'dependency_task_id', 'project_id', 'phase_id', 'newComment', 'co_pic_ids', 'editing_task_id', 'files', 'file_document_meta', 'existing_attachments', 'hasDependencyBlock', 'dependencyTaskName', 'activeTab', 'showCompletionRatingModal', 'completionStarRating', 'completionApprovalComment', 'completionTaskName', 'showRejectReasonModal', 'rejectReason', 'showEditDocumentModal', 'editingAttachmentForDocument', 'editingDocumentId', 'editingDocumentName', 'editingChangeSummary', 'editingNewVersionFile', 'original_status', 'isResponsibleLeader', 'isTaskStarted', 'projectBlocked', 'canCancel', 'showTaskTypeModal', 'editingTaskTypeId', 'editingTaskTypeKey', 'editingTaskTypeLabel', 'showDeliverableEditModal', 'editingDeliverableIndex', 'editingDeliverableUrl', 'editingDeliverableNote']);
         $this->existing_attachments = collect();
         $this->taskComments = collect();
+        $this->deliverableDocuments = collect();
         $this->activeTab = 'general';
         $this->type = 'technical';
         $this->status = 'pending';
@@ -573,6 +601,14 @@ new class extends Component
         $this->deliverable_urls[] = $value;
         $this->deliverable_url_input = '';
         $this->resetErrorBag('deliverable_urls');
+
+        if ($this->mode === 'edit' && $this->editing_task_id !== null) {
+            $task = Task::find($this->editing_task_id);
+            if ($task) {
+                $doc = app(DocumentServiceInterface::class)->createDeliverableDocument(auth()->user(), $task, $value);
+                $this->deliverableDocuments->push($doc->load('versions'));
+            }
+        }
     }
 
     public function removeDeliverableUrl(int $index): void
@@ -581,7 +617,69 @@ new class extends Component
             return;
         }
 
+        if ($this->mode === 'edit' && $this->editing_task_id !== null) {
+            $doc = $this->deliverableDocuments->get($index);
+            if ($doc) {
+                app(DocumentServiceInterface::class)->deleteDocument(auth()->user(), $doc);
+            }
+        }
+
         array_splice($this->deliverable_urls, $index, 1);
+    }
+
+    public function openDeliverableEditModal(int $index): void
+    {
+        if (! isset($this->deliverable_urls[$index])) {
+            return;
+        }
+
+        $this->editingDeliverableIndex = $index;
+        $this->editingDeliverableUrl = $this->deliverable_urls[$index];
+        $this->editingDeliverableNote = '';
+        $this->showDeliverableEditModal = true;
+        $this->resetErrorBag(['editingDeliverableUrl', 'editingDeliverableNote']);
+    }
+
+    public function saveDeliverableEdit(): void
+    {
+        if ($this->editingDeliverableIndex === null || ! isset($this->deliverable_urls[$this->editingDeliverableIndex])) {
+            return;
+        }
+
+        $url = trim($this->editingDeliverableUrl);
+        if ($url === '') {
+            $this->addError('editingDeliverableUrl', 'Link sản phẩm không được để trống.');
+
+            return;
+        }
+
+        if (! filter_var($url, FILTER_VALIDATE_URL)) {
+            $this->addError('editingDeliverableUrl', 'Link sản phẩm phải là một URL hợp lệ.');
+
+            return;
+        }
+
+        if (mb_strlen($url) > 1000) {
+            $this->addError('editingDeliverableUrl', 'Link sản phẩm không được vượt quá 1000 ký tự.');
+
+            return;
+        }
+
+        $doc = $this->deliverableDocuments[$this->editingDeliverableIndex] ?? null;
+        $index = $this->editingDeliverableIndex;
+
+        if ($this->mode === 'edit' && $doc) {
+            $updated = app(DocumentServiceInterface::class)->updateDeliverableDocument(
+                auth()->user(), $doc, $url, $this->editingDeliverableNote ?: null
+            );
+            $this->deliverableDocuments[$index] = $updated;
+        }
+
+        $this->deliverable_urls[$index] = $url;
+        $this->showDeliverableEditModal = false;
+        $this->editingDeliverableIndex = null;
+        $this->editingDeliverableUrl = '';
+        $this->editingDeliverableNote = '';
     }
 
     public function rules(): array
@@ -765,6 +863,12 @@ new class extends Component
                 $result = $taskService->create(auth()->user(), $attributes, $this->co_pic_ids);
                 $overloadWarning = $result->overloadWarning;
                 $toastMessage = 'Công việc đã được thêm mới!';
+
+                foreach ($this->deliverable_urls as $url) {
+                    app(DocumentServiceInterface::class)->createDeliverableDocument(
+                        auth()->user(), $result->task, $url
+                    );
+                }
             }
 
             // Show overload warning popup if PIC is overloaded (BR-006)
@@ -1366,17 +1470,37 @@ new class extends Component
                 </div>
             @endif
 
+            @if ($projectBlocked)
+                <div
+                    class="mb-4 flex items-center gap-2 rounded-lg border border-orange-200 bg-orange-50 px-3 py-2 text-sm text-orange-700 dark:border-orange-900/40 dark:bg-orange-900/10 dark:text-orange-300">
+                    <span class="material-symbols-outlined text-base">warning_amber</span>
+                    <span>Dự án đang tạm dừng hoặc đã kết thúc. Chế độ chỉ xem.</span>
+                </div>
+            @endif
+
             @include('components.task.form.partials.tabs')
 
-            @if ($activeTab === 'general')
-                @include('components.task.form.partials.tab-general')
-            @elseif ($activeTab === 'issues')
-                @include('components.task.form.partials.tab-issues')
-            @elseif($activeTab === 'comments')
-                @include('components.task.form.partials.tab-comments')
-            @elseif ($activeTab === 'logs')
-                @include('components.task.form.partials.tab-logs')
-            @endif
+            <div class="relative" x-data="{ blocked: @js($projectBlocked) }"
+                x-init="if (blocked) { $el.querySelectorAll('input, select, textarea, button, [href], [tabindex]:not([tabindex=\\'-1\\'])').forEach(el => el.tabIndex = -1) }">
+
+                <div class="{{ $projectBlocked ? 'opacity-60' : '' }}">
+                    @if ($activeTab === 'general')
+                        @include('components.task.form.partials.tab-general')
+                    @elseif ($activeTab === 'issues')
+                        @include('components.task.form.partials.tab-issues')
+                    @elseif($activeTab === 'comments')
+                        @include('components.task.form.partials.tab-comments')
+                    @elseif ($activeTab === 'logs')
+                        @include('components.task.form.partials.tab-logs')
+                    @endif
+                </div>
+
+                @if ($projectBlocked)
+                    <div class="absolute inset-0 z-10 cursor-not-allowed"
+                        @click.prevent @click.stop
+                        @keydown.prevent @keydown.stop></div>
+                @endif
+            </div>
         </form>
 
         <x-slot name="footer">

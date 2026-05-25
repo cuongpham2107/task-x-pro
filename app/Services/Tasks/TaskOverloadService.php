@@ -58,6 +58,18 @@ class TaskOverloadService
     }
 
     /**
+     * Dem so task qua han (>9 deadline, chua hoan thanh) cua PIC.
+     */
+    public function countOverdueTasksForUser(int $userId): int
+    {
+        return Task::query()
+            ->where('pic_id', $userId)
+            ->where('deadline', '<', now()->startOfDay())
+            ->where('status', '!=', TaskStatus::Completed->value)
+            ->count();
+    }
+
+    /**
      * Dem so task cua PIC co deadline nam trong khoang +/-1 ngay.
      */
     private function countNearbyDeadlineTasks(int $picId, Carbon $deadline, ?int $ignoreTaskId = null): int

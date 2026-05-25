@@ -730,102 +730,95 @@ new class extends Component
                 </div>
             </div>
 
-            <div class="overflow-x-auto">
-                <table class="w-full text-left">
-                    <thead
-                        class="bg-slate-50 text-2xs font-black uppercase tracking-widest text-slate-500 dark:bg-slate-900/50">
-                        <tr>
-                            <th class="px-6 py-4">Công việc</th>
-                            <th class="px-6 py-4">Dự án / Giai đoạn</th>
-                            <th class="px-6 py-4 text-center w-28 whitespace-nowrap">Trạng thái</th>
-                            <th class="px-6 py-4 text-center">Tiến độ</th>
-                            <th class="px-6 py-4 text-center ">Deadline</th>
-                            <th class="px-6 py-4 text-center w-28 whitespace-nowrap">SLA</th>
-                            <th class="px-6 py-4 text-center">Task Approver</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
-                        @forelse($taskReviewItems as $task)
-                            @php
-                                $taskStatusMeta = $this->taskStatusMeta($task);
-                                $taskApprovalMeta = $this->taskApprovalMeta($task);
-                            @endphp
-                            <tr class="transition-colors hover:bg-slate-50 dark:hover:bg-slate-900/30">
-                                <td class="px-6 py-4">
-                                    <p class="font-semibold text-slate-600 dark:text-white">{{ $task->name }}</p>
-                                    @if ($task->description)
-                                        <p class="mt-0.5 line-clamp-2 text-xs text-slate-500">{{ $task->description }}
-                                        </p>
-                                    @endif
-                                </td>
-                                <td class="px-6 py-4 text-xs text-slate-600 dark:text-slate-300">
-                                    <p class="font-medium">{{ $task->phase?->project?->name ?? 'N/A' }}</p>
-                                    <p class="text-slate-500">{{ $task->phase?->name ?? 'N/A' }}</p>
-                                </td>
-                                <td class="px-6 py-4 text-center w-28 whitespace-nowrap">
-                                    <span
-                                        class="{{ $taskStatusMeta['class'] }} rounded-full px-2.5 py-1 text-xs font-bold">
-                                        {{ $taskStatusMeta['label'] }}
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 text-center">
-                                    <div class="mx-auto w-24">
-                                        <div class="mb-1 text-xs font-semibold text-slate-700 dark:text-slate-200">
-                                            {{ (int) $task->progress }}%</div>
-                                        <div class="h-1.5 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
-                                            <div class="bg-primary h-full rounded-full"
-                                                style="width: {{ max(0, min(100, (int) $task->progress)) }}%"></div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4 text-center text-xs text-slate-600 dark:text-slate-300">
-                                    {{ $task->deadline?->format('d/m/Y') ?? '—' }}
-                                </td>
-                                <td class="px-6 py-4 text-center text-xs w-28 whitespace-nowrap">
-                                    @if ($task->sla_met === true)
-                                        <span
-                                            class="rounded bg-emerald-100 px-2 py-0.5 font-semibold text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">Đạt</span>
-                                    @elseif ($task->sla_met === false)
-                                        <span
-                                            class="rounded bg-rose-100 px-2 py-0.5 font-semibold text-rose-700 dark:bg-rose-900/30 dark:text-rose-300">Không
-                                            đạt</span>
-                                    @else
-                                        <span class="text-slate-400">—</span>
-                                    @endif
-                                </td>
-                                <td class="px-6 py-4 text-center w-28 whitespace-nowrap">
-                                    <span
-                                        class="{{ $taskApprovalMeta['class'] }} inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold">
-                                        {{ $taskApprovalMeta['label'] }}
-                                    </span>
-                                    @if ($taskApprovalMeta['reviewer'] !== '' || $taskApprovalMeta['star'] !== null)
-                                        <p class="mt-1 text-[11px] text-slate-500">
-                                            {{ $taskApprovalMeta['level'] !== '' ? $taskApprovalMeta['level'] . ':' : '' }}
-                                            {{ $taskApprovalMeta['reviewer'] !== '' ? $taskApprovalMeta['reviewer'] : 'N/A' }}
-                                            @if ($taskApprovalMeta['star'] !== null)
-                                                · {{ $taskApprovalMeta['star'] }}★
-                                            @endif
-                                        </p>
-                                    @endif
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="7" class="px-6 py-8 text-center text-sm text-slate-500">
-                                    Chưa có task nào trong kỳ này.
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
+            <x-ui.table :paginator="$taskReviewItems" paginator-label="công việc">
+                <x-ui.table.head>
+                    <x-ui.table.column width="min-w-60">Công việc</x-ui.table.column>
+                    <x-ui.table.column width="min-w-56">Dự án / Giai đoạn</x-ui.table.column>
+                    <x-ui.table.column width="min-w-32" align="center">Trạng thái</x-ui.table.column>
+                    <x-ui.table.column width="min-w-40" align="center">Tiến độ</x-ui.table.column>
+                    <x-ui.table.column width="min-w-32" align="center">Deadline</x-ui.table.column>
+                    <x-ui.table.column width="min-w-32" align="center">SLA</x-ui.table.column>
+                    <x-ui.table.column width="min-w-36" align="center">Task Approver</x-ui.table.column>
+                </x-ui.table.head>
 
-            @if ($taskReviewItems->hasPages())
-                <div
-                    class="border-t border-slate-100 bg-slate-50/50 px-6 py-4 dark:border-slate-700 dark:bg-slate-900/20">
-                    {{ $taskReviewItems->links() }}
-                </div>
-            @endif
+                <x-ui.table.body>
+                    @forelse($taskReviewItems as $task)
+                        @php
+                            $taskStatusMeta = $this->taskStatusMeta($task);
+                            $taskApprovalMeta = $this->taskApprovalMeta($task);
+                        @endphp
+                        <x-ui.table.row wire:key="task-review-{{ $task->id }}">
+                            <x-ui.table.cell>
+                                <p class="font-semibold text-slate-600 dark:text-white">{{ $task->name }}</p>
+                                @if ($task->description)
+                                    <p class="mt-0.5 line-clamp-2 text-xs text-slate-500">{{ $task->description }}</p>
+                                @endif
+                            </x-ui.table.cell>
+
+                            <x-ui.table.cell>
+                                <p class="font-medium text-slate-600 dark:text-slate-300">
+                                    {{ $task->phase?->project?->name ?? 'N/A' }}</p>
+                                <p class="text-slate-500">{{ $task->phase?->name ?? 'N/A' }}</p>
+                            </x-ui.table.cell>
+
+                            <x-ui.table.cell align="center">
+                                <span
+                                    class="{{ $taskStatusMeta['class'] }} inline-flex rounded-full px-2.5 py-1 text-xs font-bold">
+                                    {{ $taskStatusMeta['label'] }}
+                                </span>
+                            </x-ui.table.cell>
+
+                            <x-ui.table.cell align="center">
+                                <div class="mx-auto w-24">
+                                    <div class="mb-1 text-xs font-semibold text-slate-700 dark:text-slate-200">
+                                        {{ (int) $task->progress }}%</div>
+                                    <div class="h-1.5 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
+                                        <div class="bg-primary h-full rounded-full"
+                                            style="width: {{ max(0, min(100, (int) $task->progress)) }}%"></div>
+                                    </div>
+                                </div>
+                            </x-ui.table.cell>
+
+                            <x-ui.table.cell align="center">
+                                <span class="text-xs text-slate-600 dark:text-slate-300">
+                                    {{ $task->deadline?->format('d/m/Y') ?? '—' }}
+                                </span>
+                            </x-ui.table.cell>
+
+                            <x-ui.table.cell align="center">
+                                @if ($task->sla_met === true)
+                                    <span
+                                        class="rounded bg-emerald-100 px-2 py-0.5 font-semibold text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">Đạt</span>
+                                @elseif ($task->sla_met === false)
+                                    <span
+                                        class="rounded bg-rose-100 px-2 py-0.5 font-semibold text-rose-700 dark:bg-rose-900/30 dark:text-rose-300">Không
+                                        đạt</span>
+                                @else
+                                    <span class="text-slate-400">—</span>
+                                @endif
+                            </x-ui.table.cell>
+
+                            <x-ui.table.cell align="center">
+                                <span
+                                    class="{{ $taskApprovalMeta['class'] }} inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold">
+                                    {{ $taskApprovalMeta['label'] }}
+                                </span>
+                                @if ($taskApprovalMeta['reviewer'] !== '' || $taskApprovalMeta['star'] !== null)
+                                    <p class="mt-1 text-[11px] text-slate-500">
+                                        {{ $taskApprovalMeta['level'] !== '' ? $taskApprovalMeta['level'] . ':' : '' }}
+                                        {{ $taskApprovalMeta['reviewer'] !== '' ? $taskApprovalMeta['reviewer'] : 'N/A' }}
+                                        @if ($taskApprovalMeta['star'] !== null)
+                                            · {{ $taskApprovalMeta['star'] }}★
+                                        @endif
+                                    </p>
+                                @endif
+                            </x-ui.table.cell>
+                        </x-ui.table.row>
+                    @empty
+                        <x-ui.table.empty :colspan="7" icon="task_alt" message="Chưa có task nào trong kỳ này." />
+                    @endforelse
+                </x-ui.table.body>
+            </x-ui.table>
         </div>
 
         <!-- History Table -->
@@ -836,7 +829,7 @@ new class extends Component
                 <h3 class="text-xl font-bold text-slate-600 dark:text-white">Lịch sử KPI</h3>
                 <div class="flex items-center gap-2 overflow-x-auto pb-2 md:w-auto md:overflow-visible md:pb-0">
                     <div class="flex shrink-0 flex-col gap-1">
-                        <label class="ml-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">Kỳ báo
+                        <label class="ml-1 text-2xs font-bold uppercase tracking-wider text-slate-400">Kỳ báo
                             cáo</label>
                         <div class="flex items-center gap-2">
                             <x-ui.filter-select model="historyPeriodType" :value="$historyPeriodType" icon="calendar_month"
@@ -852,77 +845,73 @@ new class extends Component
                     </div>
                 </div>
             </div>
-            <div class="overflow-x-auto">
-                <table class="w-full text-left">
-                    <thead
-                        class="bg-slate-50 text-[10px] font-black uppercase tracking-widest text-slate-500 dark:bg-slate-900/50">
-                        <tr>
-                            <th class="px-8 py-4">Kỳ báo cáo</th>
-                            <th class="px-8 py-4">Điểm thực tế</th>
-                            <th class="px-8 py-4">Chỉ tiêu</th>
-                            <th class="px-8 py-4 text-center w-28 whitespace-nowrap">Trạng thái</th>
-                            <th class="px-8 py-4">Phê duyệt</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
-                        @forelse($this->scores as $row)
-                            @php
-                                $periodLabel =
-                                    $row->period_type === 'monthly'
-                                        ? 'Tháng ' . $row->period_value . '/' . $row->period_year
-                                        : ($row->period_type === 'quarterly'
-                                            ? 'Quý ' . $row->period_value . '/' . $row->period_year
-                                            : 'Năm ' . $row->period_year);
-                                $rowStatus = $row->status ?? 'pending';
-                                $rowStatusLabel =
-                                    $rowStatus === 'approved'
-                                        ? 'Đã duyệt'
-                                        : ($rowStatus === 'rejected'
-                                            ? 'Từ chối'
-                                            : ($rowStatus === 'locked'
-                                                ? 'Đã khóa'
-                                                : 'Chờ duyệt'));
-                                $rowStatusClass =
-                                    $rowStatus === 'approved'
-                                        ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                                        : ($rowStatus === 'rejected'
-                                            ? 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400'
-                                            : ($rowStatus === 'locked'
-                                                ? 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200'
-                                                : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'));
-                            @endphp
-                            <tr class="transition-colors hover:bg-slate-50 dark:hover:bg-slate-900/30">
-                                <td class="px-8 py-4 font-bold text-slate-700 dark:text-slate-300">{{ $periodLabel }}
-                                </td>
-                                <td class="px-8 py-4">
-                                    <span
-                                        class="text-lg font-bold text-slate-600 dark:text-white">{{ number_format($row->actual_score ?? $row->final_score, 1) }}</span>
-                                </td>
-                                <td class="px-8 py-4">
-                                    <span
-                                        class="text-sm font-bold text-slate-600 dark:text-slate-300">{{ number_format($row->target_score ?? 100, 0) }}</span>
-                                </td>
-                                <td class="px-8 py-4">
-                                    <span
-                                        class="{{ $rowStatusClass }} rounded-full px-3 py-1 text-xs font-bold uppercase">{{ $rowStatusLabel }}</span>
-                                </td>
-                                <td class="px-8 py-4">
-                                    <span
-                                        class="text-sm text-slate-500">{{ $row->approved_at?->format('d/m/Y') ?? 'Chưa duyệt' }}</span>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="5" class="px-8 py-8 text-center text-sm text-slate-500">Chưa có dữ
-                                    liệu KPI.</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-            <div class="bg-slate-50 p-6 dark:bg-slate-900/50">
-                {{ $this->scores->links() }}
-            </div>
+            <x-ui.table :paginator="$this->scores" paginator-label="bản ghi KPI">
+                <x-ui.table.head>
+                    <x-ui.table.column width="min-w-44">Kỳ báo cáo</x-ui.table.column>
+                    <x-ui.table.column width="min-w-32" align="center">Điểm thực tế</x-ui.table.column>
+                    <x-ui.table.column width="min-w-28" align="center"> Chỉ tiêu</x-ui.table.column>
+                    <x-ui.table.column width="min-w-36" align="center">Trạng thái</x-ui.table.column>
+                    <x-ui.table.column width="min-w-24">Phê duyệt</x-ui.table.column>
+                </x-ui.table.head>
+
+                <x-ui.table.body>
+                    @forelse($this->scores as $row)
+                        @php
+                            $periodLabel =
+                                $row->period_type === 'monthly'
+                                    ? 'Tháng ' . $row->period_value . '/' . $row->period_year
+                                    : ($row->period_type === 'quarterly'
+                                        ? 'Quý ' . $row->period_value . '/' . $row->period_year
+                                        : 'Năm ' . $row->period_year);
+                            $rowStatus = $row->status ?? 'pending';
+                            $rowStatusLabel =
+                                $rowStatus === 'approved'
+                                    ? 'Đã duyệt'
+                                    : ($rowStatus === 'rejected'
+                                        ? 'Từ chối'
+                                        : ($rowStatus === 'locked'
+                                            ? 'Đã khóa'
+                                            : 'Chờ duyệt'));
+                            $rowStatusClass =
+                                $rowStatus === 'approved'
+                                    ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                                    : ($rowStatus === 'rejected'
+                                        ? 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400'
+                                        : ($rowStatus === 'locked'
+                                            ? 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200'
+                                            : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'));
+                        @endphp
+
+                        <x-ui.table.row wire:key="kpi-score-{{ $row->id }}">
+                            <x-ui.table.cell>
+                                <span class="font-bold text-slate-700 dark:text-slate-300">{{ $periodLabel }}</span>
+                            </x-ui.table.cell>
+
+                            <x-ui.table.cell align="center">
+                                <span
+                                    class="text-lg font-bold text-slate-600 dark:text-white">{{ number_format($row->actual_score ?? $row->final_score, 1) }}</span>
+                            </x-ui.table.cell>
+
+                            <x-ui.table.cell align="center">
+                                <span
+                                    class="text-sm font-bold text-slate-600 dark:text-slate-300">{{ number_format($row->target_score ?? 100, 0) }}</span>
+                            </x-ui.table.cell>
+
+                            <x-ui.table.cell align="center">
+                                <span
+                                    class="{{ $rowStatusClass }} inline-flex rounded-full px-3 py-1 text-xs font-bold uppercase">{{ $rowStatusLabel }}</span>
+                            </x-ui.table.cell>
+
+                            <x-ui.table.cell>
+                                <span
+                                    class="text-sm text-slate-500">{{ $row->approved_at?->format('d/m/Y') ?? 'Chưa duyệt' }}</span>
+                            </x-ui.table.cell>
+                        </x-ui.table.row>
+                    @empty
+                        <x-ui.table.empty :colspan="5" icon="insights" message="Chưa có dữ liệu KPI." />
+                    @endforelse
+                </x-ui.table.body>
+            </x-ui.table>
         </div>
     </main>
 </div>

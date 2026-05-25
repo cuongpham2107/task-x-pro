@@ -147,18 +147,170 @@ $isManager = ($isLeader && !$isCeo && $status !== 'waiting_approval') || $isSupe
 
          <div class="mt-2 space-y-2">
              @foreach ($deliverable_urls as $i => $url)
-                 <div class="flex items-center justify-between gap-3 bg-slate-50 px-3 py-2 rounded-md">
+                 @php
+                     $driveFileId = null;
+                     if (preg_match('/(?:drive|docs)\.google\.com\/(?:file|document|spreadsheets|presentation|forms|drawings)\/d\/([a-zA-Z0-9_-]+)/', $url, $matches)) {
+                         $driveFileId = $matches[1];
+                     } elseif (preg_match('/[?&]id=([a-zA-Z0-9_-]+)/', $url, $matches)) {
+                         $driveFileId = $matches[1];
+                     }
+
+                     $doc = $deliverableDocuments[$i] ?? null;
+                     $hasVersions = $mode === 'edit' && $doc && $doc->versions && $doc->versions->count() > 0;
+                 @endphp
+                 <div class="flex items-center justify-between gap-3 bg-slate-50 px-3 py-2 rounded-md"
+                     x-data="{ previewOpen: false, historyOpen: false }">
                      <a href="{{ $url }}" target="_blank" rel="noopener noreferrer"
                          class="text-sm text-primary underline break-all">{{ $url }}</a>
-                     <button type="button" wire:click="removeDeliverableUrl({{ $i }})"
-                             class="text-red-500 hover:text-red-700">
-                         <span class="material-symbols-outlined">close</span>
-                     </button>
+                     <div class="flex items-center gap-1 shrink-0">
+                         @if ($driveFileId)
+                             <button type="button" @click="previewOpen = true"
+                                 class="text-slate-400 hover:text-primary transition-colors" title="Xem trước">
+                                 <span class="material-symbols-outlined text-lg">visibility</span>
+                             </button>
+                         @endif
+                         @if ($hasVersions)
+                             <button type="button" @click="historyOpen = true"
+                                 class="text-slate-400 hover:text-primary transition-colors" title="Lịch sử phiên bản">
+                                 <span class="material-symbols-outlined text-lg">history_toggle_off</span>
+                             </button>
+                         @endif
+                         <button type="button" wire:click="openDeliverableEditModal({{ $i }})"
+                             class="text-slate-400 hover:text-primary transition-colors" title="Cập nhật link">
+                             <span class="material-symbols-outlined text-lg">edit</span>
+                         </button>
+                         <button type="button" wire:click="removeDeliverableUrl({{ $i }})"
+                                 class="text-red-500 hover:text-red-700">
+                             <span class="material-symbols-outlined">close</span>
+                         </button>
+                     </div>
+
+                     @if ($driveFileId)
+                         <div x-show="previewOpen" x-cloak
+                             class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+                             @click.self="previewOpen = false">
+                             <div class="relative flex w-full max-w-4xl flex-col overflow-hidden rounded-xl bg-white shadow-2xl">
+                                 <div class="flex items-center justify-between border-b px-4 py-3">
+                                     <span class="text-sm font-semibold text-slate-700">Xem trước tài liệu</span>
+                                     <button type="button" @click="previewOpen = false"
+                                         class="text-slate-400 hover:text-slate-600 transition-colors">
+                                         <span class="material-symbols-outlined">close</span>
+                                     </button>
+                                 </div>
+                                 <iframe src="https://drive.google.com/file/d/{{ $driveFileId }}/preview"
+                                     width="100%" height="700" allow="autoplay"
+                                     class="border-0"></iframe>
+                             </div>
+                         </div>
+                     @endif
+
+                     @if ($hasVersions)
+                         <div x-show="historyOpen" x-cloak
+                             class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+                             @click.self="historyOpen = false">
+                             <div class="relative flex w-full max-w-lg flex-col overflow-hidden rounded-xl bg-white shadow-2xl">
+                                 <div class="flex items-center justify-between border-b px-4 py-3">
+                                     <span class="text-sm font-semibold text-slate-700">Lịch sử phiên bản</span>
+                                     <button type="button" @click="historyOpen = false"
+                                         class="text-slate-400 hover:text-slate-600 transition-colors">
+                                         <span class="material-symbols-outlined">close</span>
+                                     </button>
+                                 </div>
+                                 <div class="max-h-96 space-y-0 overflow-y-auto p-4">
+                                     @foreach ($doc->versions->sortByDesc('version_number') as $ver)
+                                         @php
+                                             $verUrl = $ver->stored_path;
+                                             $verDriveId = null;
+                                             if (preg_match('/(?:drive|docs)\.google\.com\/(?:file|document|spreadsheets|presentation|forms|drawings)\/d\/([a-zA-Z0-9_-]+)/', $verUrl, $m)) {
+                                                 $verDriveId = $m[1];
+                                             } elseif (preg_match('/[?&]id=([a-zA-Z0-9_-]+)/', $verUrl, $m)) {
+                                                 $verDriveId = $m[1];
+                                             }
+                                         @endphp
+                                         <div class="flex items-start gap-3 border-b border-slate-100 pb-3 last:border-0"
+                                             x-data="{ verPreview: false }">
+                                             <div class="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary shrink-0">
+                                                 v{{ $ver->version_number }}
+                                             </div>
+                                             <div class="flex-1 min-w-0 space-y-1">
+                                                 <div class="flex items-center gap-1">
+                                                     <a href="{{ $verUrl }}" target="_blank" rel="noopener noreferrer"
+                                                         class="text-xs text-primary underline truncate">{{ $verUrl }}</a>
+                                                     @if ($verDriveId)
+                                                         <button type="button" @click="verPreview = true"
+                                                             class="text-slate-400 hover:text-primary transition-colors shrink-0" title="Xem trước">
+                                                             <span class="material-symbols-outlined text-base">visibility</span>
+                                                         </button>
+                                                     @endif
+                                                 </div>
+                                                 <div class="text-[11px] text-slate-400">
+                                                     {{ $ver->uploader?->name ?? 'N/A' }} &middot;
+                                                     {{ $ver->created_at?->format('d/m/Y H:i') ?? '' }}
+                                                 </div>
+                                                 @if ($ver->change_summary)
+                                                     <div class="text-xs text-slate-600">{{ $ver->change_summary }}</div>
+                                                 @endif
+                                             </div>
+
+                                             @if ($verDriveId)
+                                                 <div x-show="verPreview" x-cloak
+                                                     class="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4"
+                                                     @click.self="verPreview = false">
+                                                     <div class="relative flex w-full max-w-4xl flex-col overflow-hidden rounded-xl bg-white shadow-2xl">
+                                                         <div class="flex items-center justify-between border-b px-4 py-3">
+                                                             <span class="text-sm font-semibold text-slate-700">Xem trước phiên bản v{{ $ver->version_number }}</span>
+                                                             <button type="button" @click="verPreview = false"
+                                                                 class="text-slate-400 hover:text-slate-600 transition-colors">
+                                                                 <span class="material-symbols-outlined">close</span>
+                                                             </button>
+                                                         </div>
+                                                         <iframe src="https://drive.google.com/file/d/{{ $verDriveId }}/preview"
+                                                             width="100%" height="600" allow="autoplay"
+                                                             class="border-0"></iframe>
+                                                     </div>
+                                                 </div>
+                                             @endif
+                                         </div>
+                                     @endforeach
+                                 </div>
+                             </div>
+                         </div>
+                     @endif
                  </div>
              @endforeach
          </div>
 
          <x-ui.field-error field="deliverable_urls" />
+
+         @if ($mode === 'edit' && $showDeliverableEditModal)
+             <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+                 wire:click.self="$set('showDeliverableEditModal', false)">
+                 <div class="relative flex w-full max-w-lg flex-col overflow-hidden rounded-xl bg-white shadow-2xl"
+                     wire:click.stop>
+                     <div class="flex items-center justify-between border-b px-4 py-3">
+                         <span class="text-sm font-semibold text-slate-700">Cập nhật link sản phẩm</span>
+                         <button type="button" wire:click="$set('showDeliverableEditModal', false)"
+                             class="text-slate-400 hover:text-slate-600 transition-colors">
+                             <span class="material-symbols-outlined">close</span>
+                         </button>
+                     </div>
+                     <div class="space-y-4 p-4">
+                         <x-ui.input label="Link sản phẩm" type="url"
+                             name="editingDeliverableUrl"
+                             placeholder="https://..." wire:model.defer="editingDeliverableUrl" />
+                         <x-ui.textarea label="Ghi chú thay đổi (không bắt buộc)"
+                             wire:model.defer="editingDeliverableNote"
+                             placeholder="VD: Cập nhật bản vẽ thiết kế mới nhất" />
+                     </div>
+                     <div class="flex justify-end gap-2 border-t px-4 py-3">
+                         <x-ui.button type="button" variant="secondary"
+                             wire:click="$set('showDeliverableEditModal', false)">Hủy</x-ui.button>
+                         <x-ui.button type="button" variant="primary"
+                             wire:click="saveDeliverableEdit">Lưu</x-ui.button>
+                     </div>
+                 </div>
+             </div>
+         @endif
      </div>
 
      {{-- Phụ thuộc công việc --}}

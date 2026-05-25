@@ -59,6 +59,12 @@
                 </button>
             </x-ui.table.column>
             <x-ui.table.column>Mức độ ưu tiên</x-ui.table.column>
+            <!-- process -->
+            <x-ui.table.column>
+               Tiến độ
+            </x-ui.table.colum>
+
+
             <x-ui.table.column>Trạng thái</x-ui.table.column>
             <x-ui.table.column :muted="true" width="w-10"></x-ui.table.column>
         </x-ui.table.head>
@@ -136,7 +142,15 @@
                             {{ $priority->label() }}
                         </x-ui.badge>
                     </x-ui.table.cell>
-
+                    {{-- Process --}}
+                    <x-ui.table.cell>
+                        <div class="flex items-center gap-2">
+                            <div class="flex-1 bg-slate-200 rounded-full h-2">
+                                <div class="bg-primary rounded-full h-2 transition-all" style="width: {{ (int) $task->progress }}%"></div>
+                            </div>
+                            <span class="text-xs font-semibold text-slate-500 w-8 text-right">{{ (int) $task->progress }}%</span>
+                        </div>
+                    </x-ui.table.cell>
                     {{-- Trạng thái --}}
                     <x-ui.table.cell>
                         <div class="flex items-center gap-2">

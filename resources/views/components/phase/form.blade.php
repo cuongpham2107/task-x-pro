@@ -1,8 +1,10 @@
 <?php
 
+use App\Enums\ProjectStatus;
 use App\Models\Phase;
 use App\Models\Project;
 use App\Services\Phases\PhaseService;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
@@ -38,12 +40,29 @@ new class extends Component {
     #[On('phase-create-requested')]
     public function showCreateFormModal(): void
     {
-        Gate::forUser(auth()->user())->authorize('create', Phase::class);
+        $this->guardProjectNotPaused($this->project);
+        Gate::forUser(auth()->user())->authorize('create', [Phase::class, $this->project]);
 
         $this->resetFormModal();
         $this->mode = 'create';
         $this->editingPhaseId = null;
         $this->showFormModal = true;
+    }
+
+    private function guardProjectNotPaused(?Project $project): void
+    {
+        if ($project === null) {
+            return;
+        }
+
+        if (in_array($project->status, [
+            ProjectStatus::Completed,
+            ProjectStatus::Cancelled,
+            ProjectStatus::Paused,
+            ProjectStatus::Overdue,
+        ], true)) {
+            throw new AuthorizationException('Dự án đang tạm dừng hoặc đã kết thúc, không thể thực hiện thao tác này.');
+        }
     }
 
     #[On('phase-edit-requested')]

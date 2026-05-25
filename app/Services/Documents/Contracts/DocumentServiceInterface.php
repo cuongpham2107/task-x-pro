@@ -136,4 +136,10 @@ interface DocumentServiceInterface
         ?int $projectId,
         ?array $meta = null
     ): Document;
+
+    public function createDeliverableDocument(User $actor, Task $task, string $url, ?string $changeSummary = null): Document;
+
+    public function updateDeliverableDocument(User $actor, Document $document, string $newUrl, ?string $changeSummary = null): Document;
+
+    public function restoreDeliverableDocument(User $actor, Document $document): Document;
 }

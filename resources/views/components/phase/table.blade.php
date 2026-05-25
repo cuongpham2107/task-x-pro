@@ -80,26 +80,40 @@
                             size="xs">{{ $statusEnum?->label() ?? $phase->status }}</x-ui.badge>
                     </x-ui.table.cell>
                     <x-ui.table.cell align="right" x-on:click.stop>
+                        @php
+                            $_projectBlocked = in_array($project->status, [
+                                \App\Enums\ProjectStatus::Completed,
+                                \App\Enums\ProjectStatus::Cancelled,
+                                \App\Enums\ProjectStatus::Paused,
+                                \App\Enums\ProjectStatus::Overdue,
+                            ], true);
+                        @endphp
                         <div class="flex items-center justify-end gap-1">
                             <x-ui.icon-button icon="visibility" size="sm" tooltip="Xem"
                                 href="{{ route('projects.phases.tasks.index', [$project, $phase]) }}" />
                             @can('update', $phase)
-                                @if ($phase->status === \App\Enums\PhaseStatus::Pending)
-                                    <x-ui.icon-button icon="play_circle" size="sm" color="blue" tooltip="Bắt đầu"
-                                        wire:click="confirmStartStatus({{ $phase->id }})" />
-                                @elseif($phase->status === \App\Enums\PhaseStatus::Active)
-                                    <x-ui.icon-button icon="stop" size="sm" tooltip="Hoàn thành" :hidden="$phase->progress !== 100"
-                                        wire:click="confirmCompleteStatus({{ $phase->id }})" />
-                                @endif
+                                @unless ($_projectBlocked)
+                                    @if ($phase->status === \App\Enums\PhaseStatus::Pending)
+                                        <x-ui.icon-button icon="play_circle" size="sm" color="blue" tooltip="Bắt đầu"
+                                            wire:click="confirmStartStatus({{ $phase->id }})" />
+                                    @elseif($phase->status === \App\Enums\PhaseStatus::Active)
+                                        <x-ui.icon-button icon="stop" size="sm" tooltip="Hoàn thành" :hidden="$phase->progress !== 100"
+                                            wire:click="confirmCompleteStatus({{ $phase->id }})" />
+                                    @endif
+                                @endunless
                             @endcan
                             @can('update', $phase)
-                                <x-ui.icon-button icon="edit" size="sm" tooltip="Sửa"
-                                    wire:click="openEditPhaseModal({{ $phase->id }})" />
+                                @unless ($_projectBlocked)
+                                    <x-ui.icon-button icon="edit" size="sm" tooltip="Sửa"
+                                        wire:click="openEditPhaseModal({{ $phase->id }})" />
+                                @endunless
                             @endcan
 
                             @can('delete', $phase)
-                                <x-ui.icon-button icon="delete" size="sm" color="red" tooltip="Xóa"
-                                    wire:click="confirmDeletePhase({{ $phase->id }})" />
+                                @unless ($_projectBlocked)
+                                    <x-ui.icon-button icon="delete" size="sm" color="red" tooltip="Xóa"
+                                        wire:click="confirmDeletePhase({{ $phase->id }})" />
+                                @endunless
                             @endcan
                         </div>
                     </x-ui.table.cell>

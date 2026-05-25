@@ -182,9 +182,11 @@ new class extends Component {
                 <x-ui.avatar-stack :users="$this->members" :max="5" :size="10" placement="bottom" />
             </div>
             @can('create', [App\Models\Task::class, $phase])
-                <x-ui.button icon="add" size="sm" @click="$dispatch('task-create-requested')">
-                    Thêm công việc
-                </x-ui.button>
+                @unless (in_array($phase->project?->status, [\App\Enums\ProjectStatus::Completed, \App\Enums\ProjectStatus::Cancelled, \App\Enums\ProjectStatus::Paused, \App\Enums\ProjectStatus::Overdue], true))
+                    <x-ui.button icon="add" size="sm" @click="$dispatch('task-create-requested')">
+                        Thêm công việc
+                    </x-ui.button>
+                @endunless
             @endcan
         </div>
     </div>

@@ -9,6 +9,8 @@ new class extends Component
 {
     public array $data = [];
 
+    public array $teamData = [];
+
     public $activityLogs = [];
 
     public array $weeklyStats = [];
@@ -16,9 +18,20 @@ new class extends Component
     public function mount(array $data): void
     {
         $this->data = $data;
+        $this->loadTeamData();
+        $this->loadWeeklyStats();
+    }
+
+    public function loadTeamData(): void
+    {
+        $dashboardService = app(DashboardService::class);
+        $this->teamData = $dashboardService->getLeaderTeamData(auth()->user());
+    }
+
+    public function loadWeeklyStats(): void
+    {
         $this->activityLogs = ActivityLog::with('user')->latest()->limit(5)->get();
 
-        // Tính toán số task hoàn thành và tạo mới trong 7 ngày qua
         $this->weeklyStats = collect(range(6, 0))
             ->map(function (int $daysAgo): array {
                 $date = now()->subDays($daysAgo);
@@ -30,18 +43,6 @@ new class extends Component
                 ];
             })
             ->all();
-    }
-
-    public function filterDate()
-    {
-        // TODO: Implement date filtering logic
-        $this->dispatch('toast', message: 'Tính năng lọc 7 ngày qua đang được phát triển', type: 'info');
-    }
-
-    public function exportReport()
-    {
-        // TODO: Implement report export logic
-        $this->dispatch('toast', message: 'Tính năng xuất báo cáo đang được phát triển', type: 'info');
     }
 
     #[On('task-updated')]
@@ -50,20 +51,8 @@ new class extends Component
     {
         $dashboardService = app(DashboardService::class);
         $this->data = $dashboardService->getIndexData(auth()->user());
-        $this->activityLogs = ActivityLog::with('user')->latest()->limit(5)->get();
-
-        // Re-calculate weekly stats
-        $this->weeklyStats = collect(range(6, 0))
-            ->map(function (int $daysAgo): array {
-                $date = now()->subDays($daysAgo);
-
-                return [
-                    'label' => $date->isoFormat('dd'),
-                    'completed' => Task::whereDate('updated_at', $date)->where('status', \App\Enums\TaskStatus::Completed->value)->count(),
-                    'created' => Task::whereDate('created_at', $date)->count(),
-                ];
-            })
-            ->all();
+        $this->loadTeamData();
+        $this->loadWeeklyStats();
 
         $this->dispatch('charts-updated', [
             'weeklyStats' => $this->weeklyStats,
@@ -160,6 +149,87 @@ new class extends Component
                         </p>
                     </div>
                 </div>
+
+                <!-- Team Stats Cards Row 2 -->
+                <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">
+                    <div
+                        class="flex flex-col gap-2 rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:shadow-md dark:border-slate-800 dark:bg-slate-900">
+                        <div class="flex items-start justify-between">
+                            <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Task trong team</p>
+                            <span
+                                class="rounded-lg bg-violet-100 p-2 text-violet-600 dark:bg-violet-900/30 dark:text-violet-400">
+                                <span class="material-symbols-outlined text-[20px]">group_work</span>
+                            </span>
+                        </div>
+                        <h3 class="text-3xl font-bold text-slate-600 dark:text-white">
+                            {{ $teamData['team_tasks_total'] ?? 0 }}</h3>
+                        <p class="flex items-center gap-1 text-sm font-bold text-violet-600">
+                            <span class="material-symbols-outlined text-[16px]">assignment</span>
+                            Tổng số công việc
+                        </p>
+                    </div>
+
+                    <div
+                        class="flex flex-col gap-2 rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:shadow-md dark:border-slate-800 dark:bg-slate-900">
+                        <div class="flex items-start justify-between">
+                            <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Sắp đến hạn &le;3 ngày</p>
+                            <span
+                                class="rounded-lg bg-amber-100 p-2 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400">
+                                <span class="material-symbols-outlined text-[20px]">event_upcoming</span>
+                            </span>
+                        </div>
+                        <h3 class="text-3xl font-bold text-slate-600 dark:text-white">
+                            {{ $teamData['team_tasks_due_soon'] ?? 0 }}</h3>
+                        <p class="flex items-center gap-1 text-sm font-bold text-amber-600">
+                            <span class="material-symbols-outlined text-[16px]">schedule</span>
+                            Cần theo dõi sát
+                        </p>
+                    </div>
+
+                    <div
+                        class="flex flex-col gap-2 rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:shadow-md dark:border-slate-800 dark:bg-slate-900">
+                        <div class="flex items-start justify-between">
+                            <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Quá hạn</p>
+                            <span
+                                class="rounded-lg bg-rose-100 p-2 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400">
+                                <span class="material-symbols-outlined text-[20px]">error_outline</span>
+                            </span>
+                        </div>
+                        <h3 class="text-3xl font-bold text-slate-600 dark:text-white">
+                            {{ $teamData['team_tasks_overdue'] ?? 0 }}</h3>
+                        <p class="flex items-center gap-1 text-sm font-bold text-rose-600">
+                            <span class="material-symbols-outlined text-[16px]">warning</span>
+                            Cảnh báo rủi ro
+                        </p>
+                    </div>
+
+                    <div
+                        class="flex flex-col gap-2 rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:shadow-md dark:border-slate-800 dark:bg-slate-900">
+                        <div class="flex items-start justify-between">
+                            <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Overload PIC</p>
+                            <span
+                                class="rounded-lg bg-orange-100 p-2 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400">
+                                <span class="material-symbols-outlined text-[20px]">priority_high</span>
+                            </span>
+                        </div>
+                        <h3 class="text-3xl font-bold text-slate-600 dark:text-white">
+                            {{ $teamData['team_overloaded_pic_count'] ?? 0 }}</h3>
+                        <p class="flex items-center gap-1 text-sm font-bold text-orange-600">
+                            <span class="material-symbols-outlined text-[16px]">people</span>
+                            Nhân sự quá tải
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Overload Alert -->
+                @if (($teamData['team_overloaded_pic_count'] ?? 0) > 0)
+                    <div
+                        class="flex items-center gap-3 rounded-xl border border-orange-200 bg-orange-50 p-4 text-sm font-semibold text-orange-700 dark:border-orange-900/30 dark:bg-orange-900/20 dark:text-orange-300">
+                        <span class="material-symbols-outlined text-2xl">warning_amber</span>
+                        <span>Có <strong>{{ $teamData['team_overloaded_pic_count'] }}</strong> nhân sự đang bị quá tải công
+                            việc (trên 3 task quá hạn). Vui lòng xem xét điều phối lại.</span>
+                    </div>
+                @endif
 
                 <!-- Main Grid: Chart & Activity -->
                 <div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
@@ -258,10 +328,87 @@ new class extends Component
                     </div>
                 </div>
 
+                <!-- Team Performance Section -->
+                @if (count($teamData['team_member_performance'] ?? []) > 0)
+                    <div>
+                        <div class="mb-3 flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <span class="material-symbols-outlined text-emerald-500">leaderboard</span>
+                                <h2 class="text-lg font-bold text-slate-600 dark:text-white">Hiệu suất nhân sự</h2>
+                            </div>
+                            <a href="{{ route('kpi-scores.index') }}"
+                                class="text-xs font-semibold text-primary hover:underline">Xem chi tiết KPI</a>
+                        </div>
+                        <x-ui.table>
+                            <x-ui.table.head>
+                                <x-ui.table.column width="min-w-52">Nhân viên</x-ui.table.column>
+                                <x-ui.table.column align="center" width="min-w-24">Tổng Task</x-ui.table.column>
+                                <x-ui.table.column align="center" width="min-w-24">Đúng hạn</x-ui.table.column>
+                                <x-ui.table.column align="center" width="min-w-24">Đạt SLA</x-ui.table.column>
+                                <x-ui.table.column align="center" width="min-w-24">Sao TB</x-ui.table.column>
+                                <x-ui.table.column align="right" width="min-w-28">Final Score</x-ui.table.column>
+                            </x-ui.table.head>
+                            <x-ui.table.body>
+                                @foreach ($teamData['team_member_performance'] as $member)
+                                    @php
+                                        $score = (float) ($member['final_score'] ?? 0);
+                                        $scoreColor = $score >= 80 ? 'text-emerald-600' : ($score >= 60 ? 'text-amber-600' : 'text-rose-600');
+                                    @endphp
+                                    <x-ui.table.row wire:key="member-{{ $member['user_id'] }}">
+                                        <x-ui.table.cell>
+                                            <div class="flex items-center gap-3">
+                                                @if ($member['avatar'])
+                                                    <img src="{{ $member['avatar'] }}"
+                                                        class="size-8 rounded-lg object-cover" />
+                                                @else
+                                                    <div
+                                                        class="flex size-8 items-center justify-center rounded-lg bg-slate-100 text-xs font-bold dark:bg-slate-700">
+                                                        {{ mb_substr($member['user_name'] ?? '?', 0, 1) }}
+                                                    </div>
+                                                @endif
+                                                <div class="flex flex-col">
+                                                    <span
+                                                        class="text-sm font-bold text-slate-700 dark:text-white">{{ $member['user_name'] }}</span>
+                                                    @if ($member['job_title'])
+                                                        <span
+                                                            class="text-2xs text-slate-400">{{ $member['job_title'] }}</span>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        </x-ui.table.cell>
+                                        <x-ui.table.cell align="center">
+                                            <span class="text-sm font-semibold text-slate-600 dark:text-slate-300">{{ $member['total_tasks'] }}</span>
+                                        </x-ui.table.cell>
+                                        <x-ui.table.cell align="center">
+                                            <span class="text-sm font-semibold {{ ($member['on_time_rate'] ?? 0) >= 80 ? 'text-emerald-600' : 'text-amber-600' }}">
+                                                {{ number_format($member['on_time_rate'] ?? 0, 1) }}%
+                                            </span>
+                                        </x-ui.table.cell>
+                                        <x-ui.table.cell align="center">
+                                            <span class="text-sm font-semibold {{ ($member['sla_rate'] ?? 0) >= 80 ? 'text-emerald-600' : 'text-amber-600' }}">
+                                                {{ number_format($member['sla_rate'] ?? 0, 1) }}%
+                                            </span>
+                                        </x-ui.table.cell>
+                                        <x-ui.table.cell align="center">
+                                            <span class="text-sm font-semibold text-slate-600 dark:text-slate-300">
+                                                {{ number_format($member['avg_star'] ?? 0, 1) }}
+                                            </span>
+                                        </x-ui.table.cell>
+                                        <x-ui.table.cell align="end">
+                                            <span class="text-sm font-black {{ $scoreColor }}">
+                                                {{ number_format($score, 1) }}
+                                            </span>
+                                        </x-ui.table.cell>
+                                    </x-ui.table.row>
+                                @endforeach
+                            </x-ui.table.body>
+                        </x-ui.table>
+                    </div>
+                @endif
+
                 <!-- Approval Queue Table Card -->
-                <div
-                    class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                    <div class="flex items-center justify-between border-b border-slate-100 p-6 dark:border-slate-800">
+                <div>
+                    <div class="mb-3 flex items-center justify-between">
                         <div class="flex items-center gap-3">
                             <span class="material-symbols-outlined text-amber-500">pending_actions</span>
                             <h2 class="text-lg font-bold text-slate-600 dark:text-white">Công việc chờ duyệt</h2>
@@ -273,144 +420,139 @@ new class extends Component
                             </span>
                         </div>
                     </div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full border-collapse text-left">
-                            <thead>
-                                <tr
-                                    class="bg-slate-50/50 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:bg-slate-800/50">
-                                    <th class="px-6 py-4">Tên công việc</th>
-                                    <th class="px-6 py-4">Dự án</th>
-                                    <th class="px-6 py-4">Người thực hiện</th>
-                                    <th class="px-6 py-4">Hạn chót</th>
-                                    <th class="px-6 py-4">Tiến độ</th>
-                                    <th class="px-6 py-4">Trạng thái</th>
-                                    <th class="px-6 py-4">Cập nhập lúc</th>
-                                    <th class="px-6 py-4 text-right">Thao tác</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-                                @forelse($data['approval_tasks'] as $task)
-                                    @php
-                                        $priorityEnum = \App\Enums\TaskPriority::tryFrom(
-                                            $task->priority->value ?? ($task->priority ?? ''),
-                                        );
-                                        $priorityColor = match ($priorityEnum?->value ?? '') {
-                                            'urgent' => 'red',
-                                            'high' => 'orange',
-                                            'medium' => 'amber',
-                                            default => 'blue',
-                                        };
-                                    @endphp
-                                    <tr class="transition-colors hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
-                                        <td class="px-6 py-4">
-                                            <div class="flex flex-col gap-1">
-                                                <button
-                                                    wire:click="$dispatch('task-edit-requested', { taskId: {{ $task->id }} })"
-                                                    class="hover:text-primary max-w-50 truncate text-left text-sm font-bold text-slate-600 transition-colors dark:text-slate-100">
-                                                    {{ $task->name }}
-                                                </button>
-                                                <div class="flex items-center gap-2">
-                                                    <x-ui.badge :color="$priorityColor" size="2xs">
-                                                        {{ $priorityEnum?->label() ?? '—' }}
-                                                    </x-ui.badge>
-                                                    @if ($task->comments_count > 0)
-                                                        <span
-                                                            class="flex items-center gap-1 text-2xs text-slate-400">
-                                                            <span
-                                                                class="material-symbols-outlined text-[14px]">chat_bubble</span>
-                                                            {{ $task->comments_count }}
-                                                        </span>
-                                                    @endif
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <span
-                                                class="text-xs font-medium text-slate-600 dark:text-slate-400">{{ $task->phase?->project?->name ?? 'N/A' }}</span>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <div class="flex items-center gap-3">
-                                                @php
-                                                    $taskUsers = collect();
-                                                    if ($task->pic) {
-                                                        $taskUsers->push($task->pic);
-                                                    }
-                                                    if ($task->coPics) {
-                                                        $taskUsers = $taskUsers->concat($task->coPics);
-                                                    }
-                                                @endphp
-                                                <x-ui.avatar-stack :users="$taskUsers" size="8" />
-                                                <span
-                                                    class="text-xs font-medium text-slate-700 dark:text-slate-300">{{ $task->pic?->name ?? 'N/A' }}</span>
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <div class="flex flex-col">
-                                                <span
-                                                    class="{{ $task->deadline && \Carbon\Carbon::parse($task->deadline)->isPast() ? 'text-rose-500' : 'text-slate-600 dark:text-slate-400' }} text-xs font-medium">
-                                                    {{ $task->deadline ? \Carbon\Carbon::parse($task->deadline)->format('d/m/Y') : 'N/A' }}
-                                                </span>
-                                                @if ($task->deadline && \Carbon\Carbon::parse($task->deadline)->isPast())
-                                                    <span class="text-2xs font-bold uppercase text-rose-500">Quá
-                                                        hạn</span>
-                                                @endif
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <div class="w-24">
-                                                <div
-                                                    class="mb-1 flex items-center justify-between text-2xs font-bold text-slate-500">
-                                                    <span>{{ $task->progress }}%</span>
-                                                </div>
-                                                <div
-                                                    class="h-1.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
-                                                    <div class="{{ $task->progress >= 100 ? 'bg-emerald-500' : 'bg-primary' }} h-full transition-all duration-500"
-                                                        style="width: {{ $task->progress }}%"></div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            @php
-                                                $statusValue =
-                                                    $task->status instanceof \BackedEnum
-                                                        ? $task->status->value
-                                                        : $task->status->value ?? ($task->status ?? '');
-                                                $statusEnum = \App\Enums\TaskStatus::tryFrom($statusValue);
-                                            @endphp
-                                            <span
-                                                class="{{ $statusEnum?->badgeClass() ?? 'bg-slate-100 text-slate-600' }} rounded px-2 py-0.5 text-2xs font-bold uppercase">
-                                                {{ $statusEnum?->label() ?? $task->status }}
-                                            </span>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <div
-                                                class="mb-1 flex items-center justify-between text-2xs font-bold text-slate-500">
-                                                <span> {{ $task->updated_at->diffForHumans() }}</span>
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-4 text-right">
+                    <x-ui.table>
+                        <x-ui.table.head>
+                            <x-ui.table.column width="min-w-56">Tên công việc</x-ui.table.column>
+                            <x-ui.table.column width="min-w-36">Dự án</x-ui.table.column>
+                            <x-ui.table.column width="min-w-40">Người thực hiện</x-ui.table.column>
+                            <x-ui.table.column width="min-w-28">Hạn chót</x-ui.table.column>
+                            <x-ui.table.column align="center" width="min-w-28">Tiến độ</x-ui.table.column>
+                            <x-ui.table.column align="center" width="min-w-28">Trạng thái</x-ui.table.column>
+                            <x-ui.table.column width="min-w-28">Cập nhập lúc</x-ui.table.column>
+                            <x-ui.table.column align="right" width="min-w-20">Thao tác</x-ui.table.column>
+                        </x-ui.table.head>
+                        <x-ui.table.body>
+                            @forelse($data['approval_tasks'] as $task)
+                                @php
+                                    $priorityEnum = \App\Enums\TaskPriority::tryFrom(
+                                        $task->priority->value ?? ($task->priority ?? ''),
+                                    );
+                                    $priorityColor = match ($priorityEnum?->value ?? '') {
+                                        'urgent' => 'red',
+                                        'high' => 'orange',
+                                        'medium' => 'amber',
+                                        default => 'blue',
+                                    };
+                                @endphp
+                                <x-ui.table.row wire:key="approval-{{ $task->id }}">
+                                    <x-ui.table.cell>
+                                        <div class="flex flex-col gap-1">
                                             <button
                                                 wire:click="$dispatch('task-edit-requested', { taskId: {{ $task->id }} })"
-                                                class="hover:border-primary hover:text-primary ml-auto flex size-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 transition-all dark:border-slate-800 dark:bg-slate-900">
-                                                <span class="material-symbols-outlined text-[18px]">visibility</span>
+                                                class="hover:text-primary max-w-50 truncate text-left text-sm font-bold text-slate-600 transition-colors dark:text-slate-100">
+                                                {{ $task->name }}
                                             </button>
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="8" class="px-6 py-12 text-center">
-                                            <div class="flex flex-col items-center gap-2">
-                                                <span
-                                                    class="material-symbols-outlined text-4xl text-slate-200 dark:text-slate-800">check_circle</span>
-                                                <p class="text-sm font-medium tracking-wide text-slate-500">Tất cả công
-                                                    việc đã được phê duyệt!</p>
+                                            <div class="flex items-center gap-2">
+                                                <x-ui.badge :color="$priorityColor" size="2xs">
+                                                    {{ $priorityEnum?->label() ?? '—' }}
+                                                </x-ui.badge>
+                                                @if ($task->comments_count > 0)
+                                                    <span
+                                                        class="flex items-center gap-1 text-2xs text-slate-400">
+                                                        <span
+                                                            class="material-symbols-outlined text-[14px]">chat_bubble</span>
+                                                        {{ $task->comments_count }}
+                                                    </span>
+                                                @endif
                                             </div>
-                                        </td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
+                                        </div>
+                                    </x-ui.table.cell>
+                                    <x-ui.table.cell>
+                                        <span
+                                            class="text-xs font-medium text-slate-600 dark:text-slate-400">{{ $task->phase?->project?->name ?? 'N/A' }}</span>
+                                    </x-ui.table.cell>
+                                    <x-ui.table.cell>
+                                        <div class="flex items-center gap-3">
+                                            @php
+                                                $taskUsers = collect();
+                                                if ($task->pic) {
+                                                    $taskUsers->push($task->pic);
+                                                }
+                                                if ($task->coPics) {
+                                                    $taskUsers = $taskUsers->concat($task->coPics);
+                                                }
+                                            @endphp
+                                            <x-ui.avatar-stack :users="$taskUsers" size="8" />
+                                            <span
+                                                class="text-xs font-medium text-slate-700 dark:text-slate-300">{{ $task->pic?->name ?? 'N/A' }}</span>
+                                        </div>
+                                    </x-ui.table.cell>
+                                    <x-ui.table.cell>
+                                        <div class="flex flex-col">
+                                            <span
+                                                class="{{ $task->deadline && \Carbon\Carbon::parse($task->deadline)->isPast() ? 'text-rose-500' : 'text-slate-600 dark:text-slate-400' }} text-xs font-medium">
+                                                {{ $task->deadline ? \Carbon\Carbon::parse($task->deadline)->format('d/m/Y') : 'N/A' }}
+                                            </span>
+                                            @if ($task->deadline && \Carbon\Carbon::parse($task->deadline)->isPast())
+                                                <span class="text-2xs font-bold uppercase text-rose-500">Quá
+                                                    hạn</span>
+                                            @endif
+                                        </div>
+                                    </x-ui.table.cell>
+                                    <x-ui.table.cell align="center">
+                                        <div class="w-24">
+                                            <div
+                                                class="mb-1 flex items-center justify-between text-2xs font-bold text-slate-500">
+                                                <span>{{ $task->progress }}%</span>
+                                            </div>
+                                            <div
+                                                class="h-1.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+                                                <div class="{{ $task->progress >= 100 ? 'bg-emerald-500' : 'bg-primary' }} h-full transition-all duration-500"
+                                                    style="width: {{ $task->progress }}%"></div>
+                                            </div>
+                                        </div>
+                                    </x-ui.table.cell>
+                                    <x-ui.table.cell align="center">
+                                        @php
+                                            $statusValue =
+                                                $task->status instanceof \BackedEnum
+                                                    ? $task->status->value
+                                                    : $task->status->value ?? ($task->status ?? '');
+                                            $statusEnum = \App\Enums\TaskStatus::tryFrom($statusValue);
+                                        @endphp
+                                        <span
+                                            class="{{ $statusEnum?->badgeClass() ?? 'bg-slate-100 text-slate-600' }} rounded px-2 py-0.5 text-2xs font-bold uppercase">
+                                            {{ $statusEnum?->label() ?? $task->status }}
+                                        </span>
+                                    </x-ui.table.cell>
+                                    <x-ui.table.cell>
+                                        <div
+                                            class="mb-1 flex items-center justify-between text-2xs font-bold text-slate-500">
+                                            <span> {{ $task->updated_at->diffForHumans() }}</span>
+                                        </div>
+                                    </x-ui.table.cell>
+                                    <x-ui.table.cell align="end">
+                                        <button
+                                            wire:click="$dispatch('task-edit-requested', { taskId: {{ $task->id }} })"
+                                            class="hover:border-primary hover:text-primary ml-auto flex size-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 transition-all dark:border-slate-800 dark:bg-slate-900">
+                                            <span class="material-symbols-outlined text-[18px]">visibility</span>
+                                        </button>
+                                    </x-ui.table.cell>
+                                </x-ui.table.row>
+                            @empty
+                                <x-ui.table.row>
+                                    <x-ui.table.cell colspan="8" align="center">
+                                        <div class="flex flex-col items-center gap-2 py-4">
+                                            <span
+                                                class="material-symbols-outlined text-4xl text-slate-200 dark:text-slate-800">check_circle</span>
+                                            <p class="text-sm font-medium tracking-wide text-slate-500">Tất cả công
+                                                việc đã được phê duyệt!</p>
+                                        </div>
+                                    </x-ui.table.cell>
+                                </x-ui.table.row>
+                            @endforelse
+                        </x-ui.table.body>
+                    </x-ui.table>
                 </div>
             </div>
         </div>

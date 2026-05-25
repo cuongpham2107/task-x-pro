@@ -206,7 +206,7 @@
                 <a class="{{ $navLink('kpi-scores.*') }} inline-flex items-center gap-1.5"
                     href="{{ route('kpi-scores.index') }}" wire:navigate>
                     <span class="material-symbols-outlined text-[18px] leading-none">trending_up</span>
-                    KPI & Hiệu xuất
+                    KPI & Hiệu suất
                 </a>
             @endcan
             @can('viewAny', App\Models\Document::class)

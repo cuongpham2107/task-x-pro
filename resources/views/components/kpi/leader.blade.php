@@ -3,6 +3,7 @@ use App\Helpers\PdfHelper;
 
 use App\Enums\KpiPeriodType;
 use App\Exports\KpiExport;
+use App\Models\Department;
 use App\Models\KpiScore;
 use App\Models\Task;
 use App\Models\User;
@@ -40,6 +41,29 @@ new #[Title('KPI phòng ban')] class extends Component
     public string $reviewUserName = '';
 
     public string $reviewApprovalFilter = 'all';
+
+    public ?int $selectedDepartmentId = null;
+
+    public function getDepartmentOptionsProperty(): array
+    {
+        return Department::query()
+            ->orderBy('name')
+            ->pluck('name', 'id')
+            ->all();
+    }
+
+    public function updatedSelectedDepartmentId(): void
+    {
+        $this->selectedUserId = null;
+        $this->resetPage();
+    }
+
+    private function canViewAllDepartments(): bool
+    {
+        $user = auth()->user();
+
+        return $user?->hasRole('super_admin') || $user?->hasRole('ceo');
+    }
 
     public function mount(): void
     {
@@ -112,8 +136,16 @@ new #[Title('KPI phòng ban')] class extends Component
 
     public function getTeamUsersProperty()
     {
-        $departmentId = auth()->user()?->department_id;
+        $user = auth()->user();
+        $departmentId = $this->canViewAllDepartments() ? $this->selectedDepartmentId : $user?->department_id;
+
         if (! $departmentId) {
+            if ($this->canViewAllDepartments()) {
+                return User::query()
+                    ->orderBy('name')
+                    ->get(['id', 'name', 'department_id', 'job_title', 'avatar']);
+            }
+
             return collect();
         }
 
@@ -125,21 +157,26 @@ new #[Title('KPI phòng ban')] class extends Component
 
     public function getScoresProperty()
     {
-        $departmentId = auth()->user()?->department_id;
-        if (! $departmentId) {
-            return KpiScore::query()->where('id', 0)->paginate($this->perPage);
-        }
+        $user = auth()->user();
+        $departmentId = $this->canViewAllDepartments() ? $this->selectedDepartmentId : $user?->department_id;
 
-        return KpiScore::query()
+        $query = KpiScore::query()
             ->with('user:id,name,department_id,job_title,avatar')
             ->where('period_type', $this->periodType)
             ->where('period_year', $this->selectedYear)
-            ->where('period_value', $this->selectedValue)
-            ->whereHas('user', function ($query) use ($departmentId): void {
-                $query->where('department_id', $departmentId);
-            })
-            ->when($this->selectedUserId, function ($query): void {
-                $query->where('user_id', $this->selectedUserId);
+            ->where('period_value', $this->selectedValue);
+
+        if ($departmentId) {
+            $query->whereHas('user', function ($q) use ($departmentId): void {
+                $q->where('department_id', $departmentId);
+            });
+        } elseif (! $this->canViewAllDepartments()) {
+            return KpiScore::query()->where('id', 0)->paginate($this->perPage);
+        }
+
+        return $query
+            ->when($this->selectedUserId, function ($q): void {
+                $q->where('user_id', $this->selectedUserId);
             })
             ->orderByDesc('final_score')
             ->paginate($this->perPage);
@@ -147,8 +184,19 @@ new #[Title('KPI phòng ban')] class extends Component
 
     public function getSummaryProperty(): array
     {
-        $departmentId = auth()->user()?->department_id;
-        if (! $departmentId) {
+        $user = auth()->user();
+        $departmentId = $this->canViewAllDepartments() ? $this->selectedDepartmentId : $user?->department_id;
+
+        $baseQuery = KpiScore::query()
+            ->where('period_type', $this->periodType)
+            ->where('period_year', $this->selectedYear)
+            ->where('period_value', $this->selectedValue);
+
+        if ($departmentId) {
+            $baseQuery->whereHas('user', function ($q) use ($departmentId): void {
+                $q->where('department_id', $departmentId);
+            });
+        } elseif (! $this->canViewAllDepartments()) {
             return [
                 'avg_score' => 0.0,
                 'avg_on_time_rate' => 0.0,
@@ -159,14 +207,6 @@ new #[Title('KPI phòng ban')] class extends Component
                 'low' => 0,
             ];
         }
-
-        $baseQuery = KpiScore::query()
-            ->where('period_type', $this->periodType)
-            ->where('period_year', $this->selectedYear)
-            ->where('period_value', $this->selectedValue)
-            ->whereHas('user', function ($query) use ($departmentId): void {
-                $query->where('department_id', $departmentId);
-            });
 
         return [
             'avg_score' => round((float) (clone $baseQuery)->avg('final_score'), 2),
@@ -181,8 +221,19 @@ new #[Title('KPI phòng ban')] class extends Component
 
     public function getApprovalSummaryProperty(): array
     {
-        $departmentId = auth()->user()?->department_id;
-        if (! $departmentId) {
+        $user = auth()->user();
+        $departmentId = $this->canViewAllDepartments() ? $this->selectedDepartmentId : $user?->department_id;
+
+        $baseQuery = KpiScore::query()
+            ->where('period_type', $this->periodType)
+            ->where('period_year', $this->selectedYear)
+            ->where('period_value', $this->selectedValue);
+
+        if ($departmentId) {
+            $baseQuery->whereHas('user', function ($q) use ($departmentId): void {
+                $q->where('department_id', $departmentId);
+            });
+        } elseif (! $this->canViewAllDepartments()) {
             return [
                 'total' => 0,
                 'pending' => 0,
@@ -191,14 +242,6 @@ new #[Title('KPI phòng ban')] class extends Component
                 'approval_rate' => 0.0,
             ];
         }
-
-        $baseQuery = KpiScore::query()
-            ->where('period_type', $this->periodType)
-            ->where('period_year', $this->selectedYear)
-            ->where('period_value', $this->selectedValue)
-            ->whereHas('user', function ($query) use ($departmentId): void {
-                $query->where('department_id', $departmentId);
-            });
 
         $total = (clone $baseQuery)->count();
         $pending = (clone $baseQuery)->whereIn('status', ['pending', 'locked'])->count();
@@ -216,23 +259,26 @@ new #[Title('KPI phòng ban')] class extends Component
 
     public function getWarningsProperty(): array
     {
-        $departmentId = auth()->user()?->department_id;
-        if (! $departmentId) {
+        $user = auth()->user();
+        $departmentId = $this->canViewAllDepartments() ? $this->selectedDepartmentId : $user?->department_id;
+
+        $baseQuery = KpiScore::query()
+            ->with('user:id,name,avatar')
+            ->where('period_type', $this->periodType)
+            ->where('period_year', $this->selectedYear)
+            ->where('period_value', $this->selectedValue);
+
+        if ($departmentId) {
+            $baseQuery->whereHas('user', function ($q) use ($departmentId): void {
+                $q->where('department_id', $departmentId);
+            });
+        } elseif (! $this->canViewAllDepartments()) {
             return [
                 'low_sla_count' => 0,
                 'most_late_user' => null,
                 'top_performer' => null,
             ];
         }
-
-        $baseQuery = KpiScore::query()
-            ->with('user:id,name,avatar')
-            ->where('period_type', $this->periodType)
-            ->where('period_year', $this->selectedYear)
-            ->where('period_value', $this->selectedValue)
-            ->whereHas('user', function ($query) use ($departmentId): void {
-                $query->where('department_id', $departmentId);
-            });
 
         $lowSla = (clone $baseQuery)->where('sla_rate', '<', 75)->count();
         $late = (clone $baseQuery)->where('on_time_rate', '<', 70)->orderBy('on_time_rate', 'asc')->first();
@@ -533,21 +579,26 @@ new #[Title('KPI phòng ban')] class extends Component
 
     public function exportExcel(?string $format = 'xlsx'): mixed
     {
-        $departmentId = auth()->user()?->department_id;
-        if (! $departmentId) {
-            return null;
-        }
+        $user = auth()->user();
+        $departmentId = $this->canViewAllDepartments() ? $this->selectedDepartmentId : $user?->department_id;
 
-        $scores = KpiScore::query()
+        $scoresQuery = KpiScore::query()
             ->with('user:id,name,job_title')
             ->where('period_type', $this->periodType)
             ->where('period_year', $this->selectedYear)
-            ->where('period_value', $this->selectedValue)
-            ->whereHas('user', function ($query) use ($departmentId): void {
-                $query->where('department_id', $departmentId);
-            })
-            ->when($this->selectedUserId, function ($query): void {
-                $query->where('user_id', $this->selectedUserId);
+            ->where('period_value', $this->selectedValue);
+
+        if ($departmentId) {
+            $scoresQuery->whereHas('user', function ($q) use ($departmentId): void {
+                $q->where('department_id', $departmentId);
+            });
+        } elseif (! $this->canViewAllDepartments()) {
+            return null;
+        }
+
+        $scores = $scoresQuery
+            ->when($this->selectedUserId, function ($q): void {
+                $q->where('user_id', $this->selectedUserId);
             })
             ->orderByDesc('final_score')
             ->get();
@@ -672,6 +723,16 @@ new #[Title('KPI phòng ban')] class extends Component
                             width="w-32" :options="collect($this->yearOptions)->mapWithKeys(fn($y) => [$y => $y])->all()" />
                     </div>
                 </div>
+
+                @if ($this->canViewAllDepartments())
+                    <div class="flex shrink-0 flex-col gap-1">
+                        <label class="ml-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">Phòng
+                            ban</label>
+                        <x-ui.filter-select model="selectedDepartmentId" :value="$selectedDepartmentId" label="Chọn phòng ban"
+                            icon="business" all-label="Tất cả phòng ban" width="w-56"
+                            :options="$this->departmentOptions" />
+                    </div>
+                @endif
 
                 <div class="flex shrink-0 flex-col gap-1">
                     <label class="ml-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">Lọc nhân

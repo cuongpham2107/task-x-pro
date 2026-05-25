@@ -222,7 +222,7 @@
                         @foreach ($gantt['items'] as $item)
                             <a href="{{ route('projects.phases.index', $item['id']) }}" class="block">
                                 <div
-                                    class="grid h-16 grid-cols-[minmax(0,1fr)_auto_80px] items-center gap-3 border-b border-slate-100 pl-4 pr-6 transition-colors hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/40">
+                                    class="grid h-16 grid-cols-[minmax(0,1fr)_auto_80px] items-center gap-3 border-b border-slate-100 px-2 transition-colors hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/40">
                                     <div class="min-w-0">
                                         <p class="truncate text-sm font-semibold text-slate-700 dark:text-slate-200">
                                             {{ $item['name'] }}

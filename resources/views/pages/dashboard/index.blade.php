@@ -18,7 +18,7 @@ new #[Title('Dashboard')] class extends Component {
 ?>
 
 <div>
-    @if (auth()->user()->hasRole('ceo'))
+    @if (auth()->user()->hasAnyRole(['super_admin', 'ceo']))
         <livewire:dashboard.ceo-view :data="$data" />
     @elseif(auth()->user()->hasRole('leader'))
         <livewire:dashboard.leader-view :data="$data" />

@@ -57,7 +57,7 @@ class ProjectPolicy
 
     public function update(User $user, Project $project): bool
     {
-        if (in_array($project->status, [ProjectStatus::Completed, ProjectStatus::Cancelled], true)) {
+        if (in_array($project->status, [ProjectStatus::Completed, ProjectStatus::Cancelled, ProjectStatus::Paused, ProjectStatus::Overdue], true)) {
             return false;
         }
 

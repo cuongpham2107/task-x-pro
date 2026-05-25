@@ -89,7 +89,7 @@
                 <a class="{{ $navLink('kpi-scores.*') }} flex items-center gap-4 rounded-xl px-4 py-3"
                     href="{{ route('kpi-scores.index') }}" wire:navigate @click="sidebarOpen = false">
                     <span class="material-symbols-outlined">trending_up</span>
-                    <span class="text-base">KPI & Hiệu xuất</span>
+                    <span class="text-base">KPI & Hiệu suất</span>
                 </a>
             @endcan
             @can('viewAny', App\Models\Document::class)

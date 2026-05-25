@@ -4,8 +4,11 @@ namespace App\Services\Tasks;
 
 use App\Enums\NotificationChannel;
 use App\Enums\NotificationStatus;
+use App\Enums\ProjectStatus;
 use App\Enums\SystemNotificationType;
 use App\Enums\TaskStatus;
+use App\Models\Phase;
+use App\Models\Project;
 use App\Models\SystemNotification;
 use App\Models\Task;
 use App\Models\TaskAttachment;
@@ -13,6 +16,7 @@ use App\Models\User;
 use App\Notifications\TaskApprovalRequestLeaderNotification;
 use App\Notifications\TaskAssignedNotification;
 use App\Services\Documents\Contracts\DocumentServiceInterface;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
@@ -72,14 +76,13 @@ class TaskService
      */
     public function create(User $actor, array $attributes, array $coPicIds = []): TaskMutationResult
     {
-        Gate::forUser($actor)->authorize('create', Task::class);
+        $payload = $this->payloadService->normalizedTaskAttributes($attributes, null);
+        $phase = $this->payloadService->resolvePhaseForTaskPayload((int) $payload['phase_id']);
+        $this->guardProjectNotPaused($phase->project);
+        Gate::forUser($actor)->authorize('create', [Task::class, $phase]);
+        Gate::forUser($actor)->authorize('update', $phase->project);
 
-        return DB::transaction(function () use ($actor, $attributes, $coPicIds): TaskMutationResult {
-            $payload = $this->payloadService->normalizedTaskAttributes($attributes, null);
-
-            $phase = $this->payloadService->resolvePhaseForTaskPayload((int) $payload['phase_id']);
-            Gate::forUser($actor)->authorize('update', $phase->project);
-
+        return DB::transaction(function () use ($actor, $attributes, $coPicIds, $phase, $payload): TaskMutationResult {
             $targetStatus = (string) ($payload['status'] ?? TaskStatus::Pending->value);
             $dependencyTaskId = $payload['dependency_task_id'] ?? null;
             $this->payloadService->ensureDependencyReady($dependencyTaskId !== null ? (int) $dependencyTaskId : null, $targetStatus);
@@ -114,6 +117,7 @@ class TaskService
      */
     public function update(User $actor, Task $task, array $attributes, ?array $coPicIds = null): TaskMutationResult
     {
+        $this->guardProjectNotPaused($task->phase?->project);
         Gate::forUser($actor)->authorize('update', $task);
 
         return DB::transaction(function () use ($actor, $task, $attributes, $coPicIds): TaskMutationResult {
@@ -298,6 +302,7 @@ class TaskService
      */
     public function start(User $actor, Task $task): Task
     {
+        $this->guardProjectNotPaused($task->phase?->project);
         Gate::forUser($actor)->authorize('start', $task);
 
         $currentStatus = $this->normalizeStatus($task->status);
@@ -336,6 +341,7 @@ class TaskService
      */
     public function submitForApproval(User $actor, Task $task): Task
     {
+        $this->guardProjectNotPaused($task->phase?->project);
         Gate::forUser($actor)->authorize('update', $task);
 
         $currentStatus = $this->normalizeStatus($task->status);
@@ -422,6 +428,7 @@ class TaskService
         ?int $starRating = null,
         ?string $comment = null,
     ): Task {
+        $this->guardProjectNotPaused($task->phase?->project);
         Gate::forUser($actor)->authorize('approve', $task);
 
         $this->approvalService->approve($actor, $task, $starRating, $comment);
@@ -434,6 +441,7 @@ class TaskService
      */
     public function reject(User $actor, Task $task, string $comment): Task
     {
+        $this->guardProjectNotPaused($task->phase?->project);
         Gate::forUser($actor)->authorize('approve', $task);
 
         $this->approvalService->reject($actor, $task, $comment);
@@ -446,6 +454,7 @@ class TaskService
      */
     public function delete(User $actor, Task $task): bool
     {
+        $this->guardProjectNotPaused($task->phase?->project);
         Gate::forUser($actor)->authorize('delete', $task);
 
         return DB::transaction(function () use ($task): bool {
@@ -838,5 +847,21 @@ class TaskService
         ?array $meta = null,
     ): void {
         $this->documentService->createFromTaskAttachment($actor, $task, $attachment, $attachmentMedia, $projectId, $meta);
+    }
+
+    private function guardProjectNotPaused(?Project $project): void
+    {
+        if ($project === null) {
+            return;
+        }
+
+        if (in_array($project->status, [
+            ProjectStatus::Completed,
+            ProjectStatus::Cancelled,
+            ProjectStatus::Paused,
+            ProjectStatus::Overdue,
+        ], true)) {
+            throw new AuthorizationException('Dự án đang tạm dừng hoặc đã kết thúc, không thể thực hiện thao tác này.');
+        }
     }
 }

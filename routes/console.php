@@ -9,6 +9,7 @@ use App\Models\Task;
 use App\Models\User;
 use App\Notifications\MonthlyKpiSummaryNotification;
 use App\Notifications\PicOverdueTasksNotification;
+use App\Notifications\ProjectOverdueNotification;
 use App\Notifications\TaskApprovalPendingReminderNotification;
 use App\Notifications\TaskDeadlineReminderNotification;
 use App\Notifications\WeeklySummaryNotification;
@@ -33,6 +34,16 @@ Artisan::command('projects:mark-overdue', function (\App\Services\Projects\Proje
     foreach ($projects as $project) {
         $project->update(['status' => ProjectStatus::Overdue]);
         $phaseService->syncPhaseStatusesWithProjectStatus($project);
+
+        if ($project->relationLoaded('leaders')) {
+            $leaders = $project->leaders;
+        } else {
+            $leaders = $project->leaders()->get();
+        }
+
+        $leaders = $leaders->filter(fn (User $user) => filled($user->telegram_id));
+
+        Notification::send($leaders, new ProjectOverdueNotification($project));
     }
 
     $this->info('Đã chuyển '.$projects->count().' dự án quá hạn sang trạng thái Quá hạn (Overdue) và đồng bộ Phase.');

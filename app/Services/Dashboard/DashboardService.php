@@ -15,6 +15,7 @@ use App\Models\Phase;
 use App\Models\Project;
 use App\Models\Task;
 use App\Models\User;
+use App\Services\Tasks\TaskOverloadService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 
@@ -383,6 +384,116 @@ class DashboardService
         return [
             (int) $now->year,
             (int) $now->month,
+        ];
+    }
+
+    /**
+     * Du lieu thong ke cho leader dashboard: hieu suat team, task sap han,
+     * task qua han, KPI tung nhan su, canh bao overload PIC.
+     *
+     * @return array<string, mixed>
+     */
+    public function getLeaderTeamData(User $actor): array
+    {
+        $now = now();
+        $threeDaysLater = $now->copy()->addDays(3);
+
+        if ($actor->hasAnyRole(['ceo', 'super_admin'])) {
+            $teamUserIds = User::query()
+                ->where('status', UserStatus::Active->value)
+                ->pluck('id');
+        } else {
+            $departmentId = $actor->department_id;
+            if (! $departmentId) {
+                return $this->emptyLeaderTeamData();
+            }
+
+            $teamUserIds = User::query()
+                ->where('department_id', $departmentId)
+                ->where('status', UserStatus::Active->value)
+                ->pluck('id');
+        }
+
+        if ($teamUserIds->isEmpty()) {
+            return $this->emptyLeaderTeamData();
+        }
+
+        $teamTaskScope = Task::query()->whereIn('pic_id', $teamUserIds);
+
+        $teamTasksTotal = (clone $teamTaskScope)->count();
+
+        $teamTasksDueSoon = (clone $teamTaskScope)
+            ->where('status', '!=', TaskStatus::Completed->value)
+            ->whereBetween('deadline', [$now->startOfDay(), $threeDaysLater->endOfDay()])
+            ->count();
+
+        $teamTasksOverdue = (clone $teamTaskScope)
+            ->where(function (Builder $q) use ($now): void {
+                $q->where('status', TaskStatus::Late->value)
+                    ->orWhere(function (Builder $dq) use ($now): void {
+                        $dq->where('deadline', '<', $now->startOfDay())
+                            ->where('status', '!=', TaskStatus::Completed->value);
+                    });
+            })
+            ->count();
+
+        $teamTasksWaitingApproval = (clone $teamTaskScope)
+            ->where('status', TaskStatus::WaitingApproval->value)
+            ->count();
+
+        $teamPerformance = KpiScore::query()
+            ->with('user:id,name,job_title,avatar')
+            ->whereIn('user_id', $teamUserIds)
+            ->where('period_type', KpiPeriodType::Monthly->value)
+            ->where('period_year', (int) $now->year)
+            ->where('period_value', (int) $now->month)
+            ->orderByDesc('final_score')
+            ->get()
+            ->map(function (KpiScore $kpi): array {
+                return [
+                    'user_id' => (int) $kpi->user_id,
+                    'user_name' => $kpi->user?->name,
+                    'job_title' => $kpi->user?->job_title,
+                    'avatar' => $kpi->user?->avatar,
+                    'final_score' => (float) $kpi->final_score,
+                    'on_time_rate' => (float) $kpi->on_time_rate,
+                    'sla_rate' => (float) $kpi->sla_rate,
+                    'avg_star' => (float) $kpi->avg_star,
+                    'total_tasks' => (int) $kpi->total_tasks,
+                ];
+            })
+            ->all();
+
+        $overloadedPicCount = 0;
+        $overloadService = app(TaskOverloadService::class);
+        foreach ($teamUserIds as $userId) {
+            if ($overloadService->countOverdueTasksForUser((int) $userId) > 3) {
+                $overloadedPicCount++;
+            }
+        }
+
+        return [
+            'team_tasks_total' => $teamTasksTotal,
+            'team_tasks_due_soon' => $teamTasksDueSoon,
+            'team_tasks_overdue' => $teamTasksOverdue,
+            'team_tasks_waiting_approval' => $teamTasksWaitingApproval,
+            'team_member_performance' => $teamPerformance,
+            'team_overloaded_pic_count' => $overloadedPicCount,
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function emptyLeaderTeamData(): array
+    {
+        return [
+            'team_tasks_total' => 0,
+            'team_tasks_due_soon' => 0,
+            'team_tasks_overdue' => 0,
+            'team_tasks_waiting_approval' => 0,
+            'team_member_performance' => [],
+            'team_overloaded_pic_count' => 0,
         ];
     }
 }

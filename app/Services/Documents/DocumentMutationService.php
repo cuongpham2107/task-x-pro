@@ -91,6 +91,85 @@ class DocumentMutationService
         return $version->refresh();
     }
 
+    public function createDeliverableDocument(User $actor, Task $task, string $url, ?string $changeSummary = null): Document
+    {
+        return DB::transaction(function () use ($actor, $task, $url, $changeSummary): Document {
+            $driveId = $this->extractGoogleDriveId($url);
+
+            $document = Document::query()->create([
+                'task_id' => $task->id,
+                'project_id' => $task->phase?->project_id,
+                'uploader_id' => $actor->id,
+                'name' => $changeSummary ?? $url,
+                'document_type' => \App\Enums\DocumentType::Deliverable->value,
+                'description' => $changeSummary,
+                'google_drive_url' => $url,
+                'google_drive_id' => $driveId,
+                'permission' => \App\Enums\DocumentPermission::View->value,
+                'current_version' => 1,
+            ]);
+
+            $document->versions()->create([
+                'version_number' => 1,
+                'uploader_id' => $actor->id,
+                'stored_path' => $url,
+                'change_summary' => $changeSummary,
+                'google_drive_revision_id' => $driveId,
+            ]);
+
+            return $document;
+        });
+    }
+
+    public function updateDeliverableDocument(User $actor, Document $document, string $newUrl, ?string $changeSummary = null): Document
+    {
+        return DB::transaction(function () use ($actor, $document, $newUrl, $changeSummary): Document {
+            $oldUrl = $document->google_drive_url;
+            $newDriveId = $this->extractGoogleDriveId($newUrl);
+            $nextVersion = (int) ($document->versions()->max('version_number') ?? 0) + 1;
+
+            $document->update([
+                'google_drive_url' => $newUrl,
+                'google_drive_id' => $newDriveId,
+                'current_version' => $nextVersion,
+                'name' => $changeSummary ?? $newUrl,
+                'description' => $changeSummary,
+            ]);
+
+            $document->versions()->create([
+                'version_number' => $nextVersion,
+                'uploader_id' => $actor->id,
+                'stored_path' => $newUrl,
+                'change_summary' => $changeSummary,
+                'google_drive_revision_id' => $newDriveId,
+            ]);
+
+            return $document->fresh(['versions.uploader']);
+        });
+    }
+
+    public function restoreDeliverableDocument(User $actor, Document $document): Document
+    {
+        Gate::forUser($actor)->authorize('delete', $document);
+
+        $document->restore();
+
+        return $document->refresh();
+    }
+
+    private function extractGoogleDriveId(string $url): ?string
+    {
+        if (preg_match('/(?:drive|docs)\.google\.com\/(?:file|document|spreadsheets|presentation|forms|drawings)\/d\/([a-zA-Z0-9_-]+)/', $url, $matches)) {
+            return $matches[1];
+        }
+
+        if (preg_match('/[?&]id=([a-zA-Z0-9_-]+)/', $url, $matches)) {
+            return $matches[1];
+        }
+
+        return null;
+    }
+
     /**
      * Permanently delete a document version.
      *

@@ -200,4 +200,19 @@ class DocumentService implements DocumentServiceInterface
     ): Document {
         return $this->mutationService->createFromTaskAttachment($actor, $task, $attachment, $attachmentMedia, $projectId, $meta);
     }
+
+    public function createDeliverableDocument(User $actor, Task $task, string $url, ?string $changeSummary = null): Document
+    {
+        return $this->mutationService->createDeliverableDocument($actor, $task, $url, $changeSummary);
+    }
+
+    public function updateDeliverableDocument(User $actor, Document $document, string $newUrl, ?string $changeSummary = null): Document
+    {
+        return $this->mutationService->updateDeliverableDocument($actor, $document, $newUrl, $changeSummary);
+    }
+
+    public function restoreDeliverableDocument(User $actor, Document $document): Document
+    {
+        return $this->mutationService->restoreDeliverableDocument($actor, $document);
+    }
 }
