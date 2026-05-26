@@ -48,7 +48,7 @@
         },
     }"
     @toast.window="add($event)"
-    class="z-100 pointer-events-none fixed bottom-6 right-6 flex w-full max-w-sm flex-col-reverse gap-3"
+    class="z-[100001] pointer-events-none fixed bottom-6 right-6 flex w-full max-w-sm flex-col-reverse gap-3"
 >
     <template
         x-for="toast in toasts"
