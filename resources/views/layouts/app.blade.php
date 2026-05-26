@@ -14,6 +14,7 @@
 
     <!-- Alpine Core -->
     <!-- <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script> -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.js"></script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     @livewireStyles
@@ -51,7 +52,6 @@
 
 
     <script src="https://cdn.jsdelivr.net/npm/flowbite@4.0.1/dist/flowbite.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.js"></script>
 </body>
 
 </html>
