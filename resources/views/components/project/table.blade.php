@@ -170,10 +170,8 @@
                                     wire:click.stop="startProject({{ $project->id }})" />
                             @endif
 
-                            @if (($statusEnum?->value ?? '') !== 'paused')
-                                <x-ui.icon-button icon="edit" size="sm" tooltip="Sửa"
-                                    wire:click.stop="openEditProjectModal({{ $project->id }})" />
-                            @endif
+                            <x-ui.icon-button icon="edit" size="sm" tooltip="Sửa"
+                                wire:click.stop="openEditProjectModal({{ $project->id }})" />
 
                             <x-ui.icon-button icon="content_copy" size="sm" color="primary" tooltip="Sao chép dự án"
                                 wire:click.stop="cloneProject({{ $project->id }})" />

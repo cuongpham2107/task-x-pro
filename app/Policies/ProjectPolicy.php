@@ -57,7 +57,7 @@ class ProjectPolicy
 
     public function update(User $user, Project $project): bool
     {
-        if (in_array($project->status, [ProjectStatus::Completed, ProjectStatus::Cancelled, ProjectStatus::Paused, ProjectStatus::Overdue], true)) {
+        if (in_array($project->status, [ProjectStatus::Completed, ProjectStatus::Cancelled, ProjectStatus::Overdue], true)) {
             return false;
         }
 
@@ -74,7 +74,12 @@ class ProjectPolicy
                 || $project->projectLeaders()->where('user_id', $user->id)->exists();
         }
 
-        return $user->hasRole('leader');
+        if ($user->hasRole('leader')) {
+            return (int) $project->created_by === (int) $user->id
+                || $project->projectLeaders()->where('user_id', $user->id)->exists();
+        }
+
+        return false;
     }
 
     public function delete(User $user, Project $project): bool

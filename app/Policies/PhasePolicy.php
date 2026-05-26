@@ -33,6 +33,15 @@ class PhasePolicy
             return false;
         }
 
+        if ($project !== null) {
+            $isProjectCreator = (int) $project->created_by === (int) $user->id;
+            $isProjectLeader = $project->projectLeaders()->where('user_id', $user->id)->exists();
+
+            if ($isProjectCreator || $isProjectLeader) {
+                return true;
+            }
+        }
+
         return $user->can('phase.create');
     }
 
@@ -52,7 +61,7 @@ class PhasePolicy
             return true;
         }
 
-        if ($user->hasRole('leader')) {
+        if ($user->hasRole('leader') && $phase->project?->projectLeaders()->where('user_id', $user->id)->exists()) {
             return true;
         }
 
