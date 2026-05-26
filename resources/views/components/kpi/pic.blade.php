@@ -410,9 +410,9 @@ new class extends Component
 </style>
 
 <div>
-    <main class="w-fulls mx-auto flex-1 space-y-8">
+    <main class="w-fulls mx-auto flex-1 space-y-4">
         <!-- Header Section -->
-        <div class="animate-enter relative z-20 flex flex-col justify-between gap-6 md:flex-row md:items-end"
+        <div class="animate-enter relative z-20 flex flex-col justify-between gap-3 md:flex-row md:items-end"
             style="animation-delay: 0.1s">
             <x-ui.heading title="Báo cáo KPI Cá nhân" description="Phân tích hiệu suất định kỳ và đánh giá mục tiêu" />
             <div class="flex flex-col gap-4 md:flex-row md:items-center">
@@ -441,12 +441,12 @@ new class extends Component
                     <div class="mb-0.5 flex shrink-0 flex-col gap-1 self-end">
                         <div class="flex items-center gap-2">
                             <button wire:click="exportExcel('xlsx')"
-                                class="flex h-[38px] items-center rounded-xl border border-emerald-200 bg-emerald-50 px-3 text-emerald-600 shadow-sm transition-all hover:bg-emerald-600 hover:text-white"
+                                class="flex h-9.5 items-center rounded-xl border border-emerald-200 bg-emerald-50 px-3 text-emerald-600 shadow-sm transition-all hover:bg-emerald-600 hover:text-white"
                                 title="Xuất Excel">
                                 <span class="material-symbols-outlined text-[20px]">table_view</span>
                             </button>
                             <button wire:click="exportExcel('pdf')"
-                                class="flex h-[38px] items-center rounded-xl border border-rose-200 bg-rose-50 px-3 text-rose-600 shadow-sm transition-all hover:bg-rose-600 hover:text-white"
+                                class="flex h-9.5 items-center rounded-xl border border-rose-200 bg-rose-50 px-3 text-rose-600 shadow-sm transition-all hover:bg-rose-600 hover:text-white"
                                 title="Xuất PDF">
                                 <span class="material-symbols-outlined text-[20px]">picture_as_pdf</span>
                             </button>
@@ -515,83 +515,82 @@ new class extends Component
                 default => 'Hệ thống đang tổng hợp tự động. Bạn cần hoàn thành task đúng hạn để điểm KPI tăng.',
             };
         @endphp
-        <div class="animate-enter rounded-xl border border-sky-100 bg-sky-50/70 p-4 dark:border-sky-900/40 dark:bg-sky-900/10"
+        <div class="animate-enter rounded-xl border border-sky-100 bg-sky-50/70 p-2.5 dark:border-sky-900/40 dark:bg-sky-900/10"
             style="animation-delay: 0.18s">
-            <h3 class="mb-2 text-sm font-bold text-sky-900 dark:text-sky-300">Vì sao cần Leader phê duyệt KPI?</h3>
-            <p class="text-xs text-slate-600 dark:text-slate-300">
+            <h3 class="mb-2 text-xs font-bold text-sky-900 dark:text-sky-300">Vì sao cần Leader phê duyệt KPI?</h3>
+            <p class="text-[11px] text-slate-600 dark:text-slate-300">
                 Leader xác nhận dữ liệu KPI đã phản ánh đúng thực tế công việc (deadline, SLA, chất lượng) trước khi
                 dùng cho báo cáo và đánh giá hiệu suất.
             </p>
-            <p class="mt-2 text-xs font-semibold text-sky-700 dark:text-sky-300">Trạng thái hiện tại:
+            <p class="mt-2 text-[11px] font-semibold text-sky-700 dark:text-sky-300">Trạng thái hiện tại:
                 {{ $nextAction }}</p>
         </div>
         <!-- Score Cards Grid -->
-        <div class="animate-enter grid grid-cols-1 gap-6 lg:grid-cols-4" style="animation-delay: 0.2s">
+        <div class="animate-enter grid grid-cols-1 gap-3 lg:grid-cols-4" style="animation-delay: 0.2s">
             <!-- Main Score Card -->
             <div
-                class="relative overflow-hidden rounded-2xl border border-slate-100 bg-white p-8 shadow-xl shadow-slate-200/50 lg:col-span-3 dark:border-slate-700 dark:bg-slate-800 dark:shadow-none">
-                <div class="bg-primary/5 dark:bg-primary/10 absolute right-0 top-0 h-40 w-40 rounded-bl-full"></div>
+                class="relative overflow-hidden rounded-2xl border border-slate-100 bg-white p-4 shadow-xl shadow-slate-200/50 lg:col-span-3 dark:border-slate-700 dark:bg-slate-800 dark:shadow-none">
+                <div class="bg-primary/5 dark:bg-primary/10 absolute right-0 top-0 h-24 w-24 rounded-bl-full"></div>
 
                 <div class="relative z-10 flex h-full flex-col justify-between">
-                    <div class="flex flex-col justify-between gap-6 md:flex-row md:items-start">
+                    <div class="flex flex-col justify-between gap-3 md:flex-row md:items-start">
                         <div class="space-y-2">
                             <p
-                                class="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">
+                                class="text-2xs font-bold uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">
                                 Hiệu suất thực tế kỳ này</p>
-                            <div class="flex items-baseline gap-3">
-                                <h3 class="text-7xl font-black tracking-tight text-slate-800 dark:text-white">
+                            <div class="flex items-baseline gap-2">
+                                <h3 class="text-5xl font-black tracking-tight text-slate-800 dark:text-white">
                                     {{ number_format($actualScore, 1) }}
                                 </h3>
-                                <span class="text-2xl font-bold text-slate-300 dark:text-slate-600">/
+                                <span class="text-lg font-bold text-slate-300 dark:text-slate-600">/
                                     {{ number_format($targetScore, 0) }}</span>
                             </div>
 
-                            <div class="mt-4 flex flex-wrap gap-3">
+                            <div class="mt-2 flex flex-wrap gap-1.5">
                                 <div
-                                    class="flex items-center gap-1.5 rounded-full bg-slate-50 px-3 py-1 dark:bg-slate-900/50">
+                                    class="flex items-center gap-1 rounded-full bg-slate-50 px-2.5 py-0.5 dark:bg-slate-900/50">
                                     <span class="bg-primary size-2 rounded-full"></span>
-                                    <span class="text-[11px] font-bold text-slate-600 dark:text-slate-400">Target:
+                                    <span class="text-[9px] font-bold text-slate-600 dark:text-slate-400">Target:
                                         {{ $targetScore }}</span>
                                 </div>
                                 @if ($teamAvg > 0)
                                     <div
-                                        class="flex items-center gap-1.5 rounded-full bg-slate-50 px-3 py-1 dark:bg-slate-900/50">
+                                        class="flex items-center gap-1 rounded-full bg-slate-50 px-2.5 py-0.5 dark:bg-slate-900/50">
                                         <span
                                             class="{{ $delta >= 0 ? 'bg-emerald-500' : 'bg-rose-500' }} size-2 rounded-full"></span>
-                                        <span class="text-[11px] font-bold text-slate-600 dark:text-slate-400">So với
+                                        <span class="text-[9px] font-bold text-slate-600 dark:text-slate-400">So với
                                             Team: {{ $deltaLabel }}</span>
                                     </div>
                                 @endif
                             </div>
                         </div>
 
-                        <div class="flex flex-col items-end gap-3">
+                        <div class="flex flex-col items-end gap-2">
                             <div class="flex flex-col items-end">
                                 <span
-                                    class="{{ $statusClass }} rounded-xl px-4 py-2 text-xs font-black uppercase tracking-wider shadow-sm">
+                                    class="{{ $statusClass }} rounded-lg px-2.5 py-1 text-2xs font-black uppercase tracking-wider shadow-sm">
                                     {{ $statusLabel }}
                                 </span>
                                 <p
-                                    class="mt-2 text-right text-[10px] font-medium italic text-slate-400 dark:text-slate-500">
+                                    class="mt-1.5 text-right text-[8px] font-medium italic text-slate-400 dark:text-slate-500">
                                     {{ $statusHint }}</p>
                             </div>
                             @if ($score?->approved_at)
                                 <div
-                                    class="flex items-center gap-2 rounded-lg bg-emerald-50/50 px-3 py-1.5 text-emerald-600 dark:bg-emerald-900/10 dark:text-emerald-400">
-                                    <span class="material-symbols-outlined text-[16px]">verified</span>
-                                    <span
-                                        class="text-[10px] font-bold uppercase">{{ $score->approved_at->format('d/m/Y') }}</span>
+                                    class="flex items-center gap-1.5 rounded-lg bg-emerald-50/50 px-2.5 py-0.5 text-emerald-600 dark:bg-emerald-900/10 dark:text-emerald-400">
+                                    <span class="material-symbols-outlined text-[14px]">verified</span>
+                                    <span class="text-[9px] font-bold uppercase">{{ $score->approved_at->format('d/m/Y') }}</span>
                                 </div>
                             @endif
                         </div>
                     </div>
 
-                    <div class="mt-12">
+                    <div class="mt-6">
                         @php
                             $progressWidth = min(100, $actualScore);
                         @endphp
                         <div
-                            class="group relative h-4 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-700">
+                            class="group relative h-2.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-700">
                             <!-- Background gradient for the bar -->
                             <div
                                 class="bg-linear-to-r absolute inset-0 from-rose-500/20 via-amber-500/20 to-emerald-500/20 opacity-30">
@@ -604,7 +603,7 @@ new class extends Component
                                 </div>
                             </div>
                         </div>
-                        <div class="mt-4 grid grid-cols-3 text-[10px] font-black uppercase tracking-widest">
+                        <div class="mt-2.5 grid grid-cols-3 text-[8px] font-black uppercase tracking-widest">
                             <div class="text-rose-500/70 dark:text-rose-500/50">Cần cố gắng</div>
                             <div class="text-center text-amber-500/70 dark:text-amber-500/50">Đạt yêu cầu</div>
                             <div class="text-right text-emerald-500">Xuất sắc</div>
@@ -614,16 +613,16 @@ new class extends Component
             </div>
 
             <!-- Grade Card -->
-            <div class="flex flex-col gap-6">
+            <div class="flex flex-col gap-3">
                 <div
-                    class="bg-linear-to-br from-primary shadow-primary/20 flex-1 rounded-2xl to-orange-600 p-8 text-white shadow-xl">
-                    <p class="text-xs font-bold uppercase tracking-[0.2em] opacity-80">Xếp loại dự kiến</p>
-                    <h3 class="mt-4 text-4xl font-black uppercase tracking-tight">{{ explode(' - ', $gradeLabel)[0] }}
+                    class="bg-linear-to-br from-primary shadow-primary/20 flex-1 rounded-2xl to-orange-600 p-4 text-white shadow-xl">
+                    <p class="text-2xs font-bold uppercase tracking-[0.2em] opacity-80">Xếp loại dự kiến</p>
+                    <h3 class="mt-2 text-2xl font-black uppercase tracking-tight">{{ explode(' - ', $gradeLabel)[0] }}
                     </h3>
-                    <p class="mt-1 text-sm font-bold uppercase opacity-90">{{ @explode(' - ', $gradeLabel)[1] }}</p>
+                    <p class="mt-1 text-2xs font-bold uppercase opacity-90">{{ @explode(' - ', $gradeLabel)[1] }}</p>
 
-                    <div class="mt-8 rounded-xl bg-white/10 p-4 backdrop-blur-sm">
-                        <p class="text-xs italic leading-relaxed text-white/90">
+                    <div class="mt-4 rounded-xl bg-white/10 p-2.5 backdrop-blur-sm">
+                        <p class="text-[11px] italic leading-relaxed text-white/90">
                             {{ $finalScore >= 80 ? 'Bạn đang duy trì một hiệu suất tuyệt vời. Tiếp tục phát huy!' : ($finalScore >= 60 ? 'Hiệu suất ổn định. Một chút nỗ lực nữa để đạt loại A.' : 'Đã đến lúc cần bứt phá các chỉ số trọng yếu.') }}
                         </p>
                     </div>
@@ -632,7 +631,7 @@ new class extends Component
         </div>
 
         <!-- Analytical Breakdown & Radar -->
-        <div class="animate-enter grid grid-cols-1 gap-8 lg:grid-cols-5" style="animation-delay: 0.3s">
+        <div class="animate-enter grid grid-cols-1 gap-4 lg:grid-cols-5" style="animation-delay: 0.3s">
             <!-- Formula Infographic -->
             <div class="lg:col-span-3">
                 <x-kpi.formula-card :on-time-rate="$onTimeRate" :sla-rate="$slaRate" :star-score="$starScore" :final-score="$finalScore"
@@ -641,9 +640,9 @@ new class extends Component
 
             <!-- Enhanced Radar Chart -->
             <div
-                class="rounded-2xl border border-slate-100 bg-white p-8 lg:col-span-2 dark:border-slate-700 dark:bg-slate-800">
-                <div class="mb-6 flex items-center justify-between">
-                    <h3 class="text-sm font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">Phân tích
+                class="rounded-2xl border border-slate-100 bg-white p-4 lg:col-span-2 dark:border-slate-700 dark:bg-slate-800">
+                <div class="mb-3 flex items-center justify-between">
+                    <h3 class="text-2xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">Phân tích
                         năng lực</h3>
                     <span class="material-symbols-outlined text-slate-300">insights</span>
                 </div>
@@ -652,14 +651,14 @@ new class extends Component
                     'Đúng hạn' => $onTimeRate,
                     'SLA' => $slaRate,
                     'Đánh giá' => $starScore,
-                ]" :final-score="$finalScore" size="size-72" />
+                ]" :final-score="$finalScore" size="size-56" />
 
-                <div class="mt-8 border-t border-slate-100 pt-6 dark:border-slate-700">
-                    <div class="flex items-start gap-4 rounded-xl bg-slate-50 p-4 dark:bg-slate-900/50">
-                        <span class="material-symbols-outlined text-primary">lightbulb</span>
+                <div class="mt-4 border-t border-slate-100 pt-3 dark:border-slate-700">
+                    <div class="flex items-start gap-2 rounded-xl bg-slate-50 p-2.5 dark:bg-slate-900/50">
+                        <span class="material-symbols-outlined text-[18px] text-primary">lightbulb</span>
                         <div class="flex-1">
-                            <p class="text-[11px] font-bold uppercase text-slate-400">Gợi ý phát triển</p>
-                            <p class="mt-1 text-xs leading-relaxed text-slate-600 dark:text-slate-300">
+                            <p class="text-[9px] font-bold uppercase text-slate-400">Gợi ý phát triển</p>
+                            <p class="mt-0.5 text-2xs leading-relaxed text-slate-600 dark:text-slate-300">
                                 {{ $hintText }}
                             </p>
                         </div>
@@ -677,16 +676,16 @@ new class extends Component
         <div class="animate-enter overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800"
             style="animation-delay: 0.35s">
             <div
-                class="flex flex-col justify-between gap-3 border-b border-slate-100 px-6 py-5 md:flex-row md:items-center dark:border-slate-700">
+                class="flex flex-col justify-between gap-2 border-b border-slate-100 px-4 py-3 md:flex-row md:items-center dark:border-slate-700">
                 <div>
-                    <h3 class="text-xl font-bold text-slate-600 dark:text-white">Task KPI - SLA - Phê duyệt</h3>
+                    <h3 class="text-base font-bold text-slate-600 dark:text-white">Task KPI - SLA - Phê duyệt</h3>
                     <p class="text-xs text-slate-500 dark:text-slate-300">
                         Danh sách task trong {{ $this->taskReviewPeriodLabel }} để đối soát trước/sau duyệt KPI.
                     </p>
                 </div>
                 <div class="flex flex-wrap items-center gap-3">
                     <div class="flex items-center gap-2">
-                        <span class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Lọc duyệt</span>
+                        <span class="text-2xs font-semibold uppercase tracking-wide text-slate-500">Lọc duyệt</span>
                         <x-ui.filter-select model="taskApprovalFilter" :value="$taskApprovalFilter" icon="filter_alt"
                             :permit-all="false" width="w-36" :options="[
                                 'all' => 'Tất cả',
@@ -696,36 +695,36 @@ new class extends Component
                             ]" />
                     </div>
                     <span
-                        class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700 dark:bg-slate-700 dark:text-slate-200">
+                        class="rounded-full bg-slate-100 px-2.5 py-0.5 text-[11px] font-semibold text-slate-700 dark:bg-slate-700 dark:text-slate-200">
                         Tổng task: {{ $taskReviewSummary['total'] }}
                     </span>
                 </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-3 border-b border-slate-100 p-4 md:grid-cols-6 dark:border-slate-700">
-                <div class="rounded-lg bg-slate-50 p-3 dark:bg-slate-900/50">
+            <div class="grid grid-cols-2 gap-2 border-b border-slate-100 p-2.5 md:grid-cols-6 dark:border-slate-700">
+                <div class="rounded-lg bg-slate-50 p-2 dark:bg-slate-900/50">
                     <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Hoàn thành</p>
-                    <p class="mt-1 text-xl font-black text-emerald-600">{{ $taskReviewSummary['completed'] }}</p>
+                    <p class="mt-0.5 text-base font-black text-emerald-600">{{ $taskReviewSummary['completed'] }}</p>
                 </div>
-                <div class="rounded-lg bg-slate-50 p-3 dark:bg-slate-900/50">
+                <div class="rounded-lg bg-slate-50 p-2 dark:bg-slate-900/50">
                     <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Chờ duyệt</p>
-                    <p class="mt-1 text-xl font-black text-amber-600">{{ $taskReviewSummary['waiting_approval'] }}</p>
+                    <p class="mt-0.5 text-base font-black text-amber-600">{{ $taskReviewSummary['waiting_approval'] }}</p>
                 </div>
-                <div class="rounded-lg bg-slate-50 p-3 dark:bg-slate-900/50">
+                <div class="rounded-lg bg-slate-50 p-2 dark:bg-slate-900/50">
                     <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Task đã duyệt</p>
-                    <p class="mt-1 text-xl font-black text-emerald-600">{{ $taskReviewSummary['approved'] }}</p>
+                    <p class="mt-0.5 text-base font-black text-emerald-600">{{ $taskReviewSummary['approved'] }}</p>
                 </div>
-                <div class="rounded-lg bg-slate-50 p-3 dark:bg-slate-900/50">
+                <div class="rounded-lg bg-slate-50 p-2 dark:bg-slate-900/50">
                     <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Task bị từ chối</p>
-                    <p class="mt-1 text-xl font-black text-rose-600">{{ $taskReviewSummary['rejected'] }}</p>
+                    <p class="mt-0.5 text-base font-black text-rose-600">{{ $taskReviewSummary['rejected'] }}</p>
                 </div>
-                <div class="rounded-lg bg-slate-50 p-3 dark:bg-slate-900/50">
+                <div class="rounded-lg bg-slate-50 p-2 dark:bg-slate-900/50">
                     <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">SLA đạt</p>
-                    <p class="mt-1 text-xl font-black text-blue-600">{{ $taskReviewSummary['sla_met'] }}</p>
+                    <p class="mt-0.5 text-base font-black text-blue-600">{{ $taskReviewSummary['sla_met'] }}</p>
                 </div>
-                <div class="rounded-lg bg-slate-50 p-3 dark:bg-slate-900/50">
+                <div class="rounded-lg bg-slate-50 p-2 dark:bg-slate-900/50">
                     <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Avg tiến độ</p>
-                    <p class="mt-1 text-xl font-black text-slate-600 dark:text-white">
+                    <p class="mt-0.5 text-base font-black text-slate-600 dark:text-white">
                         {{ number_format((float) $taskReviewSummary['avg_progress'], 1) }}%</p>
                 </div>
             </div>
