@@ -39,11 +39,11 @@
             <div x-transition:enter="ease-out duration-200" x-transition:enter-start="opacity-0 scale-95"
                 x-transition:enter-end="opacity-100 scale-100" x-transition:leave="ease-in duration-150"
                 x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
-                class="{{ $maxWidthClasses }} relative z-100000 w-full overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-slate-800">
+                class="{{ $maxWidthClasses }} relative z-100000 w-full rounded-2xl bg-white shadow-2xl dark:bg-slate-800">
                 {{-- Close button --}}
                 @if ($closeable)
                     <button @click="isOpen = false"
-                        class="absolute right-4 top-4 z-10 rounded-lg p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-700">
+                        class="absolute right-4 top-4 z-[100002] rounded-lg p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-700">
                         <span class="material-symbols-outlined text-xl">close</span>
                     </button>
                 @endif

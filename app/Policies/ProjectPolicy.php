@@ -102,7 +102,8 @@ class ProjectPolicy
         }
 
         if ($user->hasRole('leader')) {
-            return $project->projectLeaders()->where('user_id', $user->id)->exists();
+            return (int) $project->created_by === (int) $user->id
+                || $project->projectLeaders()->where('user_id', $user->id)->exists();
         }
 
         return false;

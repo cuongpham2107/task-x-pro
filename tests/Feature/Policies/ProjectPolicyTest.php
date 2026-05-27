@@ -99,3 +99,15 @@ it('allows pic to view but not update or delete project', function () {
     expect($pic->can('update', $project))->toBeFalse();
     expect($pic->can('delete', $project))->toBeFalse();
 });
+
+it('deletes phases and tasks when project is deleted', function () {
+    $project = Project::factory()->create();
+    $phase = Phase::factory()->create(['project_id' => $project->id]);
+    $task = Task::factory()->create(['phase_id' => $phase->id]);
+
+    $project->delete();
+
+    $this->assertSoftDeleted('projects', ['id' => $project->id]);
+    $this->assertDatabaseMissing('phases', ['id' => $phase->id]);
+    $this->assertDatabaseMissing('tasks', ['id' => $task->id]);
+});

@@ -19,12 +19,61 @@
         displayValue: '',
         value: @entangle($attributes->wire('model')),
         instance: null,
-    
-        // Chuyển đổi linh hoạt các định dạng sang yyyy-mm-dd
+        init() {
+            this.$nextTick(() => {
+                if (!this.$refs.input) return;
+
+                this.value = this.toISO(this.value);
+                this.displayValue = this.toDisplay(this.value);
+                this.$refs.input.value = this.displayValue;
+
+                this.instance = new window.Datepicker(this.$refs.input, {
+                    language: 'vi',
+                    format: '{{ $format }}',
+                    orientation: '{{ $orientation }}',
+                    autohide: true,
+                    clearBtn: true,
+                    todayBtn: true,
+                    todayBtnMode: 1,
+                });
+
+                // Set high z-index for dropdown when it shows
+                this.$refs.input.addEventListener('focus', () => {
+                    setTimeout(() => {
+                        const dropdown = document.querySelector('.datepicker-dropdown');
+                        if (dropdown) dropdown.style.zIndex = '100001';
+                    }, 10);
+                });
+
+                this.$refs.input.addEventListener('click', () => {
+                    setTimeout(() => {
+                        const dropdown = document.querySelector('.datepicker-dropdown');
+                        if (dropdown) dropdown.style.zIndex = '100001';
+                    }, 10);
+                });
+
+                if (this.displayValue) {
+                    this.instance.setDate(this.displayValue);
+                }
+
+                this.$refs.input.addEventListener('changeDate', (e) => {
+                    if (!this.$refs.input) return;
+                    this.displayValue = this.$refs.input.value;
+                    this.value = this.toISO(this.$refs.input.value);
+                });
+
+                this.$watch('value', (newVal) => {
+                    if (!this.$refs.input || !this.instance) return;
+                    const display = this.toDisplay(newVal);
+                    if (display !== this.$refs.input.value) {
+                        this.instance.setDate(display);
+                    }
+                });
+            });
+        },
         toISO(str) {
             if (!str) return '';
-    
-            // Nếu đã là định dạng yyyy-mm-dd
+
             if (str.includes('-')) {
                 let parts = str.split(' ')[0].split('-');
                 if (parts.length === 3) {
@@ -33,8 +82,7 @@
                     return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
                 }
             }
-    
-            // Nếu là định dạng dd/mm/yyyy
+
             if (str.includes('/')) {
                 let parts = str.split('/');
                 if (parts.length === 3) {
@@ -45,68 +93,23 @@
                     return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
                 }
             }
-    
+
             return str;
         },
-    
-        // Chuyển đổi yyyy-mm-dd → dd/mm/yyyy để hiển thị
         toDisplay(str) {
             if (!str) return '';
-    
-            // Nếu đã là định dạng dd/mm/yyyy thì trả về luôn
+
             if (str.includes('/') && str.split('/').length === 3) {
                 return str;
             }
-    
+
             let iso = this.toISO(str);
             if (!iso || !iso.includes('-')) return str;
-    
+
             let [y, m, d] = iso.split('-');
             return `${d}/${m}/${y}`;
-        },
-    
-        init() {
-            this.$nextTick(() => {
-                if (!this.$refs.input) return;
-    
-                // Tự động chuẩn hóa giá trị nếu lỡ mang định dạng lạ hoặc năm 0030
-                this.value = this.toISO(this.value);
-                this.displayValue = this.toDisplay(this.value);
-    
-                // Phải set value cho input trước khi init Datepicker
-                this.$refs.input.value = this.displayValue;
-    
-                this.instance = new window.Datepicker(this.$refs.input, {
-                    language: 'vi',
-                    format: '{{ $format }}',
-                    orientation: '{{ $orientation }}',
-                    autohide: true,
-                    clearBtn: true,
-                    todayBtn: true,
-                    todayBtnMode: 1,
-                });
-    
-                // Đồng bộ lại datepicker nếu đã có giá trị
-                if (this.displayValue) {
-                    this.instance.setDate(this.displayValue);
-                }
-    
-                this.$refs.input.addEventListener('changeDate', (e) => {
-                    if (!this.$refs.input) return;
-                    this.displayValue = this.$refs.input.value;
-                    this.value = this.toISO(this.$refs.input.value);
-                });
-    
-                this.$watch('value', (newVal) => {
-                    if (!this.$refs.input || !this.instance) return;
-                    const display = this.toDisplay(newVal);
-                    if (display !== this.$refs.input.value) {
-                        this.instance.setDate(display);
-                    }
-                });
-            });
         }
-    }" wire:ignore>
+    }" wire:ignore x-cloak>
         @if ($label)
             <label for="{{ $id }}" class="label-text mb-1 block">
                 {{ $label }}

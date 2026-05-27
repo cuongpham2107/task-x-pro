@@ -7,6 +7,7 @@ use App\Models\PhaseTemplate;
 use App\Models\Project;
 use App\Models\SlaConfig;
 use App\Models\Task;
+use App\Models\TaskAttachment;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -210,6 +211,72 @@ Route::middleware('auth')->group(function () {
             'Content-Disposition' => 'inline; filename="'.basename($storedPath).'"',
         ]);
     })->name('documents.version.file');
+
+    Route::get('tasks/attachments/{attachment}/file', function (TaskAttachment $attachment) {
+        $actor = auth()->user();
+        \Illuminate\Support\Facades\Gate::forUser($actor)->authorize('view', $attachment);
+
+        $media = $attachment->getFirstMedia('attachment');
+        if ($media) {
+            try {
+                $path = $media->getPath();
+                $mime = $media->mime_type ?? null;
+
+                return response()->file($path, ['Content-Type' => $mime ?? 'application/octet-stream']);
+            } catch (\Throwable) {
+                // fall through to other handlers
+            }
+        }
+
+        $storedPath = trim((string) $attachment->stored_path);
+        if ($storedPath === '') {
+            abort(404);
+        }
+
+        $disk = (string) ($attachment->disk ?: config('media-library.disk_name'));
+        $diskInstance = \Illuminate\Support\Facades\Storage::disk($disk);
+
+        if (! $diskInstance->exists($storedPath)) {
+            abort(404);
+        }
+
+        if (method_exists($diskInstance, 'temporaryUrl')) {
+            try {
+                return redirect($diskInstance->temporaryUrl($storedPath, now()->addMinutes(10)));
+            } catch (\Throwable) {
+                // ignore and continue
+            }
+        }
+
+        if (method_exists($diskInstance, 'url')) {
+            try {
+                return redirect($diskInstance->url($storedPath));
+            } catch (\Throwable) {
+                // ignore and continue
+            }
+        }
+
+        try {
+            $fullPath = $diskInstance->path($storedPath);
+            $mime = method_exists($diskInstance, 'mimeType') ? $diskInstance->mimeType($storedPath) : null;
+
+            return response()->file($fullPath, ['Content-Type' => $mime ?? 'application/octet-stream']);
+        } catch (\Throwable) {
+            // fallback to stream
+        }
+
+        $stream = $diskInstance->readStream($storedPath);
+        if ($stream === false) {
+            abort(404);
+        }
+
+        return response()->stream(function () use ($stream) {
+            fpassthru($stream);
+        }, 200, [
+            'Content-Type' => (method_exists($diskInstance, 'mimeType') ? $diskInstance->mimeType($storedPath) : 'application/octet-stream'),
+            'Content-Disposition' => 'inline; filename="'.basename($storedPath).'"',
+        ]);
+    })->name('tasks.attachments.file');
 
     Route::get('/api/search', \App\Http\Controllers\Api\GlobalSearchController::class)->name('api.search');
 });

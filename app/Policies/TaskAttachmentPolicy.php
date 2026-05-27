@@ -8,6 +8,14 @@ use App\Models\User;
 class TaskAttachmentPolicy
 {
     /**
+     * Determine whether the user can view the given task attachment.
+     */
+    public function view(User $user, TaskAttachment $attachment): bool
+    {
+        return $this->delete($user, $attachment);
+    }
+
+    /**
      * Determine whether the user can delete the given task attachment.
      */
     public function delete(User $user, TaskAttachment $attachment): bool

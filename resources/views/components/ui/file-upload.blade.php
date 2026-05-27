@@ -55,60 +55,10 @@
             <p class="text-2xs font-bold uppercase tracking-wider text-slate-400">Tệp đã tải lên</p>
             @foreach ($existingAttachments as $attachment)
                 @php
-                    $attachmentUrl = null;
+                    $attachmentUrl = route('tasks.attachments.file', $attachment->id);
                     $media = method_exists($attachment, 'getFirstMedia')
                         ? $attachment->getFirstMedia('attachment')
                         : null;
-
-                    if ($media !== null) {
-                        try {
-                            if (method_exists($media, 'getTemporaryUrl')) {
-                                $attachmentUrl = $media->getTemporaryUrl(now()->addMinutes(10));
-                            }
-                        } catch (\Throwable) {
-                            $attachmentUrl = null;
-                        }
-
-                        if ($attachmentUrl === null) {
-                            try {
-                                $attachmentUrl = $media->getFullUrl();
-                            } catch (\Throwable) {
-                                $attachmentUrl = null;
-                            }
-                        }
-                    }
-
-                    if ($attachmentUrl === null) {
-                        $storedPath = trim((string) ($attachment->stored_path ?? ''));
-                        $diskName = (string) ($attachment->disk ?? config('media-library.disk_name'));
-
-                        if ($storedPath !== '' && $diskName !== '') {
-                            try {
-                                $diskInstance = \Illuminate\Support\Facades\Storage::disk($diskName);
-
-                                if ($diskInstance->exists($storedPath)) {
-                                    try {
-                                        if (method_exists($diskInstance, 'temporaryUrl')) {
-                                            $attachmentUrl = $diskInstance->temporaryUrl(
-                                                $storedPath,
-                                                now()->addMinutes(10),
-                                            );
-                                        }
-                                    } catch (\Throwable) {
-                                        $attachmentUrl = null;
-                                    }
-
-                                    if ($attachmentUrl === null && method_exists($diskInstance, 'url')) {
-                                        $attachmentUrl = $diskInstance->url($storedPath);
-                                    }
-                                }
-                            } catch (\Throwable) {
-                                $attachmentUrl = null;
-                            }
-                        }
-                    }
-
-                    $attachmentUrl = $attachmentUrl ?? ($attachment->url ?? '#');
                     $originalName = $attachment->original_name ?? ($attachment->file_name ?? 'Unknown');
                     $size = $attachment->size_bytes ?? ($attachment->size ?? 0);
                     $uploaderName = $attachment->uploader->name ?? 'Unknown';

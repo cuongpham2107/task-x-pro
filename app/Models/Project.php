@@ -14,6 +14,13 @@ class Project extends Model
 {
     use HasFactory, SoftDeletes;
 
+    protected static function booted(): void
+    {
+        static::deleting(function (Project $project): void {
+            $project->phases()->get()->each->delete();
+        });
+    }
+
     /**
      * @var list<string>
      */
