@@ -1,5 +1,7 @@
 <?php
 
+use App\Enums\PhaseStatus;
+use App\Enums\ProjectStatus;
 use App\Models\Phase;
 use App\Models\Project;
 use App\Models\Task;
@@ -8,6 +10,8 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
+
+use function Pest\Laravel\actingAs;
 
 uses(RefreshDatabase::class);
 
@@ -110,4 +114,27 @@ it('deletes phases and tasks when project is deleted', function () {
     $this->assertSoftDeleted('projects', ['id' => $project->id]);
     $this->assertDatabaseMissing('phases', ['id' => $phase->id]);
     $this->assertDatabaseMissing('tasks', ['id' => $task->id]);
+});
+
+it('does not auto-complete project for users without project update permission', function () {
+    $pic = User::factory()->create();
+    $pic->assignRole('pic');
+
+    $project = Project::factory()->create([
+        'status' => ProjectStatus::Init,
+        'created_by' => User::factory()->create()->id,
+    ]);
+
+    $phase = Phase::factory()->create([
+        'project_id' => $project->id,
+        'status' => PhaseStatus::Pending,
+    ]);
+
+    actingAs($pic);
+
+    $phase->update([
+        'status' => PhaseStatus::Completed,
+    ]);
+
+    expect($project->fresh()->status)->not->toBe(ProjectStatus::Completed);
 });

@@ -94,18 +94,21 @@ class Phase extends Model
             $progress = (int) round($sumProgress / $taskCount);
         }
 
-        // Phase is considered Completed only when ALL non-cancelled tasks are Completed
-        $completedCount = (int) (clone $baseQuery)->where('status', TaskStatus::Completed)->count();
-        $allTasksCompleted = $taskCount > 0 && $completedCount === $taskCount;
+        // Consider phase Active if there is at least one non-pending task.
+        $hasStartedTask = (clone $baseQuery)->where('status', '!=', TaskStatus::Pending)->exists();
 
-        // Consider phase Active if there is any progress, otherwise Pending
-        $hasStartedTask = (clone $baseQuery)->where('progress', '>', 0)->exists();
+        $currentStatus = $this->status instanceof PhaseStatus
+            ? $this->status
+            : PhaseStatus::tryFrom((string) $this->status);
 
-        $status = match (true) {
-            $allTasksCompleted => PhaseStatus::Completed,
-            $progress > 0 || $hasStartedTask => PhaseStatus::Active,
-            default => PhaseStatus::Pending,
-        };
+        if ($currentStatus === PhaseStatus::Completed) {
+            $status = PhaseStatus::Completed;
+        } else {
+            $status = match (true) {
+                $progress > 0 || $hasStartedTask => PhaseStatus::Active,
+                default => PhaseStatus::Pending,
+            };
+        }
 
         // If project is paused or overdue, phase status must follow project status,
         // UNLESS it's already completed.

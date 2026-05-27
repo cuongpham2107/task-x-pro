@@ -64,7 +64,7 @@ it('allows completing a phase only when all tasks are completed and 100 percent'
         'status' => PhaseStatus::Completed->value,
     ]);
 
-    expect($updatedPhase->refresh()->status)->toBe(PhaseStatus::Completed->value);
+    expect($updatedPhase->refresh()->status->value)->toBe(PhaseStatus::Completed->value);
 });
 
 it('keeps phase active when tasks are 100 percent but still waiting approval', function () {
@@ -80,11 +80,11 @@ it('keeps phase active when tasks are 100 percent but still waiting approval', f
 
     $phase->refreshProgressFromTasks();
 
-    expect($phase->refresh()->status)->toBe(PhaseStatus::Active->value);
+    expect($phase->refresh()->status->value)->toBe(PhaseStatus::Active->value);
     expect($phase->refresh()->progress)->toBe(100);
 });
 
-it('marks phase completed when every task is completed and 100 percent', function () {
+it('keeps phase active when every task is completed until manually completed', function () {
     $phase = Phase::factory()->create([
         'status' => PhaseStatus::Pending->value,
     ]);
@@ -97,6 +97,6 @@ it('marks phase completed when every task is completed and 100 percent', functio
 
     $phase->refreshProgressFromTasks();
 
-    expect($phase->refresh()->status)->toBe(PhaseStatus::Completed->value);
+    expect($phase->refresh()->status->value)->toBe(PhaseStatus::Active->value);
     expect($phase->refresh()->progress)->toBe(100);
 });

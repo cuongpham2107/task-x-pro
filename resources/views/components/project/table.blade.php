@@ -39,7 +39,7 @@
             </button>
         </x-ui.table.column>
         <x-ui.table.column width="min-w-40">Tiến độ</x-ui.table.column>
-        <x-ui.table.column width="min-w-36">Trạng thái</x-ui.table.column>
+        <x-ui.table.column width="min-w-40">Trạng thái</x-ui.table.column>
         <x-ui.table.column width="w-16" align="center" :muted="true">Thao tác</x-ui.table.column>
     </x-ui.table.head>
 

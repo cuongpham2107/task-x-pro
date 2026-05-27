@@ -156,8 +156,7 @@ class Project extends Model
                 $hasActive = $this->phases()->where('status', 'active')->exists();
 
                 if ($allCompleted) {
-                    // Tất cả phases hoàn thành → project completed
-                    $updates['status'] = ProjectStatus::Completed->value;
+                    // Không tự chuyển project sang completed; chỉ nút thủ công mới làm việc này.
                 } elseif ($hasActive) {
                     // Có phase active → project running
                     $updates['status'] = ProjectStatus::Running->value;

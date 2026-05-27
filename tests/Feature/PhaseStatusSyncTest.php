@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\PhaseStatus;
 use App\Models\Phase;
 use App\Models\Project;
 use App\Models\Task;
@@ -23,7 +24,7 @@ beforeEach(function () {
 it('transitions phase status to active when a task starts even with zero progress', function () {
     // 1. Setup
     $user = User::factory()->create();
-    $project = Project::factory()->create(['created_by' => $user->id]);
+    $project = Project::factory()->create(['created_by' => $user->id, 'status' => 'init']);
     $phase = Phase::factory()->create([
         'project_id' => $project->id,
         'status' => 'pending',
@@ -43,7 +44,7 @@ it('transitions phase status to active when a task starts even with zero progres
 
     // Initial check
     $phase->refreshProgressFromTasks();
-    expect($phase->refresh()->status)->toBe('pending');
+    expect($phase->refresh()->status)->toBe(PhaseStatus::Pending);
 
     // 2. Start the task via TaskService
     $taskService = app(TaskService::class);
@@ -54,13 +55,13 @@ it('transitions phase status to active when a task starts even with zero progres
     expect($task->refresh()->status->value)->toBe('in_progress');
 
     // Phase status should now be active (because task started), even though progress is still 0
-    expect($phase->refresh()->status)->toBe('active');
+    expect($phase->refresh()->status)->toBe(PhaseStatus::Active);
 });
 
 it('maintains phase status as active when adding a new zero progress task to an active phase', function () {
     // 1. Setup
     $user = User::factory()->create();
-    $project = Project::factory()->create(['created_by' => $user->id]);
+    $project = Project::factory()->create(['created_by' => $user->id, 'status' => 'init']);
     $phase = Phase::factory()->create([
         'project_id' => $project->id,
         'status' => 'active',
@@ -79,7 +80,7 @@ it('maintains phase status as active when adding a new zero progress task to an 
 
     // Verify initial state
     $phase->refreshProgressFromTasks();
-    expect($phase->refresh()->status)->toBe('active');
+    expect($phase->refresh()->status)->toBe(PhaseStatus::Active);
 
     // 2. Add a new pending task (0% progress)
     $task2 = Task::factory()->create([
@@ -91,5 +92,5 @@ it('maintains phase status as active when adding a new zero progress task to an 
 
     // 3. Verify phase status is STILL active because of task1
     $phase->refreshProgressFromTasks();
-    expect($phase->refresh()->status)->toBe('active');
+    expect($phase->refresh()->status)->toBe(PhaseStatus::Active);
 });
