@@ -14,7 +14,16 @@ class DepartmentPolicy
 
     public function view(User $user, Department $department): bool
     {
-        return $user->can('department.viewAny');
+        if ($user->can('department.view')) {
+            return true;
+        }
+
+        // Allow leaders to view the department they head
+        if ($user->hasRole('leader') && $department->head_user_id !== null && $department->head_user_id === $user->id) {
+            return true;
+        }
+
+        return false;
     }
 
     public function create(User $user): bool

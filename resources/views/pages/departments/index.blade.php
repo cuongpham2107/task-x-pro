@@ -1,7 +1,9 @@
 <?php
 
 use App\Enums\DepartmentStatus;
+use App\Enums\KpiPeriodType;
 use App\Models\Department;
+use App\Models\KpiScore;
 use App\Models\User;
 use App\Services\Departments\DepartmentService;
 use Illuminate\Support\Collection;
@@ -18,6 +20,18 @@ use Livewire\WithPagination;
 new #[Title('Phòng ban')] class extends Component
 {
     use WithPagination;
+
+    /**
+     * Expanded department rows (ids).
+     * @var int[]
+     */
+    public array $expanded = [];
+
+    /**
+     * Cached users per department id.
+     * @var array<int, \Illuminate\Support\Collection>
+     */
+    public array $departmentUsers = [];
 
     protected DepartmentService $departmentService;
 
@@ -37,6 +51,8 @@ new #[Title('Phòng ban')] class extends Component
 
     public bool $showDeleteModal = false;
 
+    public bool $showKpiModal = false;
+
     public string $mode = 'create';
 
     public ?int $editingDepartmentId = null;
@@ -44,6 +60,13 @@ new #[Title('Phòng ban')] class extends Component
     public ?int $pendingDeleteDepartmentId = null;
 
     public string $pendingDeleteDepartmentName = '';
+
+    public string $kpiUserName = '';
+
+    public string $kpiPeriodLabel = '';
+
+    /** @var array<string, int|float|string|null> */
+    public array $kpiSnapshot = [];
 
     #[Validate]
     public string $code = '';
@@ -91,6 +114,55 @@ new #[Title('Phòng ban')] class extends Component
     public function updatedFilterStatus(): void
     {
         $this->resetPage();
+    }
+
+    public function openMonthlyKpiModal(int $userId): void
+    {
+        $actor = auth()->user();
+        if ($actor === null) {
+            return;
+        }
+
+        Gate::forUser($actor)->authorize('viewAny', KpiScore::class);
+
+        $user = User::query()->findOrFail($userId);
+
+        if ($actor->hasRole('leader') && (int) $user->department_id !== (int) $actor->department_id) {
+            abort(403);
+        }
+
+        $base = now()->day <= 7 ? now()->copy()->subMonth() : now();
+        $year = (int) $base->year;
+        $month = (int) $base->month;
+
+        $score = KpiScore::query()
+            ->where('user_id', $user->id)
+            ->where('period_type', KpiPeriodType::Monthly->value)
+            ->where('period_year', $year)
+            ->where('period_value', $month)
+            ->first();
+
+        $this->kpiUserName = (string) $user->name;
+        $this->kpiPeriodLabel = 'Tháng '.$month.'/'.$year;
+        $this->kpiSnapshot = [
+            'final_score' => (float) ($score?->final_score ?? 0),
+            'on_time_rate' => (float) ($score?->on_time_rate ?? 0),
+            'sla_rate' => (float) ($score?->sla_rate ?? 0),
+            'avg_star' => (float) ($score?->avg_star ?? 0),
+            'total_tasks' => (int) ($score?->total_tasks ?? 0),
+            'status' => $score?->status,
+            'calculated_at' => $score?->calculated_at?->format('d/m/Y H:i'),
+        ];
+
+        $this->showKpiModal = true;
+    }
+
+    public function closeKpiModal(): void
+    {
+        $this->showKpiModal = false;
+        $this->kpiUserName = '';
+        $this->kpiPeriodLabel = '';
+        $this->kpiSnapshot = [];
     }
 
     public function setSort(string $column): void
@@ -166,6 +238,23 @@ new #[Title('Phòng ban')] class extends Component
         $this->status = $department->status instanceof \BackedEnum ? (string) $department->status->value : (string) $department->status;
 
         $this->showFormModal = true;
+    }
+
+    public function toggleDepartment(int $departmentId): void
+    {
+        if (in_array($departmentId, $this->expanded, true)) {
+            // collapse
+            $this->expanded = array_values(array_filter($this->expanded, fn($id) => $id !== $departmentId));
+            unset($this->departmentUsers[$departmentId]);
+            return;
+        }
+
+        $department = Department::query()
+            ->with(['users' => fn($q) => $q->select(['id', 'name', 'email', 'job_title', 'phone', 'status', 'department_id'])])
+            ->find($departmentId);
+
+        $this->departmentUsers[$departmentId] = $department?->users ?? collect();
+        $this->expanded[] = $departmentId;
     }
 
     public function closeFormModal(): void
@@ -393,8 +482,15 @@ new #[Title('Phòng ban')] class extends Component
                 @endphp
                 <x-ui.table.row wire:key="department-{{ $department->id }}">
                     <x-ui.table.cell>
-                        <span
-                            class="rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-bold tracking-wide text-slate-700 dark:bg-slate-800 dark:text-slate-200">{{ $department->code }}</span>
+                        <div class="flex items-center gap-2">
+                            <x-ui.icon-button
+                                icon="{{ in_array($department->id, $expanded) ? 'expand_less' : 'expand_more' }}"
+                                size="sm"
+                                wire:click.stop="toggleDepartment({{ $department->id }})"
+                            />
+                            <span
+                                class="rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-bold tracking-wide text-slate-700 dark:bg-slate-800 dark:text-slate-200">{{ $department->code }}</span>
+                        </div>
                     </x-ui.table.cell>
 
                     <x-ui.table.cell>
@@ -445,6 +541,54 @@ new #[Title('Phòng ban')] class extends Component
                         </div>
                     </x-ui.table.cell>
                 </x-ui.table.row>
+
+                @if(in_array($department->id, $expanded))
+                    <tr>
+                        <td colspan="7" class="px-3 pb-4 pt-0">
+                            <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                                <table class="w-full border-collapse text-left">
+                                    <thead>
+                                        <tr class="bg-slate-50 dark:bg-slate-800/50">
+                                            <th class="px-3 py-3 text-xs font-semibold tracking-wide text-slate-500 uppercase">Tên</th>
+                                            <th class="px-3 py-3 text-xs font-semibold tracking-wide text-slate-500 uppercase">Email</th>
+                                            <th class="px-3 py-3 text-xs font-semibold tracking-wide text-slate-500 uppercase">Chức danh</th>
+                                            <th class="px-3 py-3 text-xs font-semibold tracking-wide text-slate-500 uppercase">Liên hệ</th>
+                                            <th class="px-3 py-3 text-xs font-semibold tracking-wide text-slate-500 uppercase">Trạng thái</th>
+                                            <th class="px-3 py-3 text-xs font-semibold tracking-wide text-slate-500 uppercase text-right">KPI tháng</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                                        @forelse($departmentUsers[$department->id] ?? collect() as $user)
+                                            <tr class="hover:bg-slate-50/80 transition-colors dark:hover:bg-slate-800/30">
+                                                <td class="px-3 py-3 text-sm font-medium text-slate-700 dark:text-slate-100">{{ $user->name }}</td>
+                                                <td class="px-3 py-3 text-sm text-slate-600 dark:text-slate-300">{{ $user->email }}</td>
+                                                <td class="px-3 py-3 text-sm text-slate-600 dark:text-slate-300">{{ $user->job_title ?? '--' }}</td>
+                                                <td class="px-3 py-3 text-sm text-slate-600 dark:text-slate-300">{{ $user->phone ?? '--' }}</td>
+                                                <td class="px-3 py-3">
+                                                    <span class="inline-block rounded px-2 py-1 text-xs {{ ($user->status?->value ?? '') === 'active' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' : 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300' }}">
+                                                        {{ $user->status?->label() ?? '--' }}
+                                                    </span>
+                                                </td>
+                                                <td class="px-3 py-3 text-right">
+                                                    <x-ui.icon-button
+                                                        icon="query_stats"
+                                                        size="sm"
+                                                        tooltip="Theo dõi KPI tháng"
+                                                        wire:click="openMonthlyKpiModal({{ (int) $user->id }})"
+                                                    />
+                                                </td>
+                                            </tr>
+                                        @empty
+                                            <tr>
+                                                <td class="px-3 py-4 text-sm text-slate-500 dark:text-slate-400" colspan="6">Chưa có nhân sự trong phòng này.</td>
+                                            </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
+                        </td>
+                    </tr>
+                @endif
             @empty
                 <x-ui.table.empty colspan="7" icon="apartment"
                     message="Chưa có phòng ban nào phù hợp với bộ lọc hiện tại." />
@@ -550,6 +694,60 @@ new #[Title('Phòng ban')] class extends Component
             </x-ui.button>
         </x-slot>
     </x-ui.slide-panel>
+
+    <x-ui.modal wire:model="showKpiModal" maxWidth="lg">
+        <x-slot name="header">
+            <x-ui.form.heading icon="query_stats" title="KPI tháng nhân viên"
+                description="Theo dõi nhanh KPI theo tháng ngay trong màn hình phòng ban." />
+        </x-slot>
+
+        <div class="space-y-4">
+            <div class="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800/40">
+                <p class="text-sm font-semibold text-slate-700 dark:text-slate-100">{{ $kpiUserName }}</p>
+                <p class="text-xs text-slate-500">Kỳ báo cáo: {{ $kpiPeriodLabel }}</p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 md:grid-cols-3">
+                <div class="rounded-lg border border-slate-200 p-3 dark:border-slate-700">
+                    <p class="text-2xs text-slate-500">Điểm KPI</p>
+                    <p class="text-lg font-bold text-primary">{{ number_format((float) ($kpiSnapshot['final_score'] ?? 0), 2) }}</p>
+                </div>
+                <div class="rounded-lg border border-slate-200 p-3 dark:border-slate-700">
+                    <p class="text-2xs text-slate-500">Đúng hạn</p>
+                    <p class="text-lg font-bold text-slate-700 dark:text-slate-100">{{ number_format((float) ($kpiSnapshot['on_time_rate'] ?? 0), 1) }}%</p>
+                </div>
+                <div class="rounded-lg border border-slate-200 p-3 dark:border-slate-700">
+                    <p class="text-2xs text-slate-500">SLA</p>
+                    <p class="text-lg font-bold text-slate-700 dark:text-slate-100">{{ number_format((float) ($kpiSnapshot['sla_rate'] ?? 0), 1) }}%</p>
+                </div>
+                <div class="rounded-lg border border-slate-200 p-3 dark:border-slate-700">
+                    <p class="text-2xs text-slate-500">Sao trung bình</p>
+                    <p class="text-lg font-bold text-slate-700 dark:text-slate-100">{{ number_format((float) ($kpiSnapshot['avg_star'] ?? 0), 1) }}</p>
+                </div>
+                <div class="rounded-lg border border-slate-200 p-3 dark:border-slate-700">
+                    <p class="text-2xs text-slate-500">Tổng task</p>
+                    <p class="text-lg font-bold text-slate-700 dark:text-slate-100">{{ (int) ($kpiSnapshot['total_tasks'] ?? 0) }}</p>
+                </div>
+                <div class="rounded-lg border border-slate-200 p-3 dark:border-slate-700">
+                    <p class="text-2xs text-slate-500">Trạng thái</p>
+                    <p class="text-sm font-semibold text-slate-700 capitalize dark:text-slate-100">{{ (string) ($kpiSnapshot['status'] ?? 'chưa có dữ liệu') }}</p>
+                </div>
+            </div>
+
+            <p class="text-2xs text-slate-400">
+                Cập nhật lúc: {{ (string) ($kpiSnapshot['calculated_at'] ?? '--') }}
+            </p>
+        </div>
+
+        <x-slot name="footer">
+            <x-ui.button variant="secondary" wire:click="closeKpiModal">
+                Đóng
+            </x-ui.button>
+            <x-ui.button icon="open_in_new" href="{{ route('kpi-scores.index') }}">
+                Mở trang KPI đầy đủ
+            </x-ui.button>
+        </x-slot>
+    </x-ui.modal>
 
     <x-ui.modal wire:model="showDeleteModal" maxWidth="md">
         <x-slot name="header">

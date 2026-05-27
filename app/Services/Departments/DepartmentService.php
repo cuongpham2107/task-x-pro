@@ -23,7 +23,8 @@ class DepartmentService
             Gate::forUser($actor)->authorize('viewAny', Department::class);
         }
 
-        return $this->queryService->paginateForIndex($filters, $perPage);
+        // Pass the actor to the query service so it can apply role-based restrictions
+        return $this->queryService->paginateForIndex($filters, $perPage, $actor);
     }
 
     /**
@@ -33,7 +34,9 @@ class DepartmentService
     {
         $department = $this->queryService->findForEdit($departmentId);
 
-        Gate::forUser($actor)->authorize('view', $department);
+        // Authorize update for edit flow (previously used 'view' which could cause 403
+        // when user has update permission but not view permission).
+        Gate::forUser($actor)->authorize('update', $department);
 
         return $department;
     }

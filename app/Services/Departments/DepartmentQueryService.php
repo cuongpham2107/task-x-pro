@@ -16,7 +16,7 @@ class DepartmentQueryService
     /**
      * Lay du lieu danh sach phong ban cho man hinh index.
      */
-    public function paginateForIndex(array $filters = [], int $perPage = 10): LengthAwarePaginator
+    public function paginateForIndex(array $filters = [], int $perPage = 10, ?User $actor = null): LengthAwarePaginator
     {
         $query = Department::query()
             ->with('head:id,name,email,avatar')
@@ -25,6 +25,11 @@ class DepartmentQueryService
                 'activeUsers as active_member_count',
             ])
             ->withAvg('kpiScores as avg_kpi_score', 'final_score');
+
+        // If the current user is a department leader, restrict to departments they head
+        if ($actor !== null && $actor->hasRole('leader')) {
+            $query->where('head_user_id', $actor->id);
+        }
 
         $this->applyFilters($query, $filters);
 
@@ -133,7 +138,19 @@ class DepartmentQueryService
             $query->where(function (Builder $builder) use ($search): void {
                 $builder
                     ->where('name', 'like', "%{$search}%")
-                    ->orWhere('code', 'like', "%{$search}%");
+                    ->orWhere('code', 'like', "%{$search}%")
+                    ->orWhereHas('head', function (Builder $headQuery) use ($search): void {
+                        $headQuery
+                            ->where('name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%")
+                            ->orWhere('employee_code', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('users', function (Builder $userQuery) use ($search): void {
+                        $userQuery
+                            ->where('name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%")
+                            ->orWhere('employee_code', 'like', "%{$search}%");
+                    });
             });
         }
 

@@ -69,6 +69,9 @@ new #[Title('KPI phòng ban')] class extends Component
     {
         Gate::forUser(auth()->user())->authorize('viewAny', KpiScore::class);
 
+        $actor = auth()->user();
+        $departmentId = (int) ($actor?->department_id ?? 0);
+
         $now = now();
         // If we're in the first week of the month, default to show the previous month
         if ($now->day <= 7) {
@@ -79,6 +82,41 @@ new #[Title('KPI phòng ban')] class extends Component
 
         $this->selectedYear = (int) $default->year;
         $this->selectedValue = (int) $default->month;
+
+        $period = (string) request()->query('period', '');
+        if (in_array($period, [KpiPeriodType::Monthly->value, KpiPeriodType::Quarterly->value, KpiPeriodType::Yearly->value], true)) {
+            $this->periodType = $period;
+        }
+
+        $year = (int) request()->integer('year');
+        if ($year >= ((int) now()->year - 4) && $year <= (int) now()->year) {
+            $this->selectedYear = $year;
+        }
+
+        $value = (int) request()->integer('value');
+        if ($this->periodType === KpiPeriodType::Monthly->value && $value >= 1 && $value <= 12) {
+            $this->selectedValue = $value;
+        }
+
+        if ($this->periodType === KpiPeriodType::Quarterly->value && $value >= 1 && $value <= 4) {
+            $this->selectedValue = $value;
+        }
+
+        if ($this->periodType === KpiPeriodType::Yearly->value) {
+            $this->selectedValue = 1;
+        }
+
+        $selectedUserId = (int) request()->integer('user_id');
+        if ($selectedUserId > 0 && $departmentId > 0) {
+            $isInDepartment = User::query()
+                ->where('id', $selectedUserId)
+                ->where('department_id', $departmentId)
+                ->exists();
+
+            if ($isInDepartment) {
+                $this->selectedUserId = $selectedUserId;
+            }
+        }
     }
 
     public function updatedPeriodType(): void
