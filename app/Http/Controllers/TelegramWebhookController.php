@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Enums\ProjectStatus;
 use App\Enums\TaskStatus;
 use App\Models\Project;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -30,13 +31,50 @@ class TelegramWebhookController extends Controller
         return response()->json(['ok' => true]);
     }
 
+    private function resolveUser(int $chatId): ?User
+    {
+        return User::query()
+            ->where('telegram_id', (string) $chatId)
+            ->first();
+    }
+
+    private function isAuthorized(?User $user): bool
+    {
+        return $user !== null && ($user->hasRole('leader') || $user->hasRole('ceo') || $user->hasRole('super_admin'));
+    }
+
+    private function isCeoOrSuperAdmin(?User $user): bool
+    {
+        return $user !== null && ($user->hasRole('ceo') || $user->hasRole('super_admin'));
+    }
+
     private function handleMessage(array $message, string $token): void
     {
         $chatId = $message['chat']['id'];
         $text = trim($message['text'] ?? '');
 
         if ($text === '/start' || $text === 'Kiểm tra tiến độ dự án') {
-            $this->sendProjectList($chatId, $token);
+            $user = $this->resolveUser($chatId);
+
+            if ($user === null) {
+                Http::post("https://api.telegram.org/bot{$token}/sendMessage", [
+                    'chat_id' => $chatId,
+                    'text' => '🔒 Bạn chưa liên kết tài khoản Telegram. Vui lòng đăng nhập hệ thống và liên kết tại trang cá nhân.',
+                ]);
+
+                return;
+            }
+
+            if (! $this->isAuthorized($user)) {
+                Http::post("https://api.telegram.org/bot{$token}/sendMessage", [
+                    'chat_id' => $chatId,
+                    'text' => '⛔ Chức năng kiểm tra tiến độ chỉ dành cho Leader và CEO.',
+                ]);
+
+                return;
+            }
+
+            $this->sendProjectList($chatId, $token, $user);
         }
     }
 
@@ -59,14 +97,19 @@ class TelegramWebhookController extends Controller
         }
     }
 
-    private function sendProjectList(int $chatId, string $token): void
+    private function sendProjectList(int $chatId, string $token, User $user): void
     {
-        $projects = Project::query()
+        $query = Project::query()
             ->whereNotIn('status', [
                 ProjectStatus::Completed,
                 ProjectStatus::Cancelled,
-            ])
-            ->get(['id', 'name']);
+            ]);
+
+        if (! $this->isCeoOrSuperAdmin($user)) {
+            $query->whereHas('leaders', fn ($q) => $q->where('user_id', $user->id));
+        }
+
+        $projects = $query->get(['id', 'name']);
 
         if ($projects->isEmpty()) {
             Http::post("https://api.telegram.org/bot{$token}/sendMessage", [
@@ -116,7 +159,7 @@ class TelegramWebhookController extends Controller
             $total = $tasks->count();
             $completed = $tasks->filter(fn ($t) => $t->status === TaskStatus::Completed)->count();
             $inProgress = $tasks->filter(fn ($t) => $t->status === TaskStatus::InProgress || $t->status === TaskStatus::WaitingApproval)->count();
-            $todo = $tasks->filter(fn ($t) => $t->status === TaskStatus::Pending || $t->status === TaskStatus::Init)->count();
+            $todo = $tasks->filter(fn ($t) => $t->status === TaskStatus::Pending)->count();
             $late = $tasks->filter(fn ($t) => $t->status === TaskStatus::Late)->count();
             $phaseProgress = $total > 0 ? round(($completed / $total) * 100) : 0;
 

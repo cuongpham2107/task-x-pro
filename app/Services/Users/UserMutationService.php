@@ -58,12 +58,12 @@ class UserMutationService
         }
 
         if ($this->hasBlockingReferences($targetUser)) {
-                throw ValidationException::withMessages([
-                    'delete' => 'Không thể xóa người dùng này vì còn dữ liệu tham chiếu.',
-                ]);
-            }
-        
-            $targetUser->delete();
+            throw ValidationException::withMessages([
+                'delete' => 'Không thể xóa người dùng này vì còn dữ liệu tham chiếu.',
+            ]);
+        }
+
+        $targetUser->delete();
     }
 
     private function hasBlockingReferences(User $targetUser): bool

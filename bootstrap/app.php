@@ -11,10 +11,18 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->trustProxies(at: '*');
+        $middleware->trustProxies(at: [
+            '172.0.0.0/8',
+            '10.0.0.0/8',
+            '192.168.0.0/16',
+        ]);
 
         $middleware->redirectGuestsTo(fn () => route('login'));
         $middleware->redirectUsersTo(fn () => route('dashboard.index'));
+
+        $middleware->validateCsrfTokens(except: [
+            '/telegram/webhook',
+        ]);
 
         $middleware->alias([
             'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
