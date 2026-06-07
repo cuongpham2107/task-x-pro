@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\TelegramWebhookController;
 use App\Models\ActivityLog;
 use App\Models\Department;
 use App\Models\Document;
@@ -53,6 +54,9 @@ Route::get('/auth/{driver}/callback', function (string $driver, \App\Services\Au
         return redirect()->route('login')->with('error', 'Đăng nhập không thành công: '.$e->getMessage());
     }
 })->name('social.callback');
+
+// Telegram webhook (no auth — called by Telegram)
+Route::post('/telegram/webhook', TelegramWebhookController::class);
 
 // Auth-only routes (redirect to login if not authenticated)
 Route::middleware('auth')->group(function () {
