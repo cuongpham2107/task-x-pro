@@ -34,7 +34,7 @@ class UserMutationService
     {
         Gate::forUser($actor)->authorize('update', $targetUser);
 
-        $targetUser->fill($this->normalizedAttributes($attributes, true));
+        $targetUser->fill($this->normalizedAttributes($attributes, true, $targetUser));
         $targetUser->save();
 
         if (isset($attributes['role_ids'])) {
@@ -57,41 +57,75 @@ class UserMutationService
             ]);
         }
 
-        $targetUser->delete();
+        if ($this->hasBlockingReferences($targetUser)) {
+                throw ValidationException::withMessages([
+                    'delete' => 'Không thể xóa người dùng này vì còn dữ liệu tham chiếu.',
+                ]);
+            }
+        
+            $targetUser->delete();
+    }
+
+    private function hasBlockingReferences(User $targetUser): bool
+    {
+        return $targetUser->createdProjects()->exists()
+            || $targetUser->assignedProjectLeaders()->exists()
+            || $targetUser->picTasks()->exists()
+            || $targetUser->createdTasks()->exists()
+            || $targetUser->uploadedTaskAttachments()->exists()
+            || $targetUser->createdSlaConfigs()->exists()
+            || $targetUser->approvalLogs()->exists()
+            || $targetUser->uploadedDocuments()->exists()
+            || $targetUser->uploadedDocumentVersions()->exists();
     }
 
     /**
      * Chuan hoa payload truoc khi ghi DB.
      */
-    private function normalizedAttributes(array $attributes, bool $isUpdate): array
+    private function normalizedAttributes(array $attributes, bool $isUpdate, ?User $baseUser = null): array
     {
-        $status = trim((string) ($attributes['status'] ?? UserStatus::Active->value));
+        $status = array_key_exists('status', $attributes)
+            ? trim((string) $attributes['status'])
+            : ($baseUser?->status?->value ?? UserStatus::Active->value);
+
         if (! in_array($status, UserStatus::values(), true)) {
-            $status = UserStatus::Active->value;
+            $status = $baseUser?->status?->value ?? UserStatus::Active->value;
         }
 
         $payload = [
-            'name' => trim((string) ($attributes['name'] ?? '')),
-            'email' => strtolower(trim((string) ($attributes['email'] ?? ''))),
-            'phone' => $this->nullableTrimmedString($attributes['phone'] ?? null),
-            'job_title' => $this->nullableTrimmedString($attributes['job_title'] ?? null),
-            'department_id' => $attributes['department_id'] !== null && $attributes['department_id'] !== ''
-                ? (int) $attributes['department_id']
-                : null,
+            'name' => array_key_exists('name', $attributes)
+                ? trim((string) $attributes['name'])
+                : ($baseUser?->name ?? ''),
+            'email' => array_key_exists('email', $attributes)
+                ? strtolower(trim((string) $attributes['email']))
+                : ($baseUser?->email ?? ''),
+            'phone' => array_key_exists('phone', $attributes)
+                ? $this->nullableTrimmedString($attributes['phone'])
+                : $baseUser?->phone,
+            'job_title' => array_key_exists('job_title', $attributes)
+                ? $this->nullableTrimmedString($attributes['job_title'])
+                : $baseUser?->job_title,
+            'department_id' => array_key_exists('department_id', $attributes)
+                ? ($attributes['department_id'] !== null && $attributes['department_id'] !== ''
+                    ? (int) $attributes['department_id']
+                    : null)
+                : $baseUser?->department_id,
             'status' => $status,
-            'telegram_id' => $this->nullableTrimmedString($attributes['telegram_id'] ?? null),
+            'telegram_id' => array_key_exists('telegram_id', $attributes)
+                ? $this->nullableTrimmedString($attributes['telegram_id'])
+                : $baseUser?->telegram_id,
         ];
 
-        if (isset($attributes['employee_code'])) {
+        if (array_key_exists('employee_code', $attributes)) {
             $payload['employee_code'] = trim((string) $attributes['employee_code']);
         }
 
-        if (isset($attributes['avatar_path'])) {
+        if (array_key_exists('avatar_path', $attributes)) {
             $payload['avatar'] = $attributes['avatar_path']; // Model uses 'avatar'
         }
 
         $password = (string) ($attributes['password'] ?? '');
-        if ((! $isUpdate && $password !== '') || ($isUpdate && $password !== '')) {
+        if ($password !== '') {
             $payload['password'] = $password;
         }
 

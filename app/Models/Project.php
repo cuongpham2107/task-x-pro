@@ -66,7 +66,9 @@ class Project extends Model
     public function leaders(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'project_leaders')
-            ->withPivot(['id', 'assigned_at', 'assigned_by']);
+            ->withPivot(['id', 'assigned_at', 'assigned_by', 'is_primary'])
+            ->orderByPivot('is_primary', 'desc')
+            ->orderByPivot('assigned_at', 'asc');
     }
 
     public function phases(): HasMany

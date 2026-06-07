@@ -124,14 +124,17 @@ new class extends Component
         }
     }
 
+    #[Validate('required|integer|exists:users,id')]
+    public ?string $primaryLeaderId = null;
+
     /** @var array<int, int> */
     #[
         Validate([
-            'leaderIds' => 'required|array|min:1',
-            'leaderIds.*' => 'integer|exists:users,id',
+            'secondaryLeaderIds' => 'nullable|array',
+            'secondaryLeaderIds.*' => 'integer|exists:users,id',
         ]),
     ]
-    public array $leaderIds = [];
+    public array $secondaryLeaderIds = [];
 
     // Form options (populated on mount)
     /** @var array<string, string> */
@@ -173,7 +176,20 @@ new class extends Component
         $this->endDate = $project->end_date instanceof Carbon ? $project->end_date->toDateString() : '';
         $this->objective = (string) ($project->objective ?? '');
         $this->budget = $project->budget !== null ? (string) $project->budget : '';
-        $this->leaderIds = $project->leaders()->pluck('users.id')->map(fn ($id) => (int) $id)->values()->all();
+        $projectLeaders = $project->projectLeaders()
+            ->orderByDesc('is_primary')
+            ->orderBy('assigned_at')
+            ->get();
+
+        $this->primaryLeaderId = $projectLeaders->first()?->user_id !== null
+            ? (string) $projectLeaders->first()?->user_id
+            : null;
+        $this->secondaryLeaderIds = $projectLeaders
+            ->slice(1)
+            ->pluck('user_id')
+            ->map(fn ($id) => (int) $id)
+            ->values()
+            ->all();
         $this->is_phase = false; // Reset phase toggle on edit
 
         $this->showFormModal = true;
@@ -181,8 +197,35 @@ new class extends Component
 
     public function resetFormModal(): void
     {
-        $this->reset(['name', 'type', 'startDate', 'endDate', 'objective', 'budget', 'leaderIds', 'editingProjectId', 'is_phase']);
+        $this->reset(['name', 'type', 'startDate', 'endDate', 'objective', 'budget', 'primaryLeaderId', 'secondaryLeaderIds', 'editingProjectId', 'is_phase']);
         $this->resetValidation();
+    }
+
+    public function updatedPrimaryLeaderId(): void
+    {
+        if ($this->primaryLeaderId === null || $this->primaryLeaderId === '') {
+            return;
+        }
+
+        $this->secondaryLeaderIds = collect($this->secondaryLeaderIds)
+            ->filter(fn ($leaderId) => (string) $leaderId !== (string) $this->primaryLeaderId)
+            ->values()
+            ->all();
+    }
+
+    public function updatedSecondaryLeaderIds(): void
+    {
+        if ($this->primaryLeaderId === null || $this->primaryLeaderId === '') {
+            $this->secondaryLeaderIds = collect($this->secondaryLeaderIds)->unique()->values()->all();
+
+            return;
+        }
+
+        $this->secondaryLeaderIds = collect($this->secondaryLeaderIds)
+            ->filter(fn ($leaderId) => (string) $leaderId !== (string) $this->primaryLeaderId)
+            ->unique()
+            ->values()
+            ->all();
     }
 
     private function loadFormOptions(): void
@@ -281,11 +324,12 @@ new class extends Component
             'endDate.after_or_equal' => 'Ngày kết thúc phải sau hoặc bằng ngày bắt đầu.',
             'budget.numeric' => 'Ngân sách phải là số.',
             'budget.min' => 'Ngân sách không được âm.',
-            'leaderIds.required' => 'Bạn phải chọn ít nhất 1 leader.',
-            'leaderIds.array' => 'Danh sách leader không hợp lệ.',
-            'leaderIds.min' => 'Bạn phải chọn ít nhất 1 leader.',
-            'leaderIds.*.integer' => 'Leader không hợp lệ.',
-            'leaderIds.*.exists' => 'Leader đã chọn không tồn tại.',
+            'primaryLeaderId.required' => 'Bạn phải chọn leader chính.',
+            'primaryLeaderId.integer' => 'Leader chính không hợp lệ.',
+            'primaryLeaderId.exists' => 'Leader chính đã chọn không tồn tại.',
+            'secondaryLeaderIds.array' => 'Danh sách leader phụ không hợp lệ.',
+            'secondaryLeaderIds.*.integer' => 'Leader phụ không hợp lệ.',
+            'secondaryLeaderIds.*.exists' => 'Leader phụ đã chọn không tồn tại.',
         ];
     }
 
@@ -417,13 +461,24 @@ new class extends Component
             if ($this->mode === 'edit' && $this->editingProjectId !== null) {
                 $project = $projectService->findForEdit(auth()->user(), $this->editingProjectId);
 
-                $projectService->update(actor: auth()->user(), project: $project, attributes: $attributes, leaderIds: $this->leaderIds ?: [], phasePayloads: $phasePayloads);
+                $leaderIds = collect(array_merge([$this->primaryLeaderId], $this->secondaryLeaderIds))
+                    ->filter()
+                    ->map(fn ($leaderId) => (int) $leaderId)
+                    ->unique()
+                    ->values()
+                    ->all();
+
+                $projectService->update(actor: auth()->user(), project: $project, attributes: $attributes, leaderIds: $leaderIds ?: [], phasePayloads: $phasePayloads);
 
                 session()->flash('success', 'Dự án đã được cập nhật thành công!');
                 $this->dispatch('toast', message: 'Dự án đã được cập nhật thành công!', type: 'success');
             } else {
-                // Ensure leaderIds is an array
-                $leaderIds = is_array($this->leaderIds) ? $this->leaderIds : [];
+                $leaderIds = collect(array_merge([$this->primaryLeaderId], $this->secondaryLeaderIds))
+                    ->filter()
+                    ->map(fn ($leaderId) => (int) $leaderId)
+                    ->unique()
+                    ->values()
+                    ->all();
 
                 $projectService->create(actor: auth()->user(), attributes: $attributes, leaderIds: $leaderIds ?: [], phasePayloads: $phasePayloads);
 
@@ -528,13 +583,30 @@ new class extends Component
                     {{-- Leader --}}
                     @if ($leaderOptions->isNotEmpty())
                         <div class="col-span-full">
+                            @php
+                                $secondaryLeaderOptions = $leaderOptions->reject(function ($user) {
+                                    return (string) $user->id === (string) $this->primaryLeaderId;
+                                })->values();
+                            @endphp
 
-                            <x-ui.user-multi-select model="leaderIds" :users="$leaderOptions" label="Leader dự án"
-                                placeholder="Tìm tên hoặc email leader..." empty-text="Không tìm thấy leader phù hợp"
-                                dropdown-position="top" required
-                                wire:key="project-leaders-{{ $mode }}-{{ $editingProjectId ?? 'new' }}" />
-                            <x-ui.field-error field="leaderIds" />
-                            <x-ui.field-error field="leader_ids" />
+                            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                <div>
+                                    <x-ui.select label="Leader chính" name="primaryLeaderId" wire:model.live="primaryLeaderId"
+                                        icon="stars" :options="$leaderOptions->mapWithKeys(fn ($user) => [(string) $user->id => $user->name])->all()"
+                                        placeholder="Chọn leader chính" required
+                                        wire:key="project-primary-leader-{{ $mode }}-{{ $editingProjectId ?? 'new' }}" />
+                                    <x-ui.field-error field="primaryLeaderId" />
+                                </div>
+
+                                <div>
+                                    <x-ui.user-multi-select model="secondaryLeaderIds" :users="$secondaryLeaderOptions" label="Leader phụ"
+                                        placeholder="Tìm tên hoặc email leader phụ..." empty-text="Không tìm thấy leader phù hợp"
+                                        dropdown-position="top" :mark-first-as-primary="false"
+                                        wire:key="project-secondary-leaders-{{ $mode }}-{{ $editingProjectId ?? 'new' }}" />
+                                    <x-ui.field-error field="secondaryLeaderIds" />
+                                    <x-ui.field-error field="secondaryLeaderIds.*" />
+                                </div>
+                            </div>
 
                         </div>
                     @endif

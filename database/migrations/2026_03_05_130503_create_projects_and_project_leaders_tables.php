@@ -34,6 +34,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->timestamp('assigned_at')->useCurrent();
             $table->foreignId('assigned_by')->constrained('users');
+            $table->boolean('is_primary')->default(false)->after('assigned_by');
 
             $table->unique(['project_id', 'user_id'], 'uq_project_leader');
             $table->index('user_id', 'idx_pl_user');

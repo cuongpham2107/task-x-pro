@@ -22,6 +22,7 @@ class ProjectLeader extends Model
         'user_id',
         'assigned_at',
         'assigned_by',
+        'is_primary',
     ];
 
     /**
@@ -31,6 +32,7 @@ class ProjectLeader extends Model
     {
         return [
             'assigned_at' => 'datetime',
+            'is_primary' => 'boolean',
         ];
     }
 

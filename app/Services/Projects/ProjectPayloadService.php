@@ -103,13 +103,21 @@ class ProjectPayloadService
             ]);
         }
 
+        $orderedLeaderIds = $normalizedLeaderIds
+            ->filter(function (int $leaderId) use ($validLeaderIds): bool {
+                return $validLeaderIds->contains($leaderId);
+            })
+            ->values();
+
         $assignedAt = now();
-        $syncPayload = $validLeaderIds
-            ->mapWithKeys(function (int $leaderId) use ($assignedAt, $assignedBy): array {
+        $syncPayload = $orderedLeaderIds
+            ->values()
+            ->mapWithKeys(function (int $leaderId, int $index) use ($assignedAt, $assignedBy): array {
                 return [
                     $leaderId => [
                         'assigned_at' => $assignedAt,
                         'assigned_by' => $assignedBy,
+                        'is_primary' => $index === 0,
                     ],
                 ];
             })

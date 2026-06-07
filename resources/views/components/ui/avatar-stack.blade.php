@@ -33,6 +33,7 @@
                     $key = $user->id ?? $user->email ?? $user->name;
                     $hash = is_int($key) ? (int) $key : crc32((string) $key);
                     $avatarColorClass = $__avatarColorOptions[$hash % count($__avatarColorOptions)];
+                    $isPrimaryLeader = (bool) data_get($user, 'pivot.is_primary', false);
                 @endphp
                 <div class="relative shrink-0" x-data="{
                     show: false,
@@ -55,6 +56,13 @@
                             class="{{ $ring }} {{ $avatarColorClass }} flex items-center justify-center text-[11px] font-bold">
                             {{ strtoupper(substr($user->name, 0, 1)) }}
                         </div>
+                    @endif
+
+                    @if ($isPrimaryLeader)
+                        <span
+                            class="absolute -right-1.5 -top-1 z-10 inline-flex items-center rounded-full border border-white bg-emerald-500 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white shadow-sm dark:border-slate-900">
+                            Chính
+                        </span>
                     @endif
 
                     {{-- Rich Popover - Teleported to Body to escape overflow:hidden --}}

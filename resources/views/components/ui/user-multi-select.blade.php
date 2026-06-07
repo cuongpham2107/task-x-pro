@@ -10,6 +10,7 @@
     'dropdownPosition' => 'bottom',
     'required' => false,
     'disabled' => false,
+    'markFirstAsPrimary' => true,
 ])
 
 @php
@@ -20,14 +21,11 @@
                 'name' => (string) $user->name,
                 'email' => (string) ($user->email ?? ''),
                 'avatar' => $user->avatar_url ?? $user->avatar,
+                'isPrimary' => property_exists($user, 'isPrimary') ? $user->isPrimary : (property_exists($user, 'pivot') && isset($user->pivot->is_primary) ? (bool) $user->pivot->is_primary : null),
             ];
         })
         ->values()
         ->all();
-
-    $dropdownPosition = in_array($dropdownPosition, ['top', 'bottom'], true) ? $dropdownPosition : 'bottom';
-
-    $dropdownPlacementClasses = $dropdownPosition === 'top' ? 'bottom-full mb-2' : 'top-full mt-2';
 @endphp
 
 <div class="space-y-2" x-data="{
@@ -35,9 +33,27 @@
     showDropdown: false,
     selectedIds: @entangle($model).live,
     allUsers: {{ Js::from($userOptions) }},
+    markFirstAsPrimary: @js($markFirstAsPrimary),
+    dropdownRight: false,
+    dropdownStyle: '',
     get selectedUsers() {
-        const selected = this.selectedIds.map(id => Number(id));
-        return this.allUsers.filter(user => selected.includes(Number(user.id)));
+        return this.selectedIds
+            .map(id => Number(id))
+            .map((id, index) => {
+                const user = this.allUsers.find(item => Number(item.id) === id);
+
+                if (!user) {
+                    return null;
+                }
+
+                const hasServerPrimary = Object.prototype.hasOwnProperty.call(user, 'isPrimary') && user.isPrimary !== null;
+
+                return {
+                    ...user,
+                    isPrimary: hasServerPrimary ? !!user.isPrimary : (this.markFirstAsPrimary ? index === 0 : false),
+                };
+            })
+            .filter(Boolean);
     },
     get filtered() {
         const selected = this.selectedIds.map(id => Number(id));
@@ -54,6 +70,50 @@
             const email = (user.email ?? '').toLowerCase();
 
             return !selected.includes(id) && (name.includes(query) || email.includes(query));
+        });
+    },
+    adjustDropdown() {
+        this.positionDropdown();
+    },
+    positionDropdown() {
+        const dd = this.$refs.dropdown;
+        const trigger = this.$refs.trigger;
+        if (!dd || !trigger) return;
+
+        const padding = 12;
+        const trigRect = trigger.getBoundingClientRect();
+
+        // ensure dropdown is rendered to measure
+        dd.style.visibility = 'hidden';
+        dd.style.display = 'block';
+        const ddWidth = dd.offsetWidth || 288;
+        const ddHeight = dd.offsetHeight || 200;
+
+        // compute left
+        let left = trigRect.left;
+        if (left + ddWidth + padding > window.innerWidth) {
+            left = Math.max(padding, window.innerWidth - ddWidth - padding);
+        }
+
+        // compute top: prefer below
+        let top = trigRect.bottom + 8;
+        if (top + ddHeight + padding > window.innerHeight) {
+            // place above
+            top = Math.max(padding, trigRect.top - ddHeight - 8);
+        }
+
+        dd.style.visibility = '';
+        dd.style.display = '';
+
+        this.dropdownStyle = `left: ${Math.round(left)}px; top: ${Math.round(top)}px; max-width: calc(100vw - ${padding * 2}px);`;
+    },
+    init() {
+        this.$watch('showDropdown', value => {
+            if (value) this.$nextTick(() => this.positionDropdown());
+        });
+
+        window.addEventListener('resize', () => {
+            if (this.showDropdown) this.$nextTick(() => this.positionDropdown());
         });
     },
     add(user) {
@@ -92,6 +152,11 @@
 
                 <span x-text="user.name"></span>
 
+                <span x-show="user.isPrimary"
+                    class="inline-flex items-center rounded-full bg-emerald-500 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white">
+                    Chính
+                </span>
+
                 <button type="button" @if (!$disabled) @click="remove(user.id)" @endif
                     class="{{ $disabled ? 'cursor-not-allowed' : 'hover:text-red-500' }} ml-0.5 transition-colors">
                     <span class="material-symbols-outlined text-xs leading-none">close</span>
@@ -101,16 +166,21 @@
 
         <div class="relative">
             <button type="button"
+                x-ref="trigger"
                 @if (!$disabled) @click="showDropdown = !showDropdown; $nextTick(() => { if (showDropdown) $refs.searchInput.focus() })" @endif
                 class="{{ $disabled ? 'cursor-not-allowed opacity-50' : 'hover:border-primary hover:text-primary' }} flex h-8 w-8 items-center justify-center rounded-full border-2 border-dashed border-slate-300 text-slate-400 transition-all dark:border-slate-700">
                 <span class="material-symbols-outlined text-base">{{ $addIcon }}</span>
             </button>
 
-            <div x-show="showDropdown" x-transition:enter="transition ease-out duration-150"
+            <div x-show="showDropdown" 
+                x-transition:enter="transition ease-out duration-150"
                 x-transition:enter-start="scale-95 opacity-0" x-transition:enter-end="scale-100 opacity-100"
                 x-transition:leave="transition ease-in duration-100" x-transition:leave-start="scale-100 opacity-100"
                 x-transition:leave-end="scale-95 opacity-0"
-                class="{{ $dropdownPlacementClasses }} absolute left-0 z-20 w-72 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl dark:border-slate-700 dark:bg-slate-900">
+                class="fixed left-0 z-20 w-72 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl dark:border-slate-700 dark:bg-slate-900"
+                        
+                x-ref="dropdown" 
+                :style="dropdownStyle">
                 <div class="border-b border-slate-100 p-2 dark:border-slate-800">
                     <div class="relative">
                         <span

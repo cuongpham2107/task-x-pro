@@ -125,7 +125,11 @@ class ProjectMutationService
             $newProject = Project::query()->create($clonedAttributes);
 
             // Copy leaders
-            $leaderIds = $sourceProject->leaders->pluck('id')->toArray();
+            $leaderIds = $sourceProject->projectLeaders()
+                ->orderByDesc('is_primary')
+                ->orderBy('assigned_at')
+                ->pluck('user_id')
+                ->toArray();
             $this->payloadService->syncLeaders($newProject, $leaderIds, $actor->id);
 
             // Clone phases and tasks
