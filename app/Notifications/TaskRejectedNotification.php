@@ -39,26 +39,24 @@ class TaskRejectedNotification extends Notification
     {
         $this->task->loadMissing(['phase.project']);
 
-        $actorName = trim((string) $this->actor->name) !== '' ? $this->actor->name : 'Người duyệt';
         $taskName = trim((string) $this->task->name) !== '' ? $this->task->name : "Task #{$this->task->id}";
         $projectName = $this->task->phase?->project?->name;
         $phaseName = $this->task->phase?->name;
 
-        $contextDetails = [];
-        if ($projectName !== null && trim((string) $projectName) !== '') {
-            $contextDetails[] = "Dự án: {$projectName}";
-        }
+        $parts = ["❌ Task \"{$taskName}\""];
         if ($phaseName !== null && trim((string) $phaseName) !== '') {
-            $contextDetails[] = "Giai đoạn: {$phaseName}";
+            $parts[] = "thuộc Phase \"{$phaseName}\"";
         }
+        if ($projectName !== null && trim((string) $projectName) !== '') {
+            $parts[] = "của Dự án \"{$projectName}\"";
+        }
+        $parts[] = 'không đạt.';
 
-        $content = "Task \"{$taskName}\" đã bị từ chối duyệt bởi {$actorName}.";
+        $content = implode(' ', $parts);
+
         $reason = trim($this->reason);
         if ($reason !== '') {
-            $content .= "\nLý do: {$reason}";
-        }
-        if ($contextDetails !== []) {
-            $content .= "\n".implode(' | ', $contextDetails);
+            $content .= "\n⚠️ Lý do: {$reason}";
         }
 
         $message = TelegramMessage::create()
