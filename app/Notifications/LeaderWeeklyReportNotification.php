@@ -44,7 +44,7 @@ class LeaderWeeklyReportNotification extends Notification
         $content .= "─────────────────\n";
 
         foreach ($this->projects as $i => $project) {
-            $content .= "📁 ".($i + 1).". Dự án \"{$project['name']}\" — Tiến độ tổng thể: {$project['progress']}%\n";
+            $content .= '📁 '.($i + 1).". Dự án \"{$project['name']}\" — Tiến độ tổng thể: {$project['progress']}%\n";
             $content .= "🗓️ Deadline: {$project['deadline']} | Trạng thái: {$project['status']}\n";
         }
 
