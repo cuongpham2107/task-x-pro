@@ -4,16 +4,22 @@ use App\Enums\ProjectStatus;
 use App\Enums\TaskStatus;
 use App\Enums\UserStatus;
 use App\Models\KpiScore;
+use App\Models\Phase;
 use App\Models\Project;
 use App\Models\Task;
 use App\Models\User;
+use App\Notifications\CeoWeeklyReportNotification;
+use App\Notifications\LeaderWeeklyReportNotification;
 use App\Notifications\MonthlyKpiSummaryNotification;
+use App\Notifications\PicDailySummaryNotification;
 use App\Notifications\PicOverdueTasksNotification;
+use App\Notifications\PicWeeklyReportNotification;
 use App\Notifications\ProjectOverdueNotification;
 use App\Notifications\TaskApprovalPendingReminderNotification;
 use App\Notifications\TaskDeadlineReminderNotification;
-use App\Notifications\WeeklySummaryNotification;
+use App\Services\Projects\ProjectPhaseService;
 use App\Services\Tasks\TaskService;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Schedule;
@@ -24,7 +30,7 @@ Artisan::command('tasks:mark-late', function (TaskService $taskService): void {
     $this->info("Đã cập nhập {$affectedTasks} công việc sang trạng thái trễ hạn.");
 })->purpose('Cập công việc trễ hạn theo deadline');
 
-Artisan::command('projects:mark-overdue', function (\App\Services\Projects\ProjectPhaseService $phaseService): void {
+Artisan::command('projects:mark-overdue', function (ProjectPhaseService $phaseService): void {
     $projects = Project::query()
         ->whereIn('status', [ProjectStatus::Init, ProjectStatus::Running, ProjectStatus::Paused])
         ->whereNotNull('end_date')
@@ -49,21 +55,62 @@ Artisan::command('projects:mark-overdue', function (\App\Services\Projects\Proje
     $this->info('Đã chuyển '.$projects->count().' dự án quá hạn sang trạng thái Quá hạn (Overdue) và đồng bộ Phase.');
 })->purpose('Chuyển dự án quá hạn sang trạng thái Quá hạn');
 
-Artisan::command('tasks:daily-reminders', function (): void {
+Artisan::command('tasks:daily-summary', function (): void {
     $now = now();
 
-    $deadlineFrom = $now->copy()->startOfDay();
-    $deadlineTo = $now->copy()->addDays(3)->endOfDay();
+    $pics = User::query()
+        ->whereHas('picTasks', function ($q) use ($now): void {
+            $q->where(function ($q2) use ($now): void {
+                $q2->whereDate('deadline', $now->toDateString())
+                    ->orWhere('status', TaskStatus::Late->value);
+            });
+        })
+        ->with(['picTasks' => function ($q) use ($now): void {
+            $q->where(function ($q2) use ($now): void {
+                $q2->whereDate('deadline', $now->toDateString())
+                    ->orWhere('status', TaskStatus::Late->value);
+            });
+        }])
+        ->get(['id', 'name', 'telegram_id']);
 
-    $deadlineTasks = Task::query()
+    $sent = 0;
+    foreach ($pics as $pic) {
+        if (trim((string) $pic->telegram_id) === '') {
+            continue;
+        }
+
+        $todayCount = $pic->picTasks->filter(fn ($t) => $t->deadline?->isToday())->count();
+        $overdueCount = $pic->picTasks->filter(fn ($t) => $t->status === TaskStatus::Late)->count();
+
+        if ($todayCount === 0 && $overdueCount === 0) {
+            continue;
+        }
+
+        try {
+            Notification::send($pic, new PicDailySummaryNotification($todayCount, $overdueCount));
+            $sent++;
+        } catch (\Throwable $e) {
+            report($e);
+        }
+    }
+
+    $this->info("Daily summary sent to {$sent} PICs.");
+})->purpose('Gửi thông báo sáng cho PIC về task hôm nay và task quá hạn (SRS 2.4)');
+
+Artisan::command('tasks:deadline-reminders', function (): void {
+    $now = now();
+    $deadlineFrom = $now->copy()->startOfDay();
+    $deadlineTo = $now->copy()->addDays(2)->endOfDay();
+
+    $tasks = Task::query()
         ->whereNotNull('deadline')
         ->whereBetween('deadline', [$deadlineFrom, $deadlineTo])
         ->where('status', '!=', TaskStatus::Completed->value)
         ->with(['pic:id,name,telegram_id,email', 'phase.project:id,name'])
         ->get();
 
-    $deadlineNotifications = 0;
-    foreach ($deadlineTasks as $task) {
+    $sent = 0;
+    foreach ($tasks as $task) {
         $pic = $task->pic;
         if ($pic === null) {
             continue;
@@ -71,7 +118,6 @@ Artisan::command('tasks:daily-reminders', function (): void {
 
         $hasTelegram = trim((string) $pic->telegram_id) !== '';
         $hasEmail = trim((string) $pic->email) !== '';
-
         if (! $hasTelegram && ! $hasEmail) {
             continue;
         }
@@ -79,42 +125,57 @@ Artisan::command('tasks:daily-reminders', function (): void {
         $daysLeft = (int) $now->copy()->startOfDay()->diffInDays($task->deadline, false);
         try {
             Notification::send($pic, new TaskDeadlineReminderNotification($task, $daysLeft));
-            $deadlineNotifications++;
-        } catch (\Throwable $exception) {
-            report($exception);
+            $sent++;
+        } catch (\Throwable $e) {
+            report($e);
         }
     }
+
+    $this->info("Deadline reminders sent to {$sent} PICs.");
+})->purpose('Nhắc deadline task còn 0-2 ngày (SRS 2.6)');
+
+Artisan::command('tasks:pending-approval-reminder', function (): void {
+    $now = now();
 
     $pendingTasks = Task::query()
         ->where('status', TaskStatus::WaitingApproval->value)
-        ->where('updated_at', '<=', $now->copy()->subHours(24))
-        ->with([
-            'pic:id,name',
-            'phase.project.leaders:id,name,telegram_id',
-        ])
+        ->with(['phase.project.leaders:id,name,telegram_id'])
         ->get();
 
-    $pendingNotifications = 0;
+    $leaderCounts = [];
     foreach ($pendingTasks as $task) {
         $leaders = $task->phase?->project?->leaders ?? collect();
-        $telegramLeaders = $leaders->filter(function (User $leader): bool {
-            return trim((string) $leader->telegram_id) !== '';
-        });
-
-        if ($telegramLeaders->isEmpty()) {
-            continue;
-        }
-
-        $pendingHours = $task->updated_at?->diffInHours($now) ?? 0;
-        foreach ($telegramLeaders as $leader) {
-            try {
-                Notification::send($leader, new TaskApprovalPendingReminderNotification($task, $pendingHours));
-                $pendingNotifications++;
-            } catch (\Throwable $exception) {
-                report($exception);
+        foreach ($leaders as $leader) {
+            if (trim((string) $leader->telegram_id) !== '') {
+                $leaderId = (int) $leader->id;
+                $leaderCounts[$leaderId] = ($leaderCounts[$leaderId] ?? 0) + 1;
             }
         }
     }
+
+    $leaders = User::query()
+        ->whereIn('id', array_keys($leaderCounts))
+        ->get(['id', 'name', 'telegram_id']);
+
+    $sent = 0;
+    foreach ($leaders as $leader) {
+        $count = $leaderCounts[(int) $leader->id] ?? 0;
+        if ($count === 0) {
+            continue;
+        }
+        try {
+            Notification::send($leader, new TaskApprovalPendingReminderNotification($count));
+            $sent++;
+        } catch (\Throwable $e) {
+            report($e);
+        }
+    }
+
+    $this->info("Pending approval reminders sent to {$sent} leaders.");
+})->purpose('Nhắc leader duyệt task lúc 17:00 (SRS 2.9)');
+
+Artisan::command('tasks:pic-overdue-warning', function (): void {
+    $now = now();
 
     $overdueGroups = Task::query()
         ->whereNotNull('deadline')
@@ -129,167 +190,238 @@ Artisan::command('tasks:daily-reminders', function (): void {
         ->whereIn('id', $overdueGroups->pluck('pic_id')->filter())
         ->get(['id', 'name', 'telegram_id']);
 
-    $overdueNotifications = 0;
+    $sent = 0;
     foreach ($overdueGroups as $row) {
         $pic = $pics->firstWhere('id', (int) $row->pic_id);
         if ($pic === null || trim((string) $pic->telegram_id) === '') {
             continue;
         }
-
         try {
             Notification::send($pic, new PicOverdueTasksNotification($pic, (int) $row->total));
-            $overdueNotifications++;
-        } catch (\Throwable $exception) {
-            report($exception);
+            $sent++;
+        } catch (\Throwable $e) {
+            report($e);
         }
     }
 
-    $this->info("Deadline reminders: {$deadlineNotifications}");
-    $this->info("Pending approval reminders: {$pendingNotifications}");
-    $this->info("Overdue PIC reminders: {$overdueNotifications}");
-})->purpose('Gửi nhắc việc hàng ngày theo logic deadline và chờ duyệt');
+    $this->info("Overdue PIC warnings sent to {$sent} users.");
+})->purpose('Cảnh báo PIC có >3 task quá hạn');
 
-Artisan::command('reports:weekly', function (): void {
+Artisan::command('reports:weekly-pic', function (): void {
     $now = now();
-    $periodStart = $now->copy()->subWeek()->startOfDay();
-    $periodEnd = $now->copy()->endOfDay();
+    $weekStart = $now->copy()->startOfWeek(Carbon::MONDAY);
+    $weekEnd = $now->copy()->startOfWeek(Carbon::MONDAY)->addDays(5);
 
-    $summary = [
-        'completed' => Task::query()
-            ->where('status', TaskStatus::Completed->value)
-            ->whereBetween('completed_at', [$periodStart, $periodEnd])
-            ->count(),
-        'late' => Task::query()
-            ->where('status', TaskStatus::Late->value)
-            ->whereNotNull('deadline')
-            ->whereBetween('deadline', [$periodStart, $periodEnd])
-            ->count(),
-        'waiting_approval' => Task::query()
-            ->where('status', TaskStatus::WaitingApproval->value)
-            ->count(),
-        'due_soon' => Task::query()
-            ->whereNotNull('deadline')
-            ->whereBetween('deadline', [$now->copy()->startOfDay(), $now->copy()->addDays(3)->endOfDay()])
-            ->where('status', '!=', TaskStatus::Completed->value)
-            ->count(),
-    ];
-
-    $recipients = User::role(['leader', 'ceo'])->get(['id', 'telegram_id', 'email']);
-    $validRecipients = $recipients->filter(function (User $user): bool {
-        return trim((string) $user->telegram_id) !== '' || trim((string) $user->email) !== '';
-    });
-
-    if ($validRecipients->isNotEmpty()) {
-        foreach ($validRecipients as $recipient) {
-            try {
-                Notification::send($recipient, new WeeklySummaryNotification($summary, $periodStart, $periodEnd));
-            } catch (\Throwable $exception) {
-                report($exception);
-            }
-        }
-    }
-
-    $this->info('Weekly report sent.');
-})->purpose('Gửi báo cáo task hàng tuần cho leader và ceo');
-
-Artisan::command('kpi:monthly-sync', function (): void {
-    $now = now();
-
-    $users = User::query()
-        ->where('status', UserStatus::Active->value)
-        ->get(['id']);
-
-    foreach ($users as $user) {
-        KpiScore::syncForUser($user->id);
-    }
-
-    $recipients = User::role(['leader', 'ceo'])->get(['id', 'telegram_id']);
-    $telegramRecipients = $recipients->filter(function (User $user): bool {
-        return trim((string) $user->telegram_id) !== '';
-    });
-
-    if ($telegramRecipients->isNotEmpty()) {
-        foreach ($telegramRecipients as $recipient) {
-            try {
-                Notification::send($recipient, new MonthlyKpiSummaryNotification($users->count(), $now));
-            } catch (\Throwable $exception) {
-                report($exception);
-            }
-        }
-    }
-
-    $this->info("Monthly KPI synced for {$users->count()} users.");
-})->purpose('Đồng bộ KPI hàng tháng và gửi thông báo');
-
-Artisan::command('kpi:daily-sync', function (): void {
-    $users = User::query()
-        ->where('status', UserStatus::Active->value)
-        ->get(['id']);
-
-    foreach ($users as $user) {
-        KpiScore::syncForUser($user->id);
-    }
-
-    $this->info("Daily KPI synced for {$users->count()} users.");
-})->purpose('Đồng bộ KPI hàng ngày để tránh sync đồng bộ khi lưu task');
-
-Artisan::command('kpi:backfill-all {--chunk=200 : Số lượng thành viên xử lý mỗi lượt}', function (): void {
-    $chunkSize = max(50, (int) $this->option('chunk'));
-
-    $baseQuery = User::query()
-        ->select('id')
-        ->where(function ($query): void {
-            $query
-                ->whereHas('picTasks', function ($taskQuery): void {
-                    $taskQuery
-                        ->where('status', TaskStatus::Completed->value)
-                        ->whereNotNull('completed_at');
-                })
-                ->orWhereHas('kpiScores');
+    $pics = User::query()
+        ->whereHas('picTasks', function ($q) use ($weekStart, $weekEnd): void {
+            $q->where('progress', 100);
         })
-        ->orderBy('id');
+        ->with(['picTasks' => function ($q) use ($weekStart, $weekEnd): void {
+            $q->where('progress', 100);
+        }])
+        ->get(['id', 'name', 'telegram_id']);
 
-    $totalUsers = (clone $baseQuery)->count();
-    if ($totalUsers === 0) {
-        $this->info('Không có thành viên có dữ liệu KPI để đồng bộ lịch sử.');
-
-        return;
-    }
-
-    $this->info("Bắt đầu đồng bộ KPI lịch sử cho {$totalUsers} thành viên...");
-
-    $processed = 0;
-    $failed = 0;
-    $progressBar = $this->output->createProgressBar($totalUsers);
-    $progressBar->start();
-
-    $baseQuery->chunkById($chunkSize, function ($users) use (&$processed, &$failed, $progressBar): void {
-        foreach ($users as $user) {
-            try {
-                KpiScore::syncForUser((int) $user->id);
-                $processed++;
-            } catch (\Throwable $exception) {
-                report($exception);
-                $failed++;
-            }
-
-            $progressBar->advance();
+    $sent = 0;
+    foreach ($pics as $pic) {
+        if (trim((string) $pic->telegram_id) === '') {
+            continue;
         }
-    });
 
-    $progressBar->finish();
-    $this->newLine(2);
-    $this->info("Đã đồng bộ KPI lịch sử cho {$processed}/{$totalUsers} thành viên.");
+        $tasks = $pic->picTasks;
+        $total = $tasks->count();
 
-    if ($failed > 0) {
-        $this->warn("Có {$failed} thành viên đồng bộ thất bại. Vui lòng kiểm tra log.");
+        $approved = $tasks->filter(fn ($t) =>
+            $t->status === TaskStatus::Completed->value
+            && $t->completed_at !== null
+            && $t->completed_at->between($weekStart, $weekEnd)
+        )->count();
+
+        $rejected = $tasks->filter(fn ($t) =>
+            $t->status === TaskStatus::InProgress->value
+            && $t->approvalLogs()->where('action', 'rejected')->whereBetween('created_at', [$weekStart, $weekEnd])->exists()
+        )->count();
+
+        $pending = $tasks->filter(fn ($t) =>
+            $t->status === TaskStatus::WaitingApproval->value
+            && $t->updated_at !== null
+            && $t->updated_at->between($weekStart, $weekEnd)
+        )->count();
+
+        if ($total === 0) {
+            continue;
+        }
+
+        try {
+            Notification::send($pic, new PicWeeklyReportNotification(
+                $weekStart, $weekEnd, $total, $approved, $rejected, $pending
+            ));
+            $sent++;
+        } catch (\Throwable $e) {
+            report($e);
+        }
     }
-})->purpose('Backfill KPI lịch sử cho toàn bộ thành viên có dữ liệu task/KPI');
+
+    $this->info("Weekly PIC reports sent to {$sent} PICs.");
+})->purpose('Gửi báo cáo tuần cho PIC (SRS 2.7)');
+
+Artisan::command('reports:weekly-leader', function (): void {
+    $now = now();
+    $weekStart = $now->copy()->startOfWeek(Carbon::MONDAY);
+    $weekEnd = $now->copy()->startOfWeek(Carbon::MONDAY)->addDays(5);
+
+    $leaders = User::role('leader')->with(['leadingProjects' => function ($q): void {
+        $q->whereNotIn('status', [ProjectStatus::Completed->value, ProjectStatus::Cancelled->value]);
+    }])->get(['id', 'name', 'telegram_id']);
+
+    $sent = 0;
+    foreach ($leaders as $leader) {
+        if (trim((string) $leader->telegram_id) === '') {
+            continue;
+        }
+
+        $projects = $leader->leadingProjects ?? collect();
+        if ($projects->isEmpty()) {
+            continue;
+        }
+
+        $projectData = [];
+        foreach ($projects as $project) {
+            $progress = (int) ($project->progress ?? 0);
+            $deadline = $project->end_date;
+            $status = classifyProjectStatus($project, $deadline, $progress, $now);
+
+            $projectData[] = [
+                'name' => $project->name,
+                'progress' => $progress,
+                'deadline' => $deadline?->format('d/m/Y') ?? 'N/A',
+                'status' => $status,
+            ];
+        }
+
+        try {
+            Notification::send($leader, new LeaderWeeklyReportNotification(
+                $leader, $weekStart, $weekEnd, $projectData
+            ));
+            $sent++;
+        } catch (\Throwable $e) {
+            report($e);
+        }
+    }
+
+    $this->info("Weekly leader reports sent to {$sent} leaders.");
+})->purpose('Gửi báo cáo tuần cho Leader (SRS 2.8)');
+
+function classifyProjectStatus(Project $project, ?Carbon $deadline, int $progress, Carbon $now): string
+{
+    if ($deadline === null) {
+        return 'Đúng tiến độ';
+    }
+
+    if ($deadline->isPast()) {
+        return 'Trễ hạn';
+    }
+
+    $startDate = $project->start_date ?? $project->created_at;
+    $totalDuration = $startDate->diffInDays($deadline);
+    $elapsed = $startDate->diffInDays($now);
+    $twoThirdsPoint = $totalDuration > 0 ? $totalDuration * 2 / 3 : 0;
+
+    if ($elapsed >= $twoThirdsPoint && $progress < 60) {
+        return 'Rủi ro';
+    }
+
+    return 'Đúng tiến độ';
+}
+
+Artisan::command('reports:weekly-ceo', function (): void {
+    $now = now();
+    $weekStart = $now->copy()->startOfWeek(Carbon::MONDAY);
+    $weekEnd = $now->copy()->startOfWeek(Carbon::MONDAY)->addDays(5);
+
+    $allProjects = Project::query()->get();
+    $totalActive = $allProjects->count();
+
+    $completed = $allProjects->filter(fn ($p) =>
+        $p->status === ProjectStatus::Completed->value
+        && $p->updated_at !== null
+        && $p->updated_at->between($weekStart, $weekEnd)
+    );
+
+    $inProgress = $allProjects->filter(fn ($p) =>
+        ! in_array($p->status, [
+            ProjectStatus::Completed->value,
+            ProjectStatus::Cancelled->value,
+            ProjectStatus::Overdue->value,
+        ])
+        && ! ($p->end_date !== null && $p->end_date->isPast())
+    );
+
+    $atRisk = $allProjects->filter(fn ($p) =>
+        $p->end_date !== null
+        && ! $p->end_date->isPast()
+        && $p->end_date->diffInDays($now) <= 15
+        && ($p->progress ?? 0) < 60
+    );
+
+    $overdue = $allProjects->filter(fn ($p) =>
+        $p->status === ProjectStatus::Overdue->value
+        || ($p->end_date !== null && $p->end_date->isPast() && $p->status !== ProjectStatus::Completed->value)
+    );
+
+    $completedData = $completed->map(fn ($p) => [
+        'name' => $p->name,
+        'date' => $p->updated_at?->format('d/m/Y') ?? 'N/A',
+    ])->values()->toArray();
+
+    $inProgressData = $inProgress->map(fn ($p) => [
+        'name' => $p->name,
+        'progress' => (int) ($p->progress ?? 0),
+        'deadline' => $p->end_date?->format('d/m/Y') ?? 'N/A',
+    ])->values()->toArray();
+
+    $atRiskData = $atRisk->filter(fn ($p) => $p->end_date !== null)->map(fn ($p) => [
+        'name' => $p->name,
+        'progress' => (int) ($p->progress ?? 0),
+        'daysLeft' => (int) $now->diffInDays($p->end_date),
+    ])->values()->toArray();
+
+    $overdueData = $overdue->map(fn ($p) => [
+        'name' => $p->name,
+        'progress' => (int) ($p->progress ?? 0),
+        'overdueDays' => $p->end_date !== null ? (int) $p->end_date->diffInDays($now, false) : 0,
+    ])->values()->toArray();
+
+    $ceos = User::role('ceo')->get(['id', 'name', 'telegram_id']);
+    $sent = 0;
+
+    foreach ($ceos as $ceo) {
+        if (trim((string) $ceo->telegram_id) === '') {
+            continue;
+        }
+
+        try {
+            Notification::send($ceo, new CeoWeeklyReportNotification(
+                $weekStart, $weekEnd, $totalActive,
+                $completedData, $inProgressData, $atRiskData, $overdueData
+            ));
+            $sent++;
+        } catch (\Throwable $e) {
+            report($e);
+        }
+    }
+
+    $this->info("Weekly CEO report sent to {$sent} CEOs.");
+})->purpose('Gửi báo cáo tuần cho CEO (SRS 2.11)');
 
 Schedule::command('tasks:mark-late')->daily()->at('07:00');
 Schedule::command('projects:mark-overdue')->daily()->at('07:00');
-Schedule::command('tasks:daily-reminders')->daily()->at('07:00');
-Schedule::command('reports:weekly')->weekly()->fridays()->at('17:00');
+Schedule::command('tasks:daily-summary')->daily()->at('08:30');
+Schedule::command('tasks:deadline-reminders')->daily()->at('08:30');
+Schedule::command('tasks:pending-approval-reminder')->daily()->at('17:00');
+Schedule::command('tasks:pic-overdue-warning')->daily()->at('17:00');
+Schedule::command('reports:weekly-pic')->weekly()->saturdays()->at('08:00');
+Schedule::command('reports:weekly-leader')->weekly()->saturdays()->at('08:00');
+Schedule::command('reports:weekly-ceo')->weekly()->saturdays()->at('08:00');
 Schedule::command('kpi:daily-sync')
     ->daily()
     ->at('01:00')
@@ -309,7 +441,7 @@ Schedule::command('kpi:backfill-missing-months', ['--months' => '12'])
     ->onOneServer();
 
 Artisan::command('progress:refresh-all', function (): void {
-    $phases = \App\Models\Phase::query()->get();
+    $phases = Phase::query()->get();
     $this->info("Refreshing progress for {$phases->count()} phases...");
 
     foreach ($phases as $phase) {
@@ -344,7 +476,6 @@ Artisan::command('projects:set-creator-admin', function (): void {
         return;
     }
 
-    // Update all projects to set created_by to the admin user
     Project::query()->update(['created_by' => $user->id]);
 
     $this->info("Updated {$total} projects: set created_by = {$user->id} ({$user->email}).");
