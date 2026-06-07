@@ -2,15 +2,12 @@
 
 use App\Enums\ProjectStatus;
 use App\Enums\TaskStatus;
-use App\Enums\UserStatus;
-use App\Models\KpiScore;
 use App\Models\Phase;
 use App\Models\Project;
 use App\Models\Task;
 use App\Models\User;
 use App\Notifications\CeoWeeklyReportNotification;
 use App\Notifications\LeaderWeeklyReportNotification;
-use App\Notifications\MonthlyKpiSummaryNotification;
 use App\Notifications\PicDailySummaryNotification;
 use App\Notifications\PicOverdueTasksNotification;
 use App\Notifications\PicWeeklyReportNotification;
@@ -213,10 +210,10 @@ Artisan::command('reports:weekly-pic', function (): void {
     $weekEnd = $now->copy()->startOfWeek(Carbon::MONDAY)->addDays(5);
 
     $pics = User::query()
-        ->whereHas('picTasks', function ($q) use ($weekStart, $weekEnd): void {
+        ->whereHas('picTasks', function ($q): void {
             $q->where('progress', 100);
         })
-        ->with(['picTasks' => function ($q) use ($weekStart, $weekEnd): void {
+        ->with(['picTasks' => function ($q): void {
             $q->where('progress', 100);
         }])
         ->get(['id', 'name', 'telegram_id']);
@@ -230,19 +227,16 @@ Artisan::command('reports:weekly-pic', function (): void {
         $tasks = $pic->picTasks;
         $total = $tasks->count();
 
-        $approved = $tasks->filter(fn ($t) =>
-            $t->status === TaskStatus::Completed->value
+        $approved = $tasks->filter(fn ($t) => $t->status === TaskStatus::Completed->value
             && $t->completed_at !== null
             && $t->completed_at->between($weekStart, $weekEnd)
         )->count();
 
-        $rejected = $tasks->filter(fn ($t) =>
-            $t->status === TaskStatus::InProgress->value
+        $rejected = $tasks->filter(fn ($t) => $t->status === TaskStatus::InProgress->value
             && $t->approvalLogs()->where('action', 'rejected')->whereBetween('created_at', [$weekStart, $weekEnd])->exists()
         )->count();
 
-        $pending = $tasks->filter(fn ($t) =>
-            $t->status === TaskStatus::WaitingApproval->value
+        $pending = $tasks->filter(fn ($t) => $t->status === TaskStatus::WaitingApproval->value
             && $t->updated_at !== null
             && $t->updated_at->between($weekStart, $weekEnd)
         )->count();
@@ -311,27 +305,70 @@ Artisan::command('reports:weekly-leader', function (): void {
     $this->info("Weekly leader reports sent to {$sent} leaders.");
 })->purpose('Gửi báo cáo tuần cho Leader (SRS 2.8)');
 
-function classifyProjectStatus(Project $project, ?Carbon $deadline, int $progress, Carbon $now): string
-{
-    if ($deadline === null) {
+if (! function_exists('classifyProjectStatus')) {
+    function classifyProjectStatus(Project $project, ?Carbon $deadline, int $progress, Carbon $now): string
+    {
+        if ($deadline === null) {
+            return 'Đúng tiến độ';
+        }
+
+        if ($deadline->isPast()) {
+            return 'Trễ hạn';
+        }
+
+        $startDate = $project->start_date ?? $project->created_at;
+        $totalDuration = $startDate->diffInDays($deadline);
+        $elapsed = $startDate->diffInDays($now);
+        $twoThirdsPoint = $totalDuration > 0 ? $totalDuration * 2 / 3 : 0;
+
+        if ($elapsed >= $twoThirdsPoint && $progress < 60) {
+            return 'Rủi ro';
+        }
+
         return 'Đúng tiến độ';
     }
-
-    if ($deadline->isPast()) {
-        return 'Trễ hạn';
-    }
-
-    $startDate = $project->start_date ?? $project->created_at;
-    $totalDuration = $startDate->diffInDays($deadline);
-    $elapsed = $startDate->diffInDays($now);
-    $twoThirdsPoint = $totalDuration > 0 ? $totalDuration * 2 / 3 : 0;
-
-    if ($elapsed >= $twoThirdsPoint && $progress < 60) {
-        return 'Rủi ro';
-    }
-
-    return 'Đúng tiến độ';
 }
+
+Artisan::command('kpi:daily-sync', function (): void {
+    $users = User::query()
+        ->where('status', \App\Enums\UserStatus::Active->value)
+        ->get(['id']);
+
+    foreach ($users as $user) {
+        \App\Models\KpiScore::syncForUser($user->id);
+    }
+
+    $this->info("Daily KPI synced for {$users->count()} users.");
+})->purpose('Đồng bộ KPI hàng ngày');
+
+Artisan::command('kpi:monthly-sync', function (): void {
+    $now = now();
+
+    $users = User::query()
+        ->where('status', \App\Enums\UserStatus::Active->value)
+        ->get(['id']);
+
+    foreach ($users as $user) {
+        \App\Models\KpiScore::syncForUser($user->id);
+    }
+
+    $recipients = User::role(['leader', 'ceo'])->get(['id', 'telegram_id']);
+    $telegramRecipients = $recipients->filter(function (User $user): bool {
+        return trim((string) $user->telegram_id) !== '';
+    });
+
+    if ($telegramRecipients->isNotEmpty()) {
+        foreach ($telegramRecipients as $recipient) {
+            try {
+                Notification::send($recipient, new \App\Notifications\MonthlyKpiSummaryNotification($users->count(), $now));
+            } catch (\Throwable $exception) {
+                report($exception);
+            }
+        }
+    }
+
+    $this->info("Monthly KPI synced for {$users->count()} users.");
+})->purpose('Đồng bộ KPI hàng tháng và gửi thông báo');
 
 Artisan::command('reports:weekly-ceo', function (): void {
     $now = now();
@@ -341,30 +378,26 @@ Artisan::command('reports:weekly-ceo', function (): void {
     $allProjects = Project::query()->get();
     $totalActive = $allProjects->count();
 
-    $completed = $allProjects->filter(fn ($p) =>
-        $p->status === ProjectStatus::Completed->value
+    $completed = $allProjects->filter(fn ($p) => $p->status === ProjectStatus::Completed->value
         && $p->updated_at !== null
         && $p->updated_at->between($weekStart, $weekEnd)
     );
 
-    $inProgress = $allProjects->filter(fn ($p) =>
-        ! in_array($p->status, [
-            ProjectStatus::Completed->value,
-            ProjectStatus::Cancelled->value,
-            ProjectStatus::Overdue->value,
-        ])
+    $inProgress = $allProjects->filter(fn ($p) => ! in_array($p->status, [
+        ProjectStatus::Completed->value,
+        ProjectStatus::Cancelled->value,
+        ProjectStatus::Overdue->value,
+    ])
         && ! ($p->end_date !== null && $p->end_date->isPast())
     );
 
-    $atRisk = $allProjects->filter(fn ($p) =>
-        $p->end_date !== null
+    $atRisk = $allProjects->filter(fn ($p) => $p->end_date !== null
         && ! $p->end_date->isPast()
         && $p->end_date->diffInDays($now) <= 15
         && ($p->progress ?? 0) < 60
     );
 
-    $overdue = $allProjects->filter(fn ($p) =>
-        $p->status === ProjectStatus::Overdue->value
+    $overdue = $allProjects->filter(fn ($p) => $p->status === ProjectStatus::Overdue->value
         || ($p->end_date !== null && $p->end_date->isPast() && $p->status !== ProjectStatus::Completed->value)
     );
 
