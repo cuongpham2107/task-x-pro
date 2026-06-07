@@ -45,17 +45,11 @@ class TaskDeadlineReminderNotification extends Notification
         $projectName = $this->task->phase?->project?->name;
         $phaseName = $this->task->phase?->name;
 
-        $contextDetails = ["Deadline: {$deadlineText}"];
-        if ($projectName !== null && trim((string) $projectName) !== '') {
-            $contextDetails[] = "Dự án: {$projectName}";
-        }
-        if ($phaseName !== null && trim((string) $phaseName) !== '') {
-            $contextDetails[] = "Giai đoạn: {$phaseName}";
-        }
-
         $daysLeft = max(0, $this->daysLeft);
-        $content = "Công việc \"{$taskName}\" sắp đến hạn. Còn {$daysLeft} ngày.";
-        $content .= "\n".implode(' | ', $contextDetails);
+        $content = "⏰ Task \"{$taskName}\" sắp đến hạn. Còn {$daysLeft} ngày.";
+        $content .= "\n🗓️ Deadline: {$deadlineText}";
+        $content .= "\n📁 Dự án: ".($projectName ?? 'N/A');
+        $content .= "\n🔖 Giai đoạn: ".($phaseName ?? 'N/A');
 
         $message = TelegramMessage::create()
             ->to((string) $notifiable->telegram_id)
