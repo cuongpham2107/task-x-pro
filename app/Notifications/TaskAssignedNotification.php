@@ -70,20 +70,11 @@ class TaskAssignedNotification extends Notification
         $deadlineText = $this->task->deadline?->format('d/m/Y H:i') ?? 'N/A';
         $projectName = $this->task->phase?->project?->name;
         $phaseName = $this->task->phase?->name;
-        $role = $this->isCoAssignee ? 'Co-PIC (hỗ trợ)' : 'PIC (phụ trách chính)';
 
-        $contextDetails = ["Deadline: {$deadlineText}", "Vai trò: {$role}"];
-        if ($projectName !== null && trim((string) $projectName) !== '') {
-            $contextDetails[] = "Dự án: {$projectName}";
-        }
-        if ($phaseName !== null && trim((string) $phaseName) !== '') {
-            $contextDetails[] = "Giai đoạn: {$phaseName}";
-        }
-
-        $content = "Bạn được giao công việc \"{$taskName}\" bởi {$assignerName}.";
-        if ($contextDetails !== []) {
-            $content .= "\n".implode(' | ', $contextDetails);
-        }
+        $content = "🆕 Task \"{$taskName}\" vừa được giao cho bạn bởi {$assignerName}.";
+        $content .= "\n📁 Dự án: ".($projectName ?? 'N/A');
+        $content .= "\n📋 Phase: ".($phaseName ?? 'N/A');
+        $content .= "\n⏳ Deadline: {$deadlineText}";
 
         $message = TelegramMessage::create()
             ->to((string) $notifiable->telegram_id)
