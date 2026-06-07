@@ -373,6 +373,7 @@ class TaskService
 
         // Tạo notification cho các Leader để họ biết có task cần duyệt
         try {
+            $pic = $actor;
             $task->loadMissing('phase:id,project_id');
             $taskName = trim((string) $task->name) !== '' ? $task->name : "Task #{$task->id}";
             $body = "Task \"{$taskName}\" đã được gửi duyệt và cần leader phê duyệt.";
@@ -406,7 +407,7 @@ class TaskService
             if ($telegramRecipients->isNotEmpty()) {
                 foreach ($telegramRecipients as $leader) {
                     try {
-                        Notification::send($leader, new TaskApprovalRequestLeaderNotification($task, $actor));
+                        Notification::send($leader, new TaskApprovalRequestLeaderNotification($task, $pic));
                     } catch (\Throwable $exception) {
                         report($exception);
                     }

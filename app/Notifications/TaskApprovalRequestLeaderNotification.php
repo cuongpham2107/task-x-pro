@@ -18,7 +18,7 @@ class TaskApprovalRequestLeaderNotification extends Notification
      */
     public function __construct(
         public Task $task,
-        public User $actor,
+        public User $pic,
     ) {}
 
     /**
@@ -38,23 +38,14 @@ class TaskApprovalRequestLeaderNotification extends Notification
     {
         $this->task->loadMissing(['phase.project']);
 
-        $actorName = trim((string) $this->actor->name) !== '' ? $this->actor->name : 'PIC';
+        $picName = trim((string) $this->pic->name) !== '' ? $this->pic->name : 'PIC';
         $taskName = trim((string) $this->task->name) !== '' ? $this->task->name : "Task #{$this->task->id}";
         $projectName = $this->task->phase?->project?->name;
         $phaseName = $this->task->phase?->name;
 
-        $contextDetails = [];
-        if ($projectName !== null && trim((string) $projectName) !== '') {
-            $contextDetails[] = "Dự án: {$projectName}";
-        }
-        if ($phaseName !== null && trim((string) $phaseName) !== '') {
-            $contextDetails[] = "Giai đoạn: {$phaseName}";
-        }
-
-        $content = "Task \"{$taskName}\" đã được {$actorName} gửi duyệt và cần leader phê duyệt.";
-        if ($contextDetails !== []) {
-            $content .= "\n".implode(' | ', $contextDetails);
-        }
+        $content = "📤 Task \"{$taskName}\" đã được {$picName} gửi và cần Leader phê duyệt.";
+        $content .= "\n📁 Dự án: ".($projectName ?? 'N/A');
+        $content .= "\n🔖 Giai đoạn: ".($phaseName ?? 'N/A');
 
         $message = TelegramMessage::create()
             ->to((string) $notifiable->telegram_id)
