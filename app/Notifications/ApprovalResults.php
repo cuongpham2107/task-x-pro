@@ -19,6 +19,8 @@ class ApprovalResults extends Notification
     public function __construct(
         public Task $task,
         public User $leader,
+        public ?int $rating = null,
+        public ?string $reviewNote = null,
     ) {}
 
     /**
@@ -38,22 +40,26 @@ class ApprovalResults extends Notification
     {
         $this->task->loadMissing(['phase.project']);
 
-        $leaderName = trim((string) $this->leader->name) !== '' ? $this->leader->name : 'Leader';
         $taskName = trim((string) $this->task->name) !== '' ? $this->task->name : "Task #{$this->task->id}";
         $projectName = $this->task->phase?->project?->name;
         $phaseName = $this->task->phase?->name;
 
-        $contextDetails = [];
-        if ($projectName !== null && trim((string) $projectName) !== '') {
-            $contextDetails[] = "Dự án: {$projectName}";
-        }
+        $parts = ["✅ Task \"{$taskName}\""];
         if ($phaseName !== null && trim((string) $phaseName) !== '') {
-            $contextDetails[] = "Giai đoạn: {$phaseName}";
+            $parts[] = "thuộc Phase \"{$phaseName}\"";
         }
+        if ($projectName !== null && trim((string) $projectName) !== '') {
+            $parts[] = "của Dự án \"{$projectName}\"";
+        }
+        $parts[] = 'đã được phê duyệt.';
 
-        $content = "Công việc \"{$taskName}\" đã được {$leaderName} phê duyệt và đang chờ CEO phê duyệt.";
-        if ($contextDetails !== []) {
-            $content .= "\n".implode(' | ', $contextDetails);
+        $content = implode(' ', $parts);
+
+        if ($this->rating !== null) {
+            $content .= "\n📝 Đánh giá: {$this->rating}/5";
+            if ($this->reviewNote !== null && trim($this->reviewNote) !== '') {
+                $content .= "\n    ".trim($this->reviewNote);
+            }
         }
 
         $message = TelegramMessage::create()

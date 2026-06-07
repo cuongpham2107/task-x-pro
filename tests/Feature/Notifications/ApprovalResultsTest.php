@@ -25,7 +25,7 @@ class ApprovalResultsTest extends TestCase
         $leader = User::factory()->create();
         $ceo = User::factory()->create(['telegram_id' => '123456789']);
 
-        $notification = new ApprovalResults($task, $leader);
+        $notification = new ApprovalResults($task, $leader, 4, 'Hoàn thành tốt');
         $payload = $notification->toTelegram($ceo)->toArray();
 
         $this->assertArrayNotHasKey('reply_markup', $payload);

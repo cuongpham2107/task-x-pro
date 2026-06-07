@@ -102,7 +102,7 @@ class TaskApprovalService
 
         // Neu la workflow 2 cap va cap duyet hien tai la leader, gui thong bao cho CEO
         if ($workflowType === TaskWorkflowType::Double->value && $approvalLevel === ApprovalLevel::Leader->value) {
-            $this->sendCEOApprovalNotification($task, $actor);
+            $this->sendCEOApprovalNotification($task, $actor, $starRating, $comment);
         }
     }
 
@@ -299,7 +299,7 @@ class TaskApprovalService
     /**
      * Gui thong bao cho CEO khi task yeu cau duyet 2 cap.
      */
-    public function sendCEOApprovalNotification(Task $task, User $leader): void
+    public function sendCEOApprovalNotification(Task $task, User $leader, ?int $starRating = null, ?string $comment = null): void
     {
         $workflowType = $this->normalizeWorkflowType($task->workflow_type);
 
@@ -347,7 +347,7 @@ class TaskApprovalService
 
         foreach ($telegramRecipients as $recipient) {
             try {
-                Notification::send($recipient, new ApprovalResults($task, $leader));
+                Notification::send($recipient, new ApprovalResults($task, $leader, $starRating, $comment));
             } catch (\Throwable $exception) {
                 report($exception);
             }
