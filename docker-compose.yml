@@ -19,7 +19,6 @@ services:
       - ./:/var/www
       - storage:/var/www/storage
       - bootstrap_cache:/var/www/bootstrap/cache
-      - database:/var/www/database
       - ./php/upload.ini:/usr/local/etc/php/conf.d/upload.ini:ro
     networks:
       - taskxpro-network
@@ -46,7 +45,6 @@ services:
       - ./:/var/www
       - storage:/var/www/storage
       - bootstrap_cache:/var/www/bootstrap/cache
-      - database:/var/www/database
       - ./php/upload.ini:/usr/local/etc/php/conf.d/upload.ini:ro
     networks:
       - taskxpro-network
@@ -90,5 +88,4 @@ networks:
 volumes:
   storage:
   bootstrap_cache:
-  database:
   db_data:
