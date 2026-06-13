@@ -1,8 +1,7 @@
 <?php
-use App\Helpers\PdfHelper;
-
 use App\Enums\KpiPeriodType;
 use App\Exports\KpiExport;
+use App\Helpers\PdfHelper;
 use App\Models\Department;
 use App\Models\KpiScore;
 use App\Models\Task;
@@ -775,7 +774,7 @@ new #[Title('KPI phòng ban')] class extends Component
                 <div class="flex shrink-0 flex-col gap-1">
                     <label class="ml-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">Lọc nhân
                         sự</label>
-                    <x-ui.filter-select model="selectedUserId" :value="$selectedUserId" label="Tình nhân viên" icon="person"
+                    <x-ui.filter-select model="selectedUserId" :value="$selectedUserId" label="Tất cả nhân sự" icon="person"
                         all-label="Tất cả nhân sự" width="w-56" :options="collect($this->teamUsers)->mapWithKeys(fn($u) => [$u->id => $u->name])->all()" />
                 </div>
 

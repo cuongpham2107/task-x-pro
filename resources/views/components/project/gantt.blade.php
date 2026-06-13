@@ -234,7 +234,7 @@
                                                 {{ $item['statusLabel'] }}
                                             </span>
                                         </div>
-                                        <p class="text-[11px] text-slate-400">
+                                        <p class="text-[10px] text-slate-400">
                                             @if ($item['hasDate'])
                                                 {{ $item['startLabel'] }} → {{ $item['endLabel'] }}
                                             @else
@@ -243,7 +243,7 @@
                                         </p>
                                     </div>
                                     <div class="text-right">
-                                        <span class="text-xs text-slate-500">{{ $item['manager'] }}</span>
+                                        <span class="text-[10px] text-slate-500">{{ $item['manager'] }}</span>
                                     </div>
                                     <div class="flex items-center justify-end gap-2">
                                         <div class="h-1.5 w-12 flex-1 rounded-full bg-slate-200 dark:bg-slate-700">

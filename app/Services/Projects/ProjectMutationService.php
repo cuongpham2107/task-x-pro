@@ -122,6 +122,10 @@ class ProjectMutationService
             $clonedAttributes['created_by'] = $actor->id;
             unset($clonedAttributes['id'], $clonedAttributes['created_at'], $clonedAttributes['updated_at']);
 
+            // Ensure date fields use Y-m-d format to avoid timezone shift via toArray() ISO 8601 serialization
+            $clonedAttributes['start_date'] = $sourceProject->start_date?->toDateString();
+            $clonedAttributes['end_date'] = $sourceProject->end_date?->toDateString();
+
             $newProject = Project::query()->create($clonedAttributes);
 
             // Copy leaders
@@ -138,6 +142,10 @@ class ProjectMutationService
                 $phaseAttributes['project_id'] = $newProject->id;
                 unset($phaseAttributes['id'], $phaseAttributes['created_at'], $phaseAttributes['updated_at']);
 
+                // Ensure date fields use Y-m-d format to avoid timezone shift
+                $phaseAttributes['start_date'] = $sourcePhase->start_date?->toDateString();
+                $phaseAttributes['end_date'] = $sourcePhase->end_date?->toDateString();
+
                 $newPhase = $newProject->phases()->create($phaseAttributes);
 
                 // Clone tasks
@@ -149,6 +157,9 @@ class ProjectMutationService
                     $taskAttributes['started_at'] = null;
                     $taskAttributes['completed_at'] = null;
                     unset($taskAttributes['id'], $taskAttributes['created_at'], $taskAttributes['updated_at']);
+
+                    // Ensure date fields use Y-m-d format to avoid timezone shift
+                    $taskAttributes['deadline'] = $sourceTask->deadline?->toDateTimeString();
 
                     $newTask = $newPhase->tasks()->create($taskAttributes);
 

@@ -53,7 +53,7 @@ class TelegramWebhookController extends Controller
         $chatId = $message['chat']['id'];
         $text = trim($message['text'] ?? '');
 
-        if ($text === '/start' || $text === 'Kiểm tra tiến độ dự án') {
+        if ($text === '/check' || $text === 'Kiểm tra tiến độ dự án') {
             $user = $this->resolveUser($chatId);
 
             if ($user === null) {

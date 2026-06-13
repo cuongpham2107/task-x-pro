@@ -577,6 +577,19 @@ new #[Title('Tài liệu')] class extends Component
 
         $storedPath = trim((string) $version->stored_path);
         if ($storedPath !== '') {
+            if (str_starts_with($storedPath, 'http')) {
+                $docName = trim((string) $version->document?->name);
+
+                if ($docName !== '') {
+                    return $docName;
+                }
+
+                $parsed = parse_url($storedPath);
+                $path = $parsed['path'] ?? '';
+
+                return basename($path);
+            }
+
             return basename($storedPath);
         }
 
@@ -1124,7 +1137,9 @@ new #[Title('Tài liệu')] class extends Component
                             try {
                                 $docForEdit = $this->documentService->findDocumentForEdit(auth()->user(), $editingDocumentId);
                                 $latestVersionForModal = $docForEdit->versions->first();
-                                $viewUrlForModal = $latestVersionForModal ? route('documents.version.file', $latestVersionForModal->id) : null;
+                                $viewUrlForModal = $docForEdit->google_drive_url
+                                    ? $docForEdit->google_drive_url
+                                    : ($latestVersionForModal ? route('documents.version.file', $latestVersionForModal->id) : null);
                             } catch (\Throwable) {
                                 $latestVersionForModal = null;
                                 $viewUrlForModal = null;

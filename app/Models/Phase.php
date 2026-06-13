@@ -97,11 +97,16 @@ class Phase extends Model
         // Consider phase Active if there is at least one non-pending task.
         $hasStartedTask = (clone $baseQuery)->where('status', '!=', TaskStatus::Pending)->exists();
 
+        $allTasksCompleted = $taskCount > 0
+            && ! (clone $baseQuery)->where('status', '!=', TaskStatus::Completed)->exists();
+
         $currentStatus = $this->status instanceof PhaseStatus
             ? $this->status
             : PhaseStatus::tryFrom((string) $this->status);
 
         if ($currentStatus === PhaseStatus::Completed) {
+            $status = PhaseStatus::Completed;
+        } elseif ($allTasksCompleted && $progress === 100) {
             $status = PhaseStatus::Completed;
         } else {
             $status = match (true) {

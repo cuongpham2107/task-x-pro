@@ -14,6 +14,7 @@ use App\Models\SystemNotification;
 use App\Models\Task;
 use App\Models\User;
 use App\Notifications\ApprovalResults;
+use App\Notifications\TaskApprovedNotification;
 use App\Notifications\TaskRejectedNotification;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
@@ -92,6 +93,8 @@ class TaskApprovalService
                 'status' => TaskStatus::Completed->value,
                 'completed_at' => $task->completed_at ?? now(),
             ])->save();
+
+            $this->createApprovalNotification($actor, $task, $starRating, $comment);
 
             return;
         }
@@ -273,6 +276,48 @@ class TaskApprovalService
             }
         } catch (\Exception $e) {
             Log::error('Lỗi gửi thông báo từ chối công việc: '.$e->getMessage());
+        }
+    }
+
+    /**
+     * Tao thong bao cho PIC khi task duoc duyet Dat.
+     */
+    private function createApprovalNotification(User $actor, Task $task, ?int $starRating = null, ?string $comment = null): void
+    {
+        if ($task->pic_id === null) {
+            return;
+        }
+
+        $task->loadMissing('pic:id,name,telegram_id');
+        $actorName = trim((string) $actor->name) !== '' ? $actor->name : 'Người duyệt';
+        $taskName = trim((string) $task->name) !== '' ? $task->name : "Task #{$task->id}";
+        $body = "Task \"{$taskName}\" vừa được duyệt Đạt bởi {$actorName}.";
+        if ($starRating !== null) {
+            $body .= ' Đánh giá: '.$starRating.'/5';
+        }
+        if ($comment !== null && trim($comment) !== '') {
+            $body .= ' Nhận xét: '.trim($comment);
+        }
+
+        SystemNotification::query()->create([
+            'user_id' => (int) $task->pic_id,
+            'type' => SystemNotificationType::TaskApproved->value,
+            'channel' => NotificationChannel::Both->value,
+            'title' => 'Task được duyệt Đạt',
+            'body' => $body,
+            'notifiable_type' => Task::class,
+            'notifiable_id' => $task->id,
+            'status' => NotificationStatus::Pending->value,
+            'created_at' => now(),
+        ]);
+
+        try {
+            $pic = $task->pic;
+            if ($pic !== null && trim((string) $pic->telegram_id) !== '') {
+                Notification::send($pic, new TaskApprovedNotification($task, $actor, $starRating, $comment));
+            }
+        } catch (\Exception $e) {
+            Log::error('Lỗi gửi thông báo duyệt công việc: '.$e->getMessage());
         }
     }
 

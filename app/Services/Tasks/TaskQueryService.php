@@ -2,6 +2,7 @@
 
 namespace App\Services\Tasks;
 
+use App\Enums\ProjectStatus;
 use App\Enums\TaskPriority;
 use App\Enums\TaskStatus;
 use App\Enums\TaskWorkflowType;
@@ -114,6 +115,7 @@ class TaskQueryService
     public function formOptions(User $actor, ?int $projectId = null): array
     {
         $projects = $this->projectScopeForActor($actor)
+            ->where('status', '!=', ProjectStatus::Completed->value)
             ->orderBy('name')
             ->get(['id', 'name', 'type', 'status']);
 

@@ -78,13 +78,14 @@ Artisan::command('tasks:daily-summary', function (): void {
 
         $todayCount = $pic->picTasks->filter(fn ($t) => $t->deadline?->isToday())->count();
         $overdueCount = $pic->picTasks->filter(fn ($t) => $t->status === TaskStatus::Late)->count();
+        $dueTodayNotCompleted = $pic->picTasks->filter(fn ($t) => $t->deadline?->isToday() && $t->status !== TaskStatus::Completed->value)->count();
 
         if ($todayCount === 0 && $overdueCount === 0) {
             continue;
         }
 
         try {
-            Notification::send($pic, new PicDailySummaryNotification($todayCount, $overdueCount));
+            Notification::send($pic, new PicDailySummaryNotification($todayCount, $overdueCount, $dueTodayNotCompleted));
             $sent++;
         } catch (\Throwable $e) {
             report($e);
