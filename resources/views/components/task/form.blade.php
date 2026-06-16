@@ -432,8 +432,6 @@ new class extends Component
     #[On('task-create-requested')]
     public function showCreateFormModal(): void
     {
-        Gate::forUser(auth()->user())->authorize('create', Task::class);
-
         $this->resetFormModal();
         $this->mode = 'create';
         $this->editing_task_id = null;

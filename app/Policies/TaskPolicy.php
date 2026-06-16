@@ -49,7 +49,16 @@ class TaskPolicy
             return false;
         }
 
+        if ($user->hasRole('leader') && $phase !== null && $this->isPhaseProjectLeader($user, $phase)) {
+            return true;
+        }
+
         return $user->can('task.create');
+    }
+
+    private function isPhaseProjectLeader(User $user, Phase $phase): bool
+    {
+        return $phase->project?->projectLeaders()->where('user_id', $user->id)->exists() ?? false;
     }
 
     public function update(User $user, Task $task): bool

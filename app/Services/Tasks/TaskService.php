@@ -80,7 +80,6 @@ class TaskService
         $phase = $this->payloadService->resolvePhaseForTaskPayload((int) $payload['phase_id']);
         $this->guardProjectNotPaused($phase->project);
         Gate::forUser($actor)->authorize('create', [Task::class, $phase]);
-        Gate::forUser($actor)->authorize('update', $phase->project);
 
         return DB::transaction(function () use ($actor, $attributes, $coPicIds, $phase, $payload): TaskMutationResult {
             $targetStatus = (string) ($payload['status'] ?? TaskStatus::Pending->value);
