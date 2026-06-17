@@ -104,16 +104,11 @@ class Phase extends Model
             ? $this->status
             : PhaseStatus::tryFrom((string) $this->status);
 
-        if ($currentStatus === PhaseStatus::Completed) {
-            $status = PhaseStatus::Completed;
-        } elseif ($allTasksCompleted && $progress === 100) {
-            $status = PhaseStatus::Completed;
-        } else {
-            $status = match (true) {
-                $progress > 0 || $hasStartedTask => PhaseStatus::Active,
-                default => PhaseStatus::Pending,
-            };
-        }
+        $status = match (true) {
+            $currentStatus === PhaseStatus::Completed && $allTasksCompleted && $progress === 100 => PhaseStatus::Completed,
+            $progress > 0 || $hasStartedTask => PhaseStatus::Active,
+            default => PhaseStatus::Pending,
+        };
 
         // If project is paused or overdue, phase status must follow project status,
         // UNLESS it's already completed.

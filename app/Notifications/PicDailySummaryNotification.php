@@ -28,10 +28,11 @@ class PicDailySummaryNotification extends Notification
         $overdueCount = max(0, $this->overdueCount);
         $dueTodayNotCompleted = max(0, $this->dueTodayNotCompleted);
 
+        $totalTasksToComplete = $dueTodayNotCompleted + $overdueCount;
+
         $content = "☀️ Chào buổi sáng! Tổng kết công việc hôm nay:\n";
-        $content .= "📋 Có {$dueTodayNotCompleted} task cần hoàn thành hôm nay.\n";
-        $content .= "🔴 Số task quá hạn: {$overdueCount}\n";
-        $content .= "📅 Số task đến hạn: {$todayCount}";
+        $content .= "📋 Có {$totalTasksToComplete} task hôm nay cần hoàn thành.\n";
+        $content .= "🔴 Số task quá hạn: {$overdueCount}";
 
         $message = TelegramMessage::create()
             ->to((string) $notifiable->telegram_id)

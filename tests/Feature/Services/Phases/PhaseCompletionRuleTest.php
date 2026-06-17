@@ -85,7 +85,10 @@ it('keeps phase active when tasks are 100 percent but still waiting approval', f
 });
 
 it('keeps phase active when every task is completed until manually completed', function () {
+    $project = \App\Models\Project::factory()->create(['status' => \App\Enums\ProjectStatus::Running->value]);
+
     $phase = Phase::factory()->create([
+        'project_id' => $project->id,
         'status' => PhaseStatus::Pending->value,
     ]);
 
