@@ -56,8 +56,9 @@ class PhasePolicy
         }
 
         $isCreator = (int) $phase->created_by === (int) $user->id;
+        $isProjectCreator = $phase->project && (int) $phase->project->created_by === (int) $user->id;
 
-        if ($isCreator) {
+        if ($isCreator || $isProjectCreator) {
             return true;
         }
 
