@@ -68,7 +68,10 @@ it('allows completing a phase only when all tasks are completed and 100 percent'
 });
 
 it('keeps phase active when tasks are 100 percent but still waiting approval', function () {
+    $project = \App\Models\Project::factory()->create(['status' => \App\Enums\ProjectStatus::Running->value]);
+
     $phase = Phase::factory()->create([
+        'project_id' => $project->id,
         'status' => PhaseStatus::Pending->value,
     ]);
 
@@ -84,7 +87,7 @@ it('keeps phase active when tasks are 100 percent but still waiting approval', f
     expect($phase->refresh()->progress)->toBe(100);
 });
 
-it('keeps phase active when every task is completed until manually completed', function () {
+it('automatically completes phase when every task is completed and 100 percent progress', function () {
     $project = \App\Models\Project::factory()->create(['status' => \App\Enums\ProjectStatus::Running->value]);
 
     $phase = Phase::factory()->create([
@@ -100,6 +103,6 @@ it('keeps phase active when every task is completed until manually completed', f
 
     $phase->refreshProgressFromTasks();
 
-    expect($phase->refresh()->status->value)->toBe(PhaseStatus::Active->value);
+    expect($phase->refresh()->status->value)->toBe(PhaseStatus::Completed->value);
     expect($phase->refresh()->progress)->toBe(100);
 });

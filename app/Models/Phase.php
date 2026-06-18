@@ -105,7 +105,7 @@ class Phase extends Model
             : PhaseStatus::tryFrom((string) $this->status);
 
         $status = match (true) {
-            $currentStatus === PhaseStatus::Completed && $allTasksCompleted && $progress === 100 => PhaseStatus::Completed,
+            $allTasksCompleted && $progress === 100 => PhaseStatus::Completed,
             $progress > 0 || $hasStartedTask => PhaseStatus::Active,
             default => PhaseStatus::Pending,
         };
