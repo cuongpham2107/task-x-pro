@@ -128,4 +128,17 @@ class ProjectPolicy
     {
         return $this->update($user, $project);
     }
+
+    public function exportProjects(User $user): bool
+    {
+        if ($user->hasRole('super_admin')) {
+            return true;
+        }
+
+        if ($user->hasAnyRole(['ceo', 'leader'])) {
+            return true;
+        }
+
+        return false;
+    }
 }

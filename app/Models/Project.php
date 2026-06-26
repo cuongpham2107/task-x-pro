@@ -8,7 +8,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Auth;
 
 class Project extends Model
 {
@@ -18,6 +20,59 @@ class Project extends Model
     {
         static::deleting(function (Project $project): void {
             $project->phases()->get()->each->delete();
+        });
+
+        static::created(function (Project $project): void {
+            $actor = Auth::user();
+            if (! $actor) {
+                return;
+            }
+
+            ActivityLog::query()->create([
+                'user_id' => $actor->id,
+                'entity_type' => static::class,
+                'entity_id' => $project->id,
+                'action' => 'created',
+                'old_values' => [],
+                'new_values' => $project->getAttributes(),
+                'ip_address' => request()->ip(),
+                'user_agent' => request()->userAgent(),
+            ]);
+        });
+
+        static::updated(function (Project $project): void {
+            $actor = Auth::user();
+            if (! $actor) {
+                return;
+            }
+
+            if ($project->wasChanged('status')) {
+                $originalStatus = $project->getOriginal('status');
+                $originalStatusValue = $originalStatus instanceof \BackedEnum ? $originalStatus->value : $originalStatus;
+                $newStatusValue = $project->status instanceof \BackedEnum ? $project->status->value : $project->status;
+
+                ActivityLog::query()->create([
+                    'user_id' => $actor->id,
+                    'entity_type' => static::class,
+                    'entity_id' => $project->id,
+                    'action' => 'status_updated',
+                    'old_values' => ['status' => $originalStatusValue],
+                    'new_values' => ['status' => $newStatusValue],
+                    'ip_address' => request()->ip(),
+                    'user_agent' => request()->userAgent(),
+                ]);
+            } elseif ($project->wasChanged('progress')) {
+                ActivityLog::query()->create([
+                    'user_id' => $actor->id,
+                    'entity_type' => static::class,
+                    'entity_id' => $project->id,
+                    'action' => 'progress_updated',
+                    'old_values' => ['progress' => $project->getOriginal('progress')],
+                    'new_values' => ['progress' => $project->progress],
+                    'ip_address' => request()->ip(),
+                    'user_agent' => request()->userAgent(),
+                ]);
+            }
         });
     }
 
@@ -74,6 +129,11 @@ class Project extends Model
     public function phases(): HasMany
     {
         return $this->hasMany(Phase::class);
+    }
+
+    public function activityLogs(): MorphMany
+    {
+        return $this->morphMany(ActivityLog::class, 'entity');
     }
 
     public function projectType(): BelongsTo
@@ -170,7 +230,37 @@ class Project extends Model
         }
 
         if ($this->progress !== $progress || (isset($updates['status']) && $this->status !== $updates['status'])) {
+            $originalProgress = $this->progress;
+            $originalStatus = $this->status instanceof ProjectStatus ? $this->status->value : $this->status;
+
             $this->forceFill($updates)->saveQuietly();
+
+            $actor = Auth::user();
+            if ($actor && isset($updates['progress']) && $originalProgress !== $updates['progress']) {
+                ActivityLog::query()->create([
+                    'user_id' => $actor->id,
+                    'entity_type' => static::class,
+                    'entity_id' => $this->id,
+                    'action' => 'progress_updated',
+                    'old_values' => ['progress' => $originalProgress],
+                    'new_values' => ['progress' => $updates['progress']],
+                    'ip_address' => request()->ip(),
+                    'user_agent' => request()->userAgent(),
+                ]);
+            }
+
+            if ($actor && isset($updates['status']) && $originalStatus !== $updates['status']) {
+                ActivityLog::query()->create([
+                    'user_id' => $actor->id,
+                    'entity_type' => static::class,
+                    'entity_id' => $this->id,
+                    'action' => 'status_updated',
+                    'old_values' => ['status' => $originalStatus],
+                    'new_values' => ['status' => $updates['status']],
+                    'ip_address' => request()->ip(),
+                    'user_agent' => request()->userAgent(),
+                ]);
+            }
         }
     }
 }

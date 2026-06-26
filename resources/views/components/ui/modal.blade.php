@@ -63,7 +63,7 @@
                 {{-- Footer --}}
                 @if (isset($footer))
                     <div
-                        class="flex items-center justify-end gap-3 border-t border-slate-200 bg-slate-50 px-6 py-4 dark:border-slate-700 dark:bg-slate-700/30">
+                        class="flex items-center justify-end gap-3 border-t rounded-b-2xl border-slate-200 bg-slate-50 px-6 py-4 dark:border-slate-700 dark:bg-slate-700/30">
                         {{ $footer }}
                     </div>
                 @endif
