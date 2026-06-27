@@ -289,8 +289,10 @@ new #[Title('Quản lý dự án')] class extends Component
         $to = $this->filterExportEndDate;
 
         $projects = Project::query()
-            ->whereDate('start_date', '>=', $from)
-            ->whereDate('end_date', '<=', $to)
+            ->where(function ($q) use ($from, $to) {
+                $q->whereBetween('start_date', [$from, $to])
+                    ->orWhereBetween('end_date', [$from, $to]);
+            })
             ->with(['leaders', 'activityLogs' => function ($q) {
                 $q->where('action', 'progress_updated')
                     ->where('created_at', '<', now()->subDays(7))
