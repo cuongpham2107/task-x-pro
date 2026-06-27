@@ -4,6 +4,7 @@ use App\Enums\ProjectStatus;
 use App\Exports\ProjectDetailExport;
 use App\Exports\ProjectReportExport;
 use App\Models\Project;
+use App\Services\Projects\ProjectQueryService;
 use App\Services\Projects\ProjectService;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Computed;
@@ -19,9 +20,12 @@ new #[Title('Quản lý dự án')] class extends Component
 
     protected ProjectService $projectService;
 
-    public function boot(ProjectService $projectService): void
+    protected ProjectQueryService $projectQueryService;
+
+    public function boot(ProjectService $projectService, ProjectQueryService $projectQueryService): void
     {
         $this->projectService = $projectService;
+        $this->projectQueryService = $projectQueryService;
     }
 
     #[Url(as: 'tab', except: 'all')]
@@ -254,15 +258,18 @@ new #[Title('Quản lý dự án')] class extends Component
     #[Computed]
     public function projectsForExport()
     {
-        return Project::query()
+        $query = Project::query()
             ->with('projectType:id,label')
             ->where(function ($q) {
                 if ($this->exportProjectSearch) {
                     $q->where('name', 'like', '%'.$this->exportProjectSearch.'%');
                 }
             })
-            ->orderBy('name')
-            ->get(['id', 'name', 'project_type_id']);
+            ->orderBy('name');
+
+        $this->projectQueryService->scopeVisibility($query, auth()->user());
+
+        return $query->get(['id', 'name', 'project_type_id']);
     }
 
     public function exportOverallReport()
@@ -437,7 +444,7 @@ new #[Title('Quản lý dự án')] class extends Component
                     Tạo dự án
                 </x-ui.button>
             @endif
-            @if(auth()->user()?->can('exportProjects'))
+            @can('exportProjects', \App\Models\Project::class)
                 <div x-data="{ open: false }" class="relative">
                     <x-ui.button icon="file_download" size="sm" @click="open = !open">
                         Xuất báo cáo

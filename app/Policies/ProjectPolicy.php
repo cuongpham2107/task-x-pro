@@ -135,7 +135,11 @@ class ProjectPolicy
             return true;
         }
 
-        if ($user->hasAnyRole(['ceo', 'leader'])) {
+        if ($user->hasRole('leader')) {
+            return true;
+        }
+
+        if ($user->hasRole('ceo')) {
             return true;
         }
 
